@@ -4,6 +4,7 @@ src/antlr
 
 #ignore Java class files
 *.class
+build/**
 
 #ignore other junk files
 *~
