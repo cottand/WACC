@@ -16,8 +16,9 @@ repositories {
   jcenter()
 }
 
+val arrowVer = "0.10.4"
+val antlrVer = "4.7.1"
 dependencies {
-  val arrowVer = "0.10.4"
 
   implementation(kotlin("stdlib-jdk8"))
   implementation(kotlin("reflect"))
@@ -25,7 +26,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3")
   implementation("io.arrow-kt:arrow-optics:$arrowVer")
   implementation("io.arrow-kt:arrow-syntax:$arrowVer")
-  antlr("org.antlr:antlr4:4.7.1")
+  antlr("org.antlr:antlr4:$antlrVer")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
