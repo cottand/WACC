@@ -1,7 +1,7 @@
 #!/bin/sh
 
-LEXER_FILE=BasicLexer.g4
-PARSER_FILE=BasicParser.g4
+LEXER_FILE=WACCLexer.g4
+PARSER_FILE=WACCParser.g4
 
 BASEDIR=$(dirname $0)
 
@@ -19,3 +19,6 @@ fi
 
 echo Compiling the parser..
 java -jar $BASEDIR/../lib/antlr-4.7-complete.jar $BASEDIR/$PARSER_FILE -o $TARGET_DIR -package antlr -no-listener -visitor -Werror
+
+#echo Compiling all the shit
+#javac -cp $BASEDIR/../lib/antlr-4.7-complete.jar $TARGET_DIR/*.java
