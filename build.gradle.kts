@@ -28,6 +28,8 @@ dependencies {
   antlr("org.antlr:antlr4:4.7.1")
 
   testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
+
 }
 
 val antlrOut = "build/generated/source/antlr/"
@@ -38,6 +40,9 @@ tasks.generateGrammarSource {
 }
 
 sourceSets["main"].java.srcDir(antlrOut)
+sourceSets["test"].withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
+  kotlin.srcDir("src/test-utils/kotlin")
+}
 
 
 tasks {
