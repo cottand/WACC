@@ -32,7 +32,7 @@ dependencies {
 
   antlr("org.antlr:antlr4:4.7.1")
 
-  compile(kotlin("reflect"))
+  implementation(kotlin("reflect"))
   testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
 }
 
