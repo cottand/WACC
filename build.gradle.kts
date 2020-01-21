@@ -1,17 +1,19 @@
 @file:Suppress("SpellCheckingInspection")
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.lang.ProcessBuilder
-import java.lang.ProcessBuilder.Redirect
 
 plugins {
   kotlin("jvm") version "1.3.61"
   antlr
+  application
 }
 
 group = "ic.wacc"
 version = "1.0"
 
+application {
+    mainClassName = "ic.org.Main"
+}
 repositories {
   jcenter()
 }
@@ -61,12 +63,3 @@ tasks {
   }
 }
 
-fun String.runCommand(workingDir: File = file(".")) =
-  this.split("\n").forEach {
-    ProcessBuilder(*it.split(" ").toTypedArray())
-      .directory(workingDir)
-      .redirectOutput(Redirect.INHERIT)
-      .redirectError(Redirect.INHERIT)
-      .start()
-      .waitFor(60, TimeUnit.SECONDS)
-  }
