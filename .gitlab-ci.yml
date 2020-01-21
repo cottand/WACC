@@ -1,10 +1,32 @@
 
-compile:
+stages:
+        - compile
+        - test
+        - deploy
+
+
+build:
+        stage: compile
         script: ./gradlew build
 
-test:
-        script: ./gradlew test
+check:
+        stage: test
+        script: ./gradle check
         artifacts:
                 paths:
-                        - target/site/jacoco/
+                        - build/reports/tests/test/
+
+
+pages:
+        stage: deploy
+        dependencies:
+                - job1
+        script:
+                - mv build/reports/tests/test/ public/
+        artifacts:
+                paths:
+                        - public
+                expire_in: 30 days
+        only:
+                - master
 
