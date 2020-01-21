@@ -2,10 +2,12 @@ package ic.org.grammar
 
 import kotlinx.collections.immutable.PersistentList
 
-data class Ident(val name: String)
-data class Param(val type: Type, val ident: Ident)
-
 data class Prog(
+  val funcs: PersitentList<Func>,
+  val firstStat: Stat
+)
+
+data class Func(
   val retType: Type,
   val ident: Ident,
   val params: PersistentList<Param>,
@@ -14,14 +16,15 @@ data class Prog(
 
 sealed class Type
 sealed class BaseT : Type()
-object StringT : BaseT()
-object CharT : BaseT()
-object BoolT : BaseT()
 object IntT : BaseT()
+object BoolT : BaseT()
+object CharT : BaseT()
+object StringT : BaseT()
 
 object ArrayT : Type()
 object PairT : Type()
 
 sealed class Stat
 
-
+data class Ident(val name: String)
+data class Param(val type: Type, val ident: Ident)
