@@ -19,7 +19,7 @@ check:
 pages:
         stage: deploy
         dependencies:
-                - job1
+                - check
         script:
                 - mv build/reports/tests/test/ public/
         artifacts:
