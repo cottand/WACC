@@ -12,7 +12,7 @@ group = "ic.wacc"
 version = "1.0"
 
 application {
-    mainClassName = "ic.org.Main"
+  mainClassName = "ic.org.Main"
 }
 repositories {
   jcenter()
@@ -38,7 +38,8 @@ dependencies {
 val antlrOut = "build/generated/source/antlr/"
 tasks.generateGrammarSource {
   val generatedPackage = "antlr"
-  arguments = arguments + listOf("-package", generatedPackage, "-no-listener", "-Werror")
+  arguments =
+    arguments + listOf("-package", generatedPackage, "-visitor", "-no-listener", "-Werror")
   this.outputDirectory = file(antlrOut + generatedPackage)
 }
 
