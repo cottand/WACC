@@ -10,6 +10,19 @@ import kotlinx.collections.immutable.toPersistentList
 typealias Errors = PersistentList<CompilationError>
 typealias Parsed<A> = Validated<Errors, A>
 
+sealed class CompilationError {
+  abstract val msg: String
+  abstract val code: Int
+}
+
+class SyntacticError(override val msg: String) : CompilationError() {
+  override val code = 100
+}
+
+sealed class SemanticError : CompilationError() {
+  override val code = 200
+}
+
 inline val <reified A> Parsed<A>.errors: Errors
   get() = when (this) {
     is Invalid -> this.e
@@ -21,5 +34,3 @@ inline val <reified A> List<Parsed<A>>.errors: Errors
 
 inline val <reified A> List<Parsed<A>>.allValid: Boolean
   get() = this.forAll { it is Valid }
-
-sealed class CompilationError

@@ -19,3 +19,6 @@ fun <A, B> List<Either<A, B>>.findFirstLeft(): Either<A, List<B>> {
 
 inline fun <reified A, reified B> PersistentList<A>.mapp(transform: (A) -> B) =
   this.map(transform).toPersistentList()
+
+fun String.containsAll(words: List<String>) =
+  words.forAll { this.contains(it, ignoreCase = true) }
