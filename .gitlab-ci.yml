@@ -10,7 +10,7 @@ build:
 
 check:
         stage: test
-        script: ./gradle check
+        script: ./gradlew check -i
         artifacts:
                 paths:
                         - build/reports/tests/test/
