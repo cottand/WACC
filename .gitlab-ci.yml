@@ -1,0 +1,10 @@
+
+compile:
+        script: ./gradlew build
+
+test:
+        script: ./gradlew test
+        artifacts:
+                paths:
+                        - target/site/jacoco/
+
