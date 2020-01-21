@@ -1,16 +1,14 @@
 package ic.org.grammar
 
-import kotlinx.collections.immutable.PersistentList
-
 data class Prog(
-  val funcs: PersitentList<Func>,
+  val funcs: List<Func>,
   val firstStat: Stat
 )
 
 data class Func(
   val retType: Type,
   val ident: Ident,
-  val params: PersistentList<Param>,
+  val params: List<Param>,
   val stat: Stat
 )
 
