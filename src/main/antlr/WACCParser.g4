@@ -4,7 +4,7 @@ options {
   tokenVocab=WACCLexer;
 }
 
-prog: BEGIN WS func* WS stat WS END;
+prog: BEGIN WS func* WS? stat WS? END;
 
 func: type WS ID WS? LBRACKET WS? param_list? WS? RBRACKET WS? IS WS stat WS END;
 
