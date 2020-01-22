@@ -2,21 +2,9 @@ package ic.org
 
 import antlr.WACCLexer
 import antlr.WACCParser
-import arrow.core.Either
-import arrow.core.Validated
 import arrow.core.Validated.Invalid
-import arrow.core.Validated.Valid
-import arrow.core.extensions.list.foldable.fold
-import arrow.core.extensions.validated.foldable.fold
-import arrow.core.left
-import arrow.core.right
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.runBlocking
-import org.antlr.v4.runtime.ANTLRErrorListener
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.misc.ParseCancellationException
-import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.io.File
 
 object Main {

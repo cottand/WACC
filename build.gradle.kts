@@ -19,7 +19,7 @@ repositories {
 }
 
 val arrowVer = "0.10.4"
-val antlrVer = "4.7.1"
+val antlrVer = "4.7"
 dependencies {
 
   implementation(kotlin("stdlib-jdk8"))

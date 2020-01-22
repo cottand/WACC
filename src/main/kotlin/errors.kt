@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
 import org.antlr.v4.runtime.misc.ParseCancellationException
+import java.lang.IllegalStateException
 import java.util.LinkedList
 
 typealias Errors = PersistentList<CompilationError>
@@ -48,7 +49,7 @@ object ThrowingErrorListener : BaseErrorListener() {
     msg: String,
     e: RecognitionException?
   ) {
-    val error = SyntacticError("At $line:$charPositionInLine, $msg")
+    val error = SyntacticError("At $line:$charPositionInLine, $msg").print()
     errors.push(error)
   }
 }

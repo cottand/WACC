@@ -1,6 +1,7 @@
 import ic.org.CompileResult
 import ic.org.Main
 import ic.org.containsAll
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Assumptions.assumingThat
@@ -23,35 +24,11 @@ object TestPrograms {
   private const val waccExamplesPath = "../wacc_examples"
   private const val testOutputKeywords = false
 
-  private val waccFiles = File(waccExamplesPath).walkBottomUp().toList()
+  private val waccFiles =
+    File(waccExamplesPath).walkBottomUp().toList()
     .filter { it.isFile && ".wacc" in it.path }
     .map { it.asProgram() }
 
-  private fun File.asProgram(): WaccProgram {
-    val content = this.readLines()
-    val isInvalidProg = this.path.contains("invalid")
-
-    val errorCode = if (isInvalidProg) {
-      val errorCodeLine = content.indexOf("# Exit:") + 1
-      content[errorCodeLine].filter { it != '#' && it != ' ' }.toInt()
-    } else 0
-
-    val output = if (isInvalidProg) {
-      val outputLine = content.indexOf("# Output:") + 1
-      content[outputLine].filter { it != '#' }.split(' ')
-    } else Collections.emptyList()
-
-    return WaccProgram(this, errorCode, output)
-  }
-
-  //@Test
-  //fun temp() = println(waccFiles.map { it.asProgram() })
-
-  data class WaccProgram(
-    val file: File,
-    val expectedReturn: Int,
-    val expectedKeyWords: List<String>
-  )
 
   @TestFactory
   fun generateTestsFromFiles(): Collection<DynamicTest> = waccFiles.map {
@@ -68,8 +45,9 @@ object TestPrograms {
           fail(e)
         }
       res.let { result ->
-        assertEquals(it.expectedReturn, result.exitCode) { e, a ->
-          "Bad exit code. Compile errors: ${result.message}"
+        assertEquals(it.expectedReturn, result.exitCode) {
+          "Bad exit code. Compile errors: \n${result.message}\n" +
+            "While compiling program:\n${it.file.readText()}"
         }
         assumingThat(testOutputKeywords) {
           assertTrue(result.message.containsAll(it.expectedKeyWords))

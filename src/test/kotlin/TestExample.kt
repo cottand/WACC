@@ -7,6 +7,6 @@ class TestExample {
   @Test
   fun `Math is not broken`() {
     val three = 3
-    assertEquals(three, 1 + 2) { exp, act -> "Expected $exp and got $act!!" }
+    assertEquals(three, 1 + 2) { "Expected ${1 + 2} and got $three!" }
   }
 }
