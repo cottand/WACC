@@ -72,4 +72,4 @@ inline val <reified A> List<Parsed<A>>.allValid: Boolean
  */
 fun List<CompilationError>.asLines(filename: String) =
   "In file $filename:\n" +
-    fold("") { str, err -> "  $str${err.msg}\n" } + '\n'
+    fold("") { str, err -> "$str  ${err.msg}\n" } + '\n'
