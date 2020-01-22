@@ -4,23 +4,23 @@ options {
   tokenVocab=WACCLexer;
 }
 
-prog: BEGIN func* stat END;
+prog: BEGIN WS func* WS stat WS END;
 
-func: type ID LBRACKET param_list? RBRACKET IS stat END;
+func: type WS ID WS? LBRACKET WS? param_list? WS? RBRACKET WS? IS WS stat WS END;
 
 stat: SKP
-| type ID ASSIGN assign_rhs
-| assign_lhs ASSIGN assign_rhs
-| READ assign_lhs
-| FREE expr
-| RETURN expr
-| EXIT expr
-| PRINT expr
-| PRINTLN expr
-| IF expr THEN stat ELSE stat FI
-| WHILE expr DO stat DONE
-| BEGIN stat END
-| stat SEMICOLON stat;
+| type WS ID WS? ASSIGN WS? assign_rhs
+| assign_lhs WS? ASSIGN WS? assign_rhs
+| READ WS assign_lhs
+| FREE WS expr
+| RETURN WS expr
+| EXIT WS expr
+| PRINT WS expr
+| PRINTLN WS expr
+| IF WS expr WS THEN WS stat WS ELSE WS stat WS FI
+| WHILE WS expr WS DO WS stat WS DONE
+| BEGIN WS stat WS END
+| stat WS? SEMICOLON WS? stat;
 
 expr: INT_LIT
 | BOOL_LIT
