@@ -22,43 +22,50 @@ stat: SKP
 | BEGIN WS stat WS END
 | stat WS? SEMICOLON WS? stat;
 
-expr: INT_LIT
-| BOOL_LIT
-| CHAR_LIT
-| STRING_LIT
-| PAIR_LIT
+expr: expr binary_op expr
+| int_lit
+| bool_lit
+| char_lit
+| string_lit
+| pair_lit
 | ID
 | array_elem
 | unary_op expr
-| expr binary_op expr
-| LBRACKET expr RBRACKET;
+| LBRACKET WS? expr WS? RBRACKET;
 
 // Assignments
 assign_lhs: ID | array_elem | pair_elem;
 assign_rhs: expr
 | array_lit
-| NEWPAIR LBRACKET expr COMMA expr RBRACKET
+| NEWPAIR WS? LBRACKET WS? expr WS? COMMA WS? expr WS? RBRACKET
 | pair_elem
-| CALL ID LBRACKET (arg_list)? RBRACKET;
+| CALL WS ID WS? LBRACKET WS? (arg_list)? WS? RBRACKET;
 
 // Param & args
-param_list: param (COMMA param)*;
-param: type ID;
+param_list: param WS? (COMMA WS? param)*;
+param: type WS ID;
 
-arg_list: expr (COMMA expr)*;
+arg_list: expr WS? (COMMA WS? expr)*;
 
 // Types
 type: base_type | array_type | pair_type;
-base_type: INT | BOOL | CHAR | STRING;
+base_type: INT WS | BOOL WS | CHAR WS | STRING WS;
 
-array_type: (base_type | pair_type) LSQBRACKET RSQBRACKET | array_type LSQBRACKET RSQBRACKET;
-array_elem: ID (LSQBRACKET expr RSQBRACKET)+;
+array_type: (base_type | pair_type) WS? LSQBRACKET WS? RSQBRACKET | array_type WS? LSQBRACKET WS? RSQBRACKET;
+array_elem: ID WS? (LSQBRACKET WS? expr WS? RSQBRACKET)+;
 
-pair_type: PAIR LBRACKET pair_elem_type COMMA pair_elem_type RBRACKET;
+pair_type: PAIR WS? LBRACKET WS? pair_elem_type WS? COMMA WS? pair_elem_type WS? RBRACKET;
+
 pair_elem_type: base_type | array_type | PAIR;
-pair_elem: FST expr | SND expr;
+pair_elem: FST WS expr | SND WS expr;
 
-array_lit: LSQBRACKET (expr (COMMA expr)*)? RSQBRACKET;
+// Literals
+array_lit: LSQBRACKET WS? (expr WS? (COMMA WS? expr WS?)*)? WS? RSQBRACKET;
+int_lit: SIGN? WS? INTEGER;
+bool_lit: TRUE | FALSE;
+char_lit: QUOTE CHARACTER QUOTE;
+string_lit: DQUOTE CHARACTER* DQUOTE;
+pair_lit: NULL;
 
 // Operators
 unary_op: NOT
