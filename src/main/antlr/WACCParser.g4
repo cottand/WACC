@@ -49,7 +49,7 @@ arg_list: expr WS? (COMMA WS? expr)*;
 
 // Types
 type: base_type | array_type | pair_type;
-base_type: INT WS | BOOL WS | CHAR WS | STRING WS;
+base_type: INT | BOOL | CHAR | STRING;
 
 array_type: (base_type | pair_type) WS? LSQBRACKET WS? RSQBRACKET | array_type WS? LSQBRACKET WS? RSQBRACKET;
 array_elem: ID WS? (LSQBRACKET WS? expr WS? RSQBRACKET)+;
