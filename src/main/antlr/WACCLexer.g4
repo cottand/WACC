@@ -1,7 +1,7 @@
 lexer grammar WACCLexer;
 
 // Skip comments and whitespaces
-WHITESPACE: [ \n\t]+ -> skip;
+WS: [ \n\t]+ -> skip;
 COMMENT: '#'~[\n]* -> skip;
 
 // Comparison
