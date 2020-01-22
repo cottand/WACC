@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
 import org.antlr.v4.runtime.misc.ParseCancellationException
+import java.util.LinkedList
 
 typealias Errors = PersistentList<CompilationError>
 typealias Parsed<A> = Validated<Errors, A>
@@ -19,13 +20,26 @@ sealed class CompilationError {
   abstract val msg: String
   abstract val code: Int
 }
-
-class SyntacticError(override val msg: String) : CompilationError() {
+data class SyntacticError(override val msg: String) : CompilationError() {
   override val code = 100
 }
 
-class ThrowingErrorListener : BaseErrorListener() {
-  @Throws(ParseCancellationException::class)
+sealed class SemanticError : CompilationError() {
+  override val code = 200
+}
+
+/**
+ * Singleton of an ErrorListener that will collect all syntactic errors as ANTLR
+ * TODO lexes?
+ * the program.
+ */
+object ThrowingErrorListener : BaseErrorListener() {
+
+  private val errors = LinkedList<SyntacticError>()
+
+  val errorsSoFar
+    get() = errors.toPersistentList()
+
   override fun syntaxError(
     recognizer: Recognizer<*, *>?,
     offendingSymbol: Any?,
@@ -34,17 +48,11 @@ class ThrowingErrorListener : BaseErrorListener() {
     msg: String,
     e: RecognitionException?
   ) {
-    throw ParseCancellationException("line $line:$charPositionInLine $msg")
-  }
-
-  companion object {
-    val INSTANCE = ThrowingErrorListener()
+    val error = SyntacticError("At $line:$charPositionInLine, $msg")
+    errors.push(error)
   }
 }
 
-sealed class SemanticError : CompilationError() {
-  override val code = 200
-}
 
 inline val <reified A> Parsed<A>.errors: Errors
   get() = when (this) {
@@ -57,3 +65,11 @@ inline val <reified A> List<Parsed<A>>.errors: Errors
 
 inline val <reified A> List<Parsed<A>>.allValid: Boolean
   get() = this.forAll { it is Valid }
+
+/**
+ * Formats a [List] of [CompilationError]s into pretty a [String] ready to be used as a summary of
+ * all the errors in [this]
+ */
+fun List<CompilationError>.asLines(filename: String) =
+  "In file $filename:\n" +
+    fold("") { str, err -> "  $str${err.msg}\n" } + '\n'

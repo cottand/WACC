@@ -6,6 +6,7 @@ import arrow.core.Either
 import arrow.core.Validated
 import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
+import arrow.core.extensions.list.foldable.fold
 import arrow.core.extensions.validated.foldable.fold
 import arrow.core.left
 import arrow.core.right
@@ -30,21 +31,21 @@ object Main {
     val lexer = WACCLexer(stream)
     val tokens = CommonTokenStream(lexer)
     val parser = WACCParser(tokens)
+    val listener = ThrowingErrorListener
     parser.removeErrorListeners()
-    parser.addErrorListener(ThrowingErrorListener.INSTANCE)
-    val prog = runBlocking {
-      Either.Companion.catch( //TODO collect without grabbing a throwable????
-        { persistentListOf(SyntacticError(it.localizedMessage)) },
-        { parser.prog() })
-    }
-    val valid: Parsed<WACCParser.ProgContext> = Validated.fromEither(prog) // AST
-    return when (valid) {
-      is Valid -> CompileResult(true, 0, "TODO")
-      is Invalid -> {
-        val msg = valid.e.toString() // TODO format this!
-        val code = valid.e.first().code
-        CompileResult(false, code, msg)
-      }
+    parser.addErrorListener(listener)
+    val syntacticErrors = listener.errorsSoFar
+      .also { println(it) }
+    val prog = parser.prog()
+    val ast by lazy { prog.asAst() }
+    return when {
+      !syntacticErrors.isEmpty() ->
+        CompileResult(false, syntacticErrors.first().code, syntacticErrors.asLines(filename))
+      ast is Invalid ->
+        CompileResult(false, (ast as Invalid).e.first().code, (ast as Invalid).e.asLines(filename))
+      else ->
+        CompileResult(true, 0, "TODO MESSAGE") // TODO  message upon success
+
     }
   }
 }
