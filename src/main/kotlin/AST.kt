@@ -4,12 +4,7 @@ import antlr.WACCParser
 import arrow.core.Validated.*
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.grammar.Func
-import ic.org.grammar.Ident
-import ic.org.grammar.Param
-import ic.org.grammar.Prog
-import ic.org.grammar.Stat
-import ic.org.grammar.Type
+import ic.org.grammar.*
 import kotlinx.collections.immutable.plus
 
 fun WACCParser.FuncContext.asAst(): Parsed<Func> {
@@ -37,10 +32,6 @@ private fun WACCParser.TypeContext.asAst(): Parsed<Type> {
 }
 
 fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
-  //if (this.exception.localizedMessage != null) {
-  //  println(exception.localizedMessage)
-  //  return persistentListOf(SyntacticError(this.exception.localizedMessage)).invalid()
-  //}
 
   val funcs = this.func().map { it.asAst() }
   val stat = this.stat().asAst()
@@ -55,5 +46,8 @@ fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
   }
 }
 
-private fun WACCParser.StatContext.asAst(): Parsed<Stat> = TODO()
+private fun WACCParser.StatContext.asAst(): Parsed<Stat> = when {
+  this.SKP() != null -> SkipT()
+  this.TYPE() != null ->
+}
 
