@@ -10,6 +10,7 @@ import ic.org.grammar.Param
 import ic.org.grammar.Prog
 import ic.org.grammar.Stat
 import ic.org.grammar.Type
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 
 fun WACCParser.FuncContext.asAst(): Parsed<Func> {
@@ -37,15 +38,12 @@ private fun WACCParser.TypeContext.asAst(): Parsed<Type> {
 }
 
 fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
-  //if (this.exception.localizedMessage != null) {
-  //  println(exception.localizedMessage)
-  //  return persistentListOf(SyntacticError(this.exception.localizedMessage)).invalid()
-  //}
+  val funcs = func().map { it.asAst() }
+  val antlrStat: WACCParser.StatContext = stat()
+    ?: return persistentListOf(SyntacticError("Malformed program at $text")).invalid()
+  val stat = antlrStat.asAst()
 
-  val funcs = this.func().map { it.asAst() }
-  val stat = this.stat().asAst()
-
-  TODO("Is this Prog valid?")
+  // Check if the return type matches!
 
   return if (funcs.areAllValid && stat is Valid) {
     val validFuncs = funcs.map { (it as Valid).a }

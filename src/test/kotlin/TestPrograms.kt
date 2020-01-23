@@ -41,40 +41,49 @@ class TestPrograms {
       .map { it.asProgram() }
       .onEach { println(it) }
 
-  @TestFactory
-  fun generateTestsFromFiles(): Iterator<DynamicTest> = waccFiles.map { program ->
-    val name = program.file.canonicalPath
-    DynamicTest.dynamicTest(name) {
-      val filename = program.file.absolutePath
-      val res: CompileResult =
-        try {
-          WACCCompiler(filename).compile()
-        } catch (e: Throwable) {
-          // If we are only checking the syntax and we hit a NotImplemented error, that means the
-          // syntactic check succeeded and returned. So we 'fake' a 0 return code to be checked
-          // later against the expected result.
-          if (e is NotImplementedError && checkSyntaxOnly) {
-            CompileResult.success(0)
-          } else {
-            assumeFalse(e is NotImplementedError)
-            //If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
-            // for some other reason. So fail the test case.
-            System.err.println("Failed to compile $name with exception:")
-            fail(e)
-          }
-        }
-      res.let { result ->
-        if (checkSyntaxOnly)
-          assertTrue(result.exitCode in listOf(0, 200))
-        else
-          assertEquals(program.expectedReturn, result.exitCode) {
-            "Bad exit code. Compile errors: \n${result.message}"
-          }
-        assumingThat(testOutputKeywords) {
-          assertTrue(result.message.containsAll(program.expectedKeyWords))
+  /**
+   * Tests a single [WACCProgram] according to [checkSyntaxOnly] and [testOutputKeywords], and
+   * skips the test if compilation exits with a [NotImplementedError]
+   */
+  private fun testProgram(program: WACCProgram) {
+    val filename = program.file.absolutePath
+    val res: CompileResult =
+      try {
+        WACCCompiler(filename).compile()
+      } catch (e: Throwable) {
+        // If we are only checking the syntax and we hit a NotImplemented error, that means the
+        // syntactic check succeeded and returned. So we 'fake' a 0 return code to be checked
+        // later against the expected result.
+        if (e is NotImplementedError && checkSyntaxOnly) {
+          CompileResult.success(0)
+        } else {
+          assumeFalse(e is NotImplementedError)
+          //If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
+          // for some other reason. So fail the test case.
+          System.err.println("Failed to compile ${program.file.canonicalPath} with exception:")
+          fail(e)
         }
       }
+    res.let { result ->
+      if (checkSyntaxOnly)
+        assertTrue(result.exitCode in listOf(0, 200) + program.expectedReturn)
+      else
+        assertEquals(program.expectedReturn, result.exitCode) {
+          "Bad exit code. Compile errors: \n${result.message}"
+        }
+      assumingThat(testOutputKeywords) {
+        assertTrue(result.message.containsAll(program.expectedKeyWords))
+      }
     }
+  }
+
+  /**
+   * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [testProgram]
+   * Every one of these [DynamicTest]s are the unit tests that show up in the report.
+   */
+  @TestFactory
+  fun generateTestsFromFiles() = waccFiles.map {
+    DynamicTest.dynamicTest(it.file.canonicalPath) { testProgram(it) }
   }.iterator()
 }
 
