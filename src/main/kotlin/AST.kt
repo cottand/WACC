@@ -10,7 +10,6 @@ import ic.org.grammar.Param
 import ic.org.grammar.Prog
 import ic.org.grammar.Stat
 import ic.org.grammar.Type
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 
 fun WACCParser.FuncContext.asAst(): Parsed<Func> {
@@ -21,7 +20,7 @@ fun WACCParser.FuncContext.asAst(): Parsed<Func> {
 
   //TODO("Is this func valid? We probably need to make checks on the stat")
 
-  return if (params.allValid && ident is Valid && type is Valid && stat is Valid) {
+  return if (params.areAllValid && ident is Valid && type is Valid && stat is Valid) {
     val validParams = params.map { (it as Valid).a }
     Func(type.a, ident.a, validParams, stat.a).valid()
   } else {
@@ -48,7 +47,7 @@ fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
 
   TODO("Is this Prog valid?")
 
-  return if (funcs.allValid && stat is Valid) {
+  return if (funcs.areAllValid && stat is Valid) {
     val validFuncs = funcs.map { (it as Valid).a }
     Prog(validFuncs, stat.a).valid()
   } else {
