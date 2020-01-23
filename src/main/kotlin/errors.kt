@@ -49,7 +49,7 @@ object ThrowingErrorListener : BaseErrorListener() {
     msg: String,
     e: RecognitionException?
   ) {
-    val error = SyntacticError("At $line:$charPositionInLine, $msg").print()
+    val error = SyntacticError("At $line:$charPositionInLine, $msg")
     errors.push(error)
   }
 }
