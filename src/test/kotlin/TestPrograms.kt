@@ -21,7 +21,7 @@ import java.util.Collections
  */
 object TestPrograms {
   // Testing constants
-  private const val waccExamplesPath = "../wacc_examples"
+  private const val waccExamplesPath = "./wacc_examples/"
   private const val testOutputKeywords = false
 
   private val waccFiles =
