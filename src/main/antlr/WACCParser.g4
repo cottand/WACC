@@ -22,7 +22,7 @@ stat: SKP
 | BEGIN WS+ stat WS+ END
 | stat WS* SEMICOLON WS* stat;
 
-expr: expr WS? binary_op WS? expr
+expr: expr WS* binary_op WS* expr
 | int_lit
 | BOOL_LIT
 | CHAR_LIT
@@ -30,7 +30,7 @@ expr: expr WS? binary_op WS? expr
 | PAIR_LIT
 | ID
 | array_elem
-| unary_op expr
+| unary_op WS* expr
 | LBRACKET WS* expr WS* RBRACKET;
 
 // Assignments
