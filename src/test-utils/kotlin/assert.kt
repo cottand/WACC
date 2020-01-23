@@ -20,7 +20,7 @@ data class WaccProgram(
 )
 
 /**
- * Constructs a [WaccProgram] frmo a normal [File]. [this] must be a file suitable for testing,
+ * Constructs a [WaccProgram] from a normal [File]. [this] must be a file suitable for testing,
  * @see [WaccProgram].
  */
 fun File.asProgram(): WaccProgram {
