@@ -46,8 +46,7 @@ object TestPrograms {
         }
       res.let { result ->
         assertEquals(it.expectedReturn, result.exitCode) {
-          "Bad exit code. Compile errors: \n${result.message}\n" +
-            "While compiling program:\n${it.file.readText()}"
+          "Bad exit code. Compile errors: \n${result.message}"
         }
         assumingThat(testOutputKeywords) {
           assertTrue(result.message.containsAll(it.expectedKeyWords))

@@ -23,7 +23,6 @@ object Main {
     parser.removeErrorListeners()
     parser.addErrorListener(listener)
     val syntacticErrors = listener.errorsSoFar
-      .also { println(it) }
     val prog = parser.prog()
     val ast by lazy { prog.asAst() }
     return when {
