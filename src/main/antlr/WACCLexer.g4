@@ -1,8 +1,10 @@
 lexer grammar WACCLexer;
 
-// Skip comments and whitespaces
-WS: [ \n\t]+ -> skip;
+// Skip comments
 COMMENT: '#'~[\n]* -> skip;
+
+// Whitespace
+WS: [ \n\t]+;
 
 // Comparison
 EQ: '==';
@@ -67,8 +69,6 @@ RBRACKET:  ')';
 LSQBRACKET: '[';
 RSQBRACKET: ']';
 
-// Literals
-INT_LIT: SIGN? INTEGER;
 BOOL_LIT: TRUE | FALSE;
 CHAR_LIT: QUOTE CHARACTER QUOTE;
 STRING_LIT: DQUOTE CHARACTER* DQUOTE;
@@ -77,14 +77,14 @@ PAIR_LIT: NULL;
 SIGN: PLUS | MINUS;
 INTEGER: DIGIT+;
 
+TRUE: 'true';
+FALSE: 'false';
+NULL: 'null';
+QUOTE: '\'';
+DQUOTE: '"';
+
 ID: [a-zA-Z_][a-zA-Z0-9_]*;
 
-// Fragments
-fragment TRUE: 'true';
-fragment FALSE: 'false';
-fragment DIGIT: '0'..'9';
-fragment NULL: 'null';
-fragment QUOTE: '\'';
-fragment DQUOTE: '"';
-fragment CHARACTER: ~[\\'"] | ESC_CHARACTER;
-fragment ESC_CHARACTER: '\\0' | '\\b' | '\\t' | '\\n' | '\\f' | '\\r' | '\\"' | '\\\'' | '\\';
+CHARACTER: ~[\\'"] | ESC_CHARACTER;
+ESC_CHARACTER: '\\0' | '\\b' | '\\t' | '\\n' | '\\f' | '\\r' | '\\"' | '\\\'' | '\\';
+DIGIT: '0'..'9';

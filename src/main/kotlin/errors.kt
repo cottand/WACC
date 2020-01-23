@@ -7,64 +7,50 @@ import arrow.core.extensions.list.foldable.forAll
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
-import org.antlr.v4.runtime.BaseErrorListener
-import org.antlr.v4.runtime.RecognitionException
-import org.antlr.v4.runtime.Recognizer
-import org.antlr.v4.runtime.misc.ParseCancellationException
-import java.lang.IllegalStateException
-import java.util.LinkedList
 
+/**
+ * Useful extension functions and sealed classes to deal with errors at compile time.
+ * @see [CompilationError]
+ */
 typealias Errors = PersistentList<CompilationError>
+
 typealias Parsed<A> = Validated<Errors, A>
 
+private const val syntacticErrorCode = 100
+private const val semanticErrorCode = 200
+
+/**
+ * Represents an error at compile time. Produced by either the [CollectingErrorListener] as a
+ * [SyntacticError], or by [Prog.asAst()] or one of its recursive calls as a [SemanticError].
+ *
+ * - [msg]: the message that will be printed for the user when reporting the error
+ *
+ * - [code]: the exit code (the compiler's) that this error would cause. One of
+ *   [syntacticErrorCode] or [semanticErrorCode].
+ */
 sealed class CompilationError {
   abstract val msg: String
   abstract val code: Int
 }
+
 data class SyntacticError(override val msg: String) : CompilationError() {
-  override val code = 100
+  override val code = syntacticErrorCode
 }
 
 sealed class SemanticError : CompilationError() {
-  override val code = 200
+  override val code = semanticErrorCode
 }
 
-/**
- * Singleton of an ErrorListener that will collect all syntactic errors as ANTLR
- * TODO lexes?
- * the program.
- */
-object ThrowingErrorListener : BaseErrorListener() {
-
-  private val errors = LinkedList<SyntacticError>()
-
-  val errorsSoFar
-    get() = errors.toPersistentList()
-
-  override fun syntaxError(
-    recognizer: Recognizer<*, *>?,
-    offendingSymbol: Any?,
-    line: Int,
-    charPositionInLine: Int,
-    msg: String,
-    e: RecognitionException?
-  ) {
-    val error = SyntacticError("At $line:$charPositionInLine, $msg").print()
-    errors.push(error)
-  }
-}
-
-
-inline val <reified A> Parsed<A>.errors: Errors
+inline val <A> Parsed<A>.errors: Errors
   get() = when (this) {
     is Invalid -> this.e
     else -> persistentListOf()
   }
 
-inline val <reified A> List<Parsed<A>>.errors: Errors
+inline val <A> List<Parsed<A>>.errors: Errors
   get() = this.flatMap { it.errors }.toPersistentList()
 
-inline val <reified A> List<Parsed<A>>.allValid: Boolean
+inline val <A> List<Parsed<A>>.areAllValid: Boolean
   get() = this.forAll { it is Valid }
 
 /**
