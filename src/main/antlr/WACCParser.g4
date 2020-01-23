@@ -24,10 +24,10 @@ stat: SKP
 
 expr: expr WS? binary_op WS? expr
 | int_lit
-| bool_lit
-| char_lit
-| string_lit
-| pair_lit
+| BOOL_LIT
+| CHAR_LIT
+| STRING_LIT
+| PAIR_LIT
 | ID
 | array_elem
 | unary_op expr
@@ -62,10 +62,6 @@ pair_elem: FST WS+ expr | SND WS+ expr;
 // Literals
 array_lit: LSQBRACKET WS* (expr WS* (COMMA WS* expr WS*)*)? WS* RSQBRACKET;
 int_lit: SIGN? WS* INTEGER;
-bool_lit: TRUE | FALSE;
-char_lit: QUOTE CHARACTER QUOTE;
-string_lit: DQUOTE CHARACTER* DQUOTE;
-pair_lit: NULL;
 
 // Operators
 unary_op: NOT
