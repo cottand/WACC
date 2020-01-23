@@ -22,7 +22,7 @@ stat: SKP
 | BEGIN WS stat WS END
 | stat WS? SEMICOLON WS? stat;
 
-expr: expr binary_op expr
+expr: expr WS? binary_op WS? expr
 | int_lit
 | bool_lit
 | char_lit
