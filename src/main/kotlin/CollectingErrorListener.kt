@@ -7,11 +7,10 @@ import org.antlr.v4.runtime.Recognizer
 import java.util.LinkedList
 
 /**
- * Singleton of an ErrorListener that will collect all syntactic errors as ANTLR
- * TODO lexes?
- * the program.
+ * An ErrorListener that will collect all syntactic errors as ANTLR
+ * parses the program.
  */
-object CollectingErrorListener : BaseErrorListener() {
+class CollectingErrorListener : BaseErrorListener() {
 
   private val errors =
     LinkedList<SyntacticError>()

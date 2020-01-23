@@ -1,15 +1,16 @@
+@file:Suppress("ConstantConditionIf")
+
 import ic.org.CompileResult
-import ic.org.Main
+import ic.org.WACCCompiler
 import ic.org.containsAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.Assumptions.assumingThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.fail
 import java.io.File
-import java.util.Collections
 
 /**
  * This test class will scan the wacc_examples directory, and attempt to compile all files, one
@@ -18,41 +19,62 @@ import java.util.Collections
  * Otherwise, we create a test and check what the return code and compiler output was. If it as
  * expected (read from the comments of the file itself) that test passes. For any other outcome
  * (a crash, or unexpected compiler output or error code) the test fails.
+ *
+ * Additionally, a file that does not have the string [testingKeyword] in its path inside the
+ * project will be ignored, this allowing us to select which files testing should be enabled for.
+ *
+ * Tests will be reported as passed if [checkSyntaxOnly] is true and and the compiler returns TODO()
+ * when codes 0 or 200 are expected, meaning that we check the syntax only and do not care about
+ * semantic checking.
  */
-object TestPrograms {
+class TestPrograms {
   // Testing constants
-  private const val waccExamplesPath = "./wacc_examples/"
-  private const val testOutputKeywords = false
+  private val waccExamplesPath = "./wacc_examples/"
+  private val testOutputKeywords = false
+  private val testingKeyword = "TEST"
+  private val checkSyntaxOnly = true
 
   private val waccFiles =
-    File(waccExamplesPath).walkBottomUp().toList()
-    .filter { it.isFile && ".wacc" in it.path }
-    .map { it.asProgram() }
-
+    File(waccExamplesPath).walkBottomUp()
+      .filter { it.isFile && ".wacc" in it.path }
+      .filter { "TEST" in it.canonicalPath } // If a
+      .map { it.asProgram() }
+      .onEach { println(it) }
 
   @TestFactory
-  fun generateTestsFromFiles(): Collection<DynamicTest> = waccFiles.map {
-    val name = it.file.canonicalPath
+  fun generateTestsFromFiles(): Iterator<DynamicTest> = waccFiles.map { program ->
+    val name = program.file.canonicalPath
     DynamicTest.dynamicTest(name) {
+      val filename = program.file.absolutePath
       val res: CompileResult =
         try {
-          Main.compile(it.file.absolutePath)
+          WACCCompiler(filename).compile()
         } catch (e: Throwable) {
-          assumeTrue(e !is NotImplementedError)
-          /* If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
-          for some other reason. So fail the test case */
-          System.err.println("Failed to compile $name with exception:")
-          fail(e)
+          // If we are only checking the syntax and we hit a NotImplemented error, that means the
+          // syntactic check succeeded and returned. So we 'fake' a 0 return code to be checked
+          // later against the expected result.
+          if (e is NotImplementedError && checkSyntaxOnly) {
+            CompileResult.success(0)
+          } else {
+            assumeFalse(e is NotImplementedError)
+            //If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
+            // for some other reason. So fail the test case.
+            System.err.println("Failed to compile $name with exception:")
+            fail(e)
+          }
         }
       res.let { result ->
-        assertEquals(it.expectedReturn, result.exitCode) {
-          "Bad exit code. Compile errors: \n${result.message}"
-        }
+        if (checkSyntaxOnly)
+          assertTrue(result.exitCode in listOf(0, 200))
+        else
+          assertEquals(program.expectedReturn, result.exitCode) {
+            "Bad exit code. Compile errors: \n${result.message}"
+          }
         assumingThat(testOutputKeywords) {
-          assertTrue(result.message.containsAll(it.expectedKeyWords))
+          assertTrue(result.message.containsAll(program.expectedKeyWords))
         }
       }
     }
-  }
+  }.iterator()
 }
 
