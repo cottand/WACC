@@ -19,7 +19,7 @@ object Main {
     val lexer = WACCLexer(stream)
     val tokens = CommonTokenStream(lexer)
     val parser = WACCParser(tokens)
-    val listener = ThrowingErrorListener
+    val listener = CollectingErrorListener
     parser.removeErrorListeners()
     parser.addErrorListener(listener)
     val syntacticErrors = listener.errorsSoFar
