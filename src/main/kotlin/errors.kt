@@ -34,7 +34,7 @@ sealed class SemanticError : CompilationError() {
  * TODO lexes?
  * the program.
  */
-object ThrowingErrorListener : BaseErrorListener() {
+object CollectingErrorListener : BaseErrorListener() {
 
   private val errors = LinkedList<SyntacticError>()
 
