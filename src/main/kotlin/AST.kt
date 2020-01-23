@@ -4,7 +4,17 @@ import antlr.WACCParser
 import arrow.core.Validated.*
 import arrow.core.invalid
 import arrow.core.valid
+<<<<<<< HEAD
 import ic.org.grammar.*
+=======
+import ic.org.grammar.Func
+import ic.org.grammar.Ident
+import ic.org.grammar.Param
+import ic.org.grammar.Prog
+import ic.org.grammar.Stat
+import ic.org.grammar.Type
+import kotlinx.collections.immutable.persistentListOf
+>>>>>>> a83df1f53afe5775b9cbf50c6f9e008434d022d0
 import kotlinx.collections.immutable.plus
 
 fun WACCParser.FuncContext.asAst(): Parsed<Func> {
@@ -32,11 +42,12 @@ private fun WACCParser.TypeContext.asAst(): Parsed<Type> {
 }
 
 fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
+  val funcs = func().map { it.asAst() }
+  val antlrStat: WACCParser.StatContext = stat()
+    ?: return persistentListOf(SyntacticError("Malformed program at $text")).invalid()
+  val stat = antlrStat.asAst()
 
-  val funcs = this.func().map { it.asAst() }
-  val stat = this.stat().asAst()
-
-  TODO("Is this Prog valid?")
+  // Check if the return type matches!
 
   return if (funcs.areAllValid && stat is Valid) {
     val validFuncs = funcs.map { (it as Valid).a }
