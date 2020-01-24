@@ -22,30 +22,25 @@ import java.io.File
  *
  * Additionally, a file that does not have the string [testingKeyword] in its path inside the
  * project will be ignored, this allowing us to select which files testing should be enabled for.
- *
- * Tests will be reported as passed if [checkSyntaxOnly] is true and and the compiler returns TODO()
- * when codes 0 or 200 are expected, meaning that we check the syntax only and do not care about
- * semantic checking.
+ 
  */
 class TestPrograms {
   // Testing constants
   private val waccExamplesPath = "./wacc_examples/"
   private val testOutputKeywords = false
   private val testingKeyword = "TEST"
-  private val checkSyntaxOnly = true
 
   private val waccFiles =
     File(waccExamplesPath).walkBottomUp()
       .filter { it.isFile && ".wacc" in it.path }
       .filter { "TEST" in it.canonicalPath } // If a
-      .map { it.asProgram() }
-      .onEach { println(it) }
+      .map { it.asProgram() }.toList()
 
   /**
-   * Tests a single [WACCProgram] according to [checkSyntaxOnly] and [testOutputKeywords], and
-   * skips the test if compilation exits with a [NotImplementedError]
+   * Tests whether the [WACCCompiler] can perform all syntactic checks on a [program] with the
+   * expected output
    */
-  private fun testProgram(program: WACCProgram) {
+  private fun testSyntax(program: WACCProgram) {
     val filename = program.file.absolutePath
     val res: CompileResult =
       try {
@@ -54,23 +49,41 @@ class TestPrograms {
         // If we are only checking the syntax and we hit a NotImplemented error, that means the
         // syntactic check succeeded and returned. So we 'fake' a 0 return code to be checked
         // later against the expected result.
-        if (e is NotImplementedError && checkSyntaxOnly) {
+        if (e is NotImplementedError) {
           CompileResult.success(0)
         } else {
-          assumeFalse(e !is NotImplementedError)
           //If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
           // for some other reason. So fail the test case.
           System.err.println("Failed to compile ${program.file.canonicalPath} with exception:")
           fail(e)
         }
       }
+    if (program.expectedReturn == 100)
+      assertEquals(100, res.exitCode)
+    else
+      assertTrue(res.exitCode in listOf(0, 200))
+  }
+
+  /**
+   * Tests whether [WACCCompiler] can compile  [program] with the expected compile output (so no
+   * runtime execution tests) according to [testOutputKeywords]
+   */
+  private fun testSemantics(program: WACCProgram) {
+    val filename = program.file.absolutePath
+    val res: CompileResult =
+      try {
+        WACCCompiler(filename).compile()
+      } catch (e: Throwable) {
+        assumeFalse(e is NotImplementedError)
+        //If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
+        // for some other reason. So fail the test case.
+        System.err.println("Failed to compile ${program.file.canonicalPath} with exception:")
+        fail(e)
+      }
     res.let { result ->
-      if (checkSyntaxOnly)
-        assertTrue(result.exitCode in listOf(0, 200) + program.expectedReturn)
-      else
-        assertEquals(program.expectedReturn, result.exitCode) {
-          "Bad exit code. Compile errors: \n${result.message}"
-        }
+      assertEquals(program.expectedReturn, result.exitCode) {
+        "Bad exit code. Compile errors: \n${result.message}"
+      }
       assumingThat(testOutputKeywords) {
         assertTrue(result.message.containsAll(program.expectedKeyWords))
       }
@@ -78,12 +91,21 @@ class TestPrograms {
   }
 
   /**
-   * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [testProgram]
+   * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [testSemantics]
    * Every one of these [DynamicTest]s are the unit tests that show up in the report.
    */
   @TestFactory
-  fun generateTestsFromFiles() = waccFiles.map {
-    DynamicTest.dynamicTest(it.file.canonicalPath) { testProgram(it) }
-  }.iterator()
+  fun semanticallyCheckPrograms() = waccFiles.map {
+    DynamicTest.dynamicTest(it.file.canonicalPath) { testSemantics(it) }
+  }
+
+  /**
+   * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [testSemantics]
+   * Every one of these [DynamicTest]s are the unit tests that show up in the report.
+   */
+  @TestFactory
+  fun syntacticallyCheckPrograms() = waccFiles.map {
+    DynamicTest.dynamicTest(it.file.canonicalPath) { testSyntax(it) }
+  }
 }
 
