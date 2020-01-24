@@ -44,7 +44,7 @@ data class ArrayLit(val exprs: List<Expr>) : AssRHS()
 data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS()
 data class Call(val id: Ident, val args: ArgList) : AssRHS()
 
-sealed class Expr : AssRHS()
+data class ExprRHS(val expr: Expr) : AssRHS()
 
 // TODO try something cleaner
 interface PairElem
@@ -55,7 +55,7 @@ data class Fst(val expr: Expr) : PairElem
 data class Snd(val expr: Expr) : PairElem
 
 sealed class AssLHS
-data class Ident(val name: String) : AssLHS()
+data class IdentLHS(val ident: Ident) : AssLHS()
 
 sealed class ArgList
 
