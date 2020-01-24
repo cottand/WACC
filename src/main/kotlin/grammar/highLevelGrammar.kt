@@ -85,23 +85,23 @@ data class BinaryOperExpr(
 ) : Expr()
 
 sealed class UnaryOper
-object NotUO : UnaryOper()
-object MinusUO : UnaryOper()
-object LenUO : UnaryOper()
-object OrdUO : UnaryOper()
-object ChrUO : UnaryOper()
+object NotUO : UnaryOper()       // !
+object MinusUO : UnaryOper()     // -
+object LenUO : UnaryOper()       // len
+object OrdUO : UnaryOper()       // ord
+object ChrUO : UnaryOper()       // chr
 
 sealed class BinaryOper
-object TimesBO : BinaryOper()
-object DivisionBO : BinaryOper()
-object ModBO : BinaryOper()
-object PlusBO : BinaryOper()
-object MinusBO : BinaryOper()
-object GtBO : BinaryOper()
-object GeqBO : BinaryOper()
-object LtBO : BinaryOper()
-object LeqBO : BinaryOper()
-object EqBO : BinaryOper()
-object NeqBO : BinaryOper()
-object AndBO : BinaryOper()
-object OrBO : BinaryOper()
+object TimesBO : BinaryOper()    // *
+object DivisionBO : BinaryOper() // /
+object ModBO : BinaryOper()      // %
+object PlusBO : BinaryOper()     // +
+object MinusBO : BinaryOper()    // -
+object GtBO : BinaryOper()       // >
+object GeqBO : BinaryOper()      // >=
+object LtBO : BinaryOper()       // <
+object LeqBO : BinaryOper()      // <=
+object EqBO : BinaryOper()       // ==
+object NeqBO : BinaryOper()      // !=
+object AndBO : BinaryOper()      // &&
+object OrBO : BinaryOper()       // ||
