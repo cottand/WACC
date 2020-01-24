@@ -20,13 +20,8 @@ data class WACCProgram(
 )
 
 /**
-<<<<<<< HEAD
  * Constructs a [WaccProgram] from a normal [File]. [this] must be a file suitable for testing,
  * @see [WaccProgram].
-=======
- * Constructs a [WACCProgram] frmo a normal [File]. [this] must be a file suitable for testing,
- * @see [WACCProgram].
->>>>>>> ws-grammar
  */
 fun File.asProgram(): WACCProgram {
   val content = this.readLines()
@@ -41,6 +36,8 @@ fun File.asProgram(): WACCProgram {
     val outputLine = content.indexOf("# Output:") + 1
     content[outputLine].filter { it != '#' }.split(' ')
   } else Collections.emptyList()
-
+if(isInvalidProg) {
+  return WACCProgram(this, 567, Collections.emptyList())
+}
   return WACCProgram(this, errorCode, output)
 }
