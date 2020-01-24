@@ -33,7 +33,7 @@ fun File.asProgram(): WACCProgram {
   } else 0
 
   val output = if (isInvalidProg) {
-    val outputLine = content.indexOf("# Output:") + 1
+    val outputLine = content.indexOf("# Output:") + 2
     content[outputLine].filter { it != '#' }.split(' ')
   } else Collections.emptyList()
   
