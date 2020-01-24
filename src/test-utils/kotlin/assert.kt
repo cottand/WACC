@@ -13,17 +13,22 @@ import java.util.Collections
  * repo, and contains information about the expected outcome of the compilation (like the exit
  * code of the compiler, contained in [expectedReturn])
  */
-data class WaccProgram(
+data class WACCProgram(
   val file: File,
   val expectedReturn: Int,
   val expectedKeyWords: List<String>
 )
 
 /**
- * Constructs a [WaccProgram] frmo a normal [File]. [this] must be a file suitable for testing,
+<<<<<<< HEAD
+ * Constructs a [WaccProgram] from a normal [File]. [this] must be a file suitable for testing,
  * @see [WaccProgram].
+=======
+ * Constructs a [WACCProgram] frmo a normal [File]. [this] must be a file suitable for testing,
+ * @see [WACCProgram].
+>>>>>>> ws-grammar
  */
-fun File.asProgram(): WaccProgram {
+fun File.asProgram(): WACCProgram {
   val content = this.readLines()
   val isInvalidProg = this.path.contains("invalid")
 
@@ -37,5 +42,5 @@ fun File.asProgram(): WaccProgram {
     content[outputLine].filter { it != '#' }.split(' ')
   } else Collections.emptyList()
 
-  return WaccProgram(this, errorCode, output)
+  return WACCProgram(this, errorCode, output)
 }

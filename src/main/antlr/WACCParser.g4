@@ -4,61 +4,64 @@ options {
   tokenVocab=WACCLexer;
 }
 
-prog: BEGIN func* stat END;
+prog: WS* BEGIN WS+ func* WS* stat WS* END WS*;
 
-func: type ID LBRACKET param_list? RBRACKET IS stat END;
+func: type WS+ ID WS* LBRACKET WS* param_list? WS* RBRACKET WS* IS WS+ stat WS+ END;
 
 stat: SKP
-| type ID ASSIGN assign_rhs
-| assign_lhs ASSIGN assign_rhs
-| READ assign_lhs
-| FREE expr
-| RETURN expr
-| EXIT expr
-| PRINT expr
-| PRINTLN expr
-| IF expr THEN stat ELSE stat FI
-| WHILE expr DO stat DONE
-| BEGIN stat END
-| stat SEMICOLON stat;
+| type WS+ ID WS* ASSIGN WS* assign_rhs
+| assign_lhs WS* ASSIGN WS* assign_rhs
+| READ WS+ assign_lhs
+| FREE WS+ expr
+| RETURN WS+ expr
+| EXIT WS+ expr
+| PRINT WS+ expr
+| PRINTLN WS+ expr
+| IF WS* expr WS* THEN WS* stat WS* ELSE WS* stat WS* FI
+| WHILE WS+ expr WS+ DO WS+ stat WS+ DONE
+| BEGIN WS+ stat WS+ END
+| stat WS* SEMICOLON WS* stat;
 
-expr: INT_LIT
+expr: expr WS* binary_op WS* expr
+| int_lit
 | BOOL_LIT
 | CHAR_LIT
 | STRING_LIT
 | PAIR_LIT
 | ID
 | array_elem
-| unary_op expr
-| expr binary_op expr
-| LBRACKET expr RBRACKET;
+| unary_op WS* expr
+| LBRACKET WS* expr WS* RBRACKET;
 
 // Assignments
 assign_lhs: ID | array_elem | pair_elem;
 assign_rhs: expr
 | array_lit
-| NEWPAIR LBRACKET expr COMMA expr RBRACKET
+| NEWPAIR WS* LBRACKET WS* expr WS* COMMA WS* expr WS* RBRACKET
 | pair_elem
-| CALL ID LBRACKET (arg_list)? RBRACKET;
+| CALL WS+ ID WS* LBRACKET WS* (arg_list)? WS* RBRACKET;
 
 // Param & args
-param_list: param (COMMA param)*;
-param: type ID;
+param_list: param WS* (COMMA WS* param)*;
+param: type WS+ ID;
 
-arg_list: expr (COMMA expr)*;
+arg_list: expr WS* (COMMA WS* expr)*;
 
 // Types
 type: base_type | array_type | pair_type;
 base_type: INT | BOOL | CHAR | STRING;
 
-array_type: (base_type | pair_type) LSQBRACKET RSQBRACKET | array_type LSQBRACKET RSQBRACKET;
-array_elem: ID (LSQBRACKET expr RSQBRACKET)+;
+array_type: (base_type | pair_type) WS* LSQBRACKET WS* RSQBRACKET | array_type WS* LSQBRACKET WS* RSQBRACKET;
+array_elem: ID WS* (LSQBRACKET WS* expr WS* RSQBRACKET)+;
 
-pair_type: PAIR LBRACKET pair_elem_type COMMA pair_elem_type RBRACKET;
+pair_type: PAIR WS* LBRACKET WS* pair_elem_type WS* COMMA WS* pair_elem_type WS* RBRACKET;
+
 pair_elem_type: base_type | array_type | PAIR;
-pair_elem: FST expr | SND expr;
+pair_elem: FST WS+ expr | SND WS+ expr;
 
-array_lit: LSQBRACKET (expr (COMMA expr)*)? RSQBRACKET;
+// Literals
+array_lit: LSQBRACKET WS* (expr WS* (COMMA WS* expr WS*)*)? WS* RSQBRACKET;
+int_lit: SIGN? WS* INTEGER;
 
 // Operators
 unary_op: NOT

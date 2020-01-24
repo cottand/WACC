@@ -30,7 +30,7 @@ dependencies {
   implementation("io.arrow-kt:arrow-syntax:$arrowVer")
   antlr("org.antlr:antlr4:$antlrVer")
 
-  testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
+  testImplementation("org.junit.jupiter:junit-jupiter:5.6.0")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
 
 }
