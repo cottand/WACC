@@ -20,13 +20,8 @@ data class WACCProgram(
 )
 
 /**
-<<<<<<< HEAD
- * Constructs a [WaccProgram] from a normal [File]. [this] must be a file suitable for testing,
- * @see [WaccProgram].
-=======
  * Constructs a [WACCProgram] frmo a normal [File]. [this] must be a file suitable for testing,
  * @see [WACCProgram].
->>>>>>> ws-grammar
  */
 fun File.asProgram(): WACCProgram {
   val content = this.readLines()
