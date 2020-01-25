@@ -12,6 +12,9 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.fail
 import java.io.File
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+import kotlin.time.toDuration
 
 /**
  * This test class will scan the wacc_examples directory, and attempt to compile all files, one
@@ -41,6 +44,7 @@ class TestPrograms {
    * Tests whether the [WACCCompiler] can perform all syntactic checks on a [program] with the
    * expected output
    */
+  @ExperimentalTime
   private fun testSyntax(program: WACCProgram) {
     program.file.readText().print()
     program.file.canonicalPath.print()
@@ -53,7 +57,8 @@ class TestPrograms {
         // syntactic check succeeded and returned. So we 'fake' a 0 return code to be checked
         // later against the expected result.
         if (e is NotImplementedError) {
-          CompileResult.success(0)
+          //TODO Check the Duration casting
+          CompileResult.success(0.toDuration(DurationUnit.SECONDS))
         } else {
           //If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
           // for some other reason. So fail the test case.
@@ -74,6 +79,7 @@ class TestPrograms {
    * Tests whether [WACCCompiler] can compile  [program] with the expected compile output (so no
    * runtime execution tests) according to [testOutputKeywords]
    */
+  @ExperimentalTime
   private fun testSemantics(program: WACCProgram) {
     val filename = program.file.absolutePath
     val res: CompileResult =
@@ -100,6 +106,7 @@ class TestPrograms {
    * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [testSemantics]
    * Every one of these [DynamicTest]s are the unit tests that show up in the report.
    */
+  @ExperimentalTime
   @TestFactory
   fun semanticallyCheckPrograms() = waccFiles.map {
     DynamicTest.dynamicTest(it.file.canonicalPath) { testSemantics(it) }
@@ -109,6 +116,7 @@ class TestPrograms {
    * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [testSemantics]
    * Every one of these [DynamicTest]s are the unit tests that show up in the report.
    */
+  @ExperimentalTime
   @TestFactory
   fun syntacticallyCheckPrograms() = waccFiles.map {
     DynamicTest.dynamicTest(it.file.canonicalPath) { testSyntax(it) }
