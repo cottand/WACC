@@ -49,6 +49,7 @@ class TestPrograms {
     program.file.readText().print()
     program.file.canonicalPath.print()
     val filename = program.file.absolutePath
+    println(filename)
     val res: CompileResult =
       try {
         WACCCompiler(filename).compile()
@@ -113,13 +114,13 @@ class TestPrograms {
   }
 
   /**
-   * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [testSemantics]
+   * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [testSyntax]
    * Every one of these [DynamicTest]s are the unit tests that show up in the report.
    */
   @ExperimentalTime
   @TestFactory
   fun syntacticallyCheckPrograms() = waccFiles.map {
-    DynamicTest.dynamicTest(it.file.canonicalPath) { testSyntax(it) }
+    DynamicTest.dynamicTest(it.file.absolutePath) { testSyntax(it) }
   }
 }
 

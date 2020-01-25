@@ -51,7 +51,7 @@ class WACCCompiler(private val filename: String) {
         exitCode = syntacticErrors.first().code,
         message = syntacticErrors.asLines(filename)
       )
-    else when (val ast = parser.prog().asAst()) {
+    else when (val ast = parser.prog().asAst(GlobalScope)) {
       is Valid -> CompileResult.success(duration = start.elapsedNow())
       is Invalid -> CompileResult(
         success = false,

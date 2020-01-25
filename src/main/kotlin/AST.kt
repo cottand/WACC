@@ -1,18 +1,19 @@
 package ic.org
 
 import antlr.WACCParser
-import arrow.core.Validated.Valid
+import arrow.core.Validated.*
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.grammar.*
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
-import org.antlr.v4.runtime.ParserRuleContext
 
-fun WACCParser.FuncContext.asAst(): Parsed<Func> {
-  val type = this.type().asAst()
+fun WACCParser.FuncContext.asAst(scope: Scope): Parsed<Func> {
+  println("parsing func")
+  val type = this.type().asAst(ControlFlowScope(scope))
   val ident = Ident(this.ID().text).valid() // TODO are there any checks on identifiers needed
-  val params = param_list().param().map { it.asAst() }
-  val stat = stat().asAst()
+  val params = param_list().param().map { it.asAst(ControlFlowScope(scope)) }
+  val stat = stat().asAst(ControlFlowScope(scope))
 
   //TODO("Is this func valid? We probably need to make checks on the stat")
 
@@ -24,17 +25,20 @@ fun WACCParser.FuncContext.asAst(): Parsed<Func> {
   }
 }
 
-private fun WACCParser.ParamContext.asAst(): Parsed<Param> {
+private fun WACCParser.ParamContext.asAst(scope: Scope): Parsed<Param> {
   TODO("not implemented")
 }
 
-private fun WACCParser.TypeContext.asAst(): Parsed<Type> {
+private fun WACCParser.TypeContext.asAst(scope: Scope): Parsed<Type> {
   TODO("not implemented")
 }
 
-fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
-  val funcs = func().map { it.asAst() }
-  val stat = stat().asAst()
+fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
+  println("parsing prog")
+  val funcs = func().map { it.asAst(ControlFlowScope(scope)) }
+  val antlrStat = stat()
+    ?: return persistentListOf(SyntacticError("Malformed program at $text")).invalid()
+  val stat = antlrStat.asAst(ControlFlowScope(scope))
 
   // Check if the return type matches!
 
@@ -42,13 +46,13 @@ fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
     val validFuncs = funcs.map { (it as Valid).a }
     Prog(validFuncs, stat.a).valid()
   } else {
-    funcs.errors.plus(stat.errors).invalid()
+    (funcs.errors + stat.errors).invalid()
   }
 }
 
-private fun WACCParser.StatContext.asAst(): Parsed<Stat> = TODO()
+private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> = TODO()
 
-private fun WACCParser.ExprContext.asAst(): Parsed<Expr> {
+private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> {
   when {
     int_lit() != null -> IntExpr(TODO())
     BOOL_LIT() != null -> BoolExpr(TODO())
