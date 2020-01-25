@@ -4,13 +4,9 @@ import antlr.WACCParser
 import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.grammar.Func
-import ic.org.grammar.Ident
-import ic.org.grammar.Param
-import ic.org.grammar.Prog
-import ic.org.grammar.Stat
-import ic.org.grammar.Type
+import ic.org.grammar.*
 import kotlinx.collections.immutable.plus
+import org.antlr.v4.runtime.ParserRuleContext
 
 fun WACCParser.FuncContext.asAst(): Parsed<Func> {
   val type = this.type().asAst()
@@ -38,8 +34,7 @@ private fun WACCParser.TypeContext.asAst(): Parsed<Type> {
 
 fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
   val funcs = func().map { it.asAst() }
-  val antlrStat: WACCParser.StatContext = stat()
-  val stat = antlrStat.asAst()
+  val stat = stat().asAst()
 
   // Check if the return type matches!
 
@@ -52,4 +47,21 @@ fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
 }
 
 private fun WACCParser.StatContext.asAst(): Parsed<Stat> = TODO()
+
+private fun WACCParser.ExprContext.asAst(): Parsed<Expr> {
+  when {
+    int_lit() != null -> IntExpr(TODO())
+    BOOL_LIT() != null -> BoolExpr(TODO())
+    CHAR_LIT() != null -> CharExpr(TODO())
+    STRING_LIT() != null -> StrExpr(TODO())
+    PAIR_LIT() != null -> NullPairExpr
+    ID() != null -> IdentExpr(TODO())
+    array_elem() != null -> ArrayElemExpr(TODO())
+    unary_op() != null -> UnaryOperExpr(TODO(), TODO())
+    binary_op() != null -> BinaryOperExpr(TODO(), TODO(), TODO())
+  }
+  TODO()
+}
+
+
 

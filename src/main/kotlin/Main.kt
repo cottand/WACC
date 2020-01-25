@@ -4,6 +4,7 @@ import antlr.WACCLexer
 import antlr.WACCParser
 import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
+import ic.org.grammar.GlobalScope
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
