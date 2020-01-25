@@ -4,12 +4,14 @@ stages:
         - deploy
 
 
-build:
+assemble:
         stage: compile
-        script: ./gradlew build
+        script: ./gradlew assemble
 
 check:
         stage: test
+        dependencies:
+                - compile
         script: ./gradlew check -i
         artifacts:
                 paths:
