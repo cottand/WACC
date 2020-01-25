@@ -38,12 +38,14 @@ data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope
 
 // <assign-lhs>
 sealed class AssLHS
+
 data class IdentLHS(val ident: Ident) : AssLHS()
 data class ArrauElemLHS(val arrayElem: ArrayElem) : AssLHS()
 data class PairElemLHS(val pairElem: PairElem) : AssLHS()
 
 // <assign-rhs>
 sealed class AssRHS
+
 data class ExprRHS(val expr: Expr) : AssRHS()
 data class ArrayLit(val exprs: List<Expr>) : AssRHS()
 data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS()
@@ -52,29 +54,34 @@ data class Call(val id: Ident, val args: List<Expr>) : AssRHS()
 
 // <pair-elem>
 sealed class PairElem
+
 data class Fst(val expr: Expr) : PairElem()
 data class Snd(val expr: Expr) : PairElem()
 
 // <type>
 sealed class Type
+
 sealed class BaseT : Type()
 data class ArrayT(val type: Type) : Type()
 data class PairT(val fstT: PairElemT, val sndT: PairElemT) : Type()
 
 // <base-type>
 object IntT : BaseT()
+
 object BoolT : BaseT()
 object CharT : BaseT()
 object StringT : BaseT()
 
 // <pair-elem-type>
 sealed class PairElemT
+
 data class PairElemBaseT(val baseType: BaseT) : PairElemT()
 data class PairElemArrayT(val arrayType: ArrayT) : PairElemT()
 object NDPairT : PairElemT()
 
 // <expr>
 sealed class Expr
+
 data class IntExpr(val value: Int) : Expr()
 data class BoolExpr(val value: Boolean) : Expr()
 data class CharExpr(val value: Char) : Expr()
@@ -82,10 +89,7 @@ data class StrExpr(val value: String) : Expr()
 object NullPairExpr : Expr()
 data class IdentExpr(val ident: Ident) : Expr()
 data class ArrayElemExpr(val arrayElem: ArrayElem) : Expr()
-data class UnaryOperExpr(
-  val unaryOper: UnaryOper,
-  val expr: Expr
-) : Expr()
+data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr()
 data class BinaryOperExpr(
   val expr1: Expr,
   val binaryOper: BinaryOper,
@@ -94,6 +98,7 @@ data class BinaryOperExpr(
 
 // <unary-oper>
 sealed class UnaryOper
+
 object NotUO : UnaryOper()       // !
 object MinusUO : UnaryOper()     // -
 object LenUO : UnaryOper()       // len
@@ -102,6 +107,7 @@ object ChrUO : UnaryOper()       // chr
 
 // <binary-oper>
 sealed class BinaryOper
+
 object TimesBO : BinaryOper()    // *
 object DivisionBO : BinaryOper() // /
 object ModBO : BinaryOper()      // %
