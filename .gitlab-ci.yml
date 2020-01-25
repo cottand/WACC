@@ -11,7 +11,7 @@ assemble:
 check:
         stage: test
         dependencies:
-                - compile
+                - assemble
         script: ./gradlew check -i
         artifacts:
                 paths:
