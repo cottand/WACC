@@ -8,12 +8,12 @@ import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 
-fun WACCParser.FuncContext.asAst(): Parsed<Func> {
+fun WACCParser.FuncContext.asAst(scope: Scope): Parsed<Func> {
   println("parsing func")
-  val type = this.type().asAst()
+  val type = this.type().asAst(ControlFlowScope(scope))
   val ident = Ident(this.ID().text).valid() // TODO are there any checks on identifiers needed
-  val params = param_list().param().map { it.asAst() }
-  val stat = stat().asAst()
+  val params = param_list().param().map { it.asAst(ControlFlowScope(scope)) }
+  val stat = stat().asAst(ControlFlowScope(scope))
 
   TODO("Is this func valid? We probably need to make checks on the stat")
 
@@ -25,22 +25,22 @@ fun WACCParser.FuncContext.asAst(): Parsed<Func> {
   }
 }
 
-private fun WACCParser.ParamContext.asAst(): Parsed<Param>  {
+private fun WACCParser.ParamContext.asAst(scope: Scope): Parsed<Param>  {
   println("parsing param")
   TODO("not implemented")
 }
 
-private fun WACCParser.TypeContext.asAst(): Parsed<Type> {
+private fun WACCParser.TypeContext.asAst(scope: Scope): Parsed<Type> {
   println("parsing type")
   TODO("not implemented")
 }
 
-fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
+fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
   println("parsing prog")
-  val funcs = func().map { it.asAst() }
+  val funcs = func().map { it.asAst(ControlFlowScope(scope)) }
   val antlrStat = stat()
     ?: return persistentListOf(SyntacticError("Malformed program at $text")).invalid()
-  val stat = antlrStat.asAst()
+  val stat = antlrStat.asAst(ControlFlowScope(scope))
 
   // Check if the return type matches!
 
@@ -52,15 +52,11 @@ fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
   }
 }
 
-private fun WACCParser.StatContext.asAst(): Parsed<Stat> {
-  println("parsing stat")
+private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
   TODO()
 }
-//when {
-//  this.READ() != null -> Read((this.assign_lhs().asAst() as Valid).a,  )
-//}
 
-private fun WACCParser.Assign_lhsContext.asAst(): Parsed<AssLHS>
+private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS>
 {
   TODO()
 }

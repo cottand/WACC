@@ -4,6 +4,7 @@ import antlr.WACCLexer
 import antlr.WACCParser
 import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
+import ic.org.grammar.GlobalScope
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
@@ -50,7 +51,7 @@ class WACCCompiler(private val filename: String) {
         exitCode = syntacticErrors.first().code,
         message = syntacticErrors.asLines(filename)
       )
-    else when (val ast = parser.prog().asAst()) {
+    else when (val ast = parser.prog().asAst(GlobalScope)) {
       is Valid -> CompileResult.success(duration = start.elapsedNow())
       is Invalid -> CompileResult(
         success = false,
