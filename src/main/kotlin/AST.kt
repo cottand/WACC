@@ -1,11 +1,15 @@
 package ic.org
 
 import antlr.WACCParser
-import arrow.core.Validated.*
+import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.grammar.*
-import kotlinx.collections.immutable.persistentListOf
+import ic.org.grammar.Func
+import ic.org.grammar.Ident
+import ic.org.grammar.Param
+import ic.org.grammar.Prog
+import ic.org.grammar.Stat
+import ic.org.grammar.Type
 import kotlinx.collections.immutable.plus
 
 fun WACCParser.FuncContext.asAst(): Parsed<Func> {
@@ -35,7 +39,6 @@ private fun WACCParser.TypeContext.asAst(): Parsed<Type> {
 fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
   val funcs = func().map { it.asAst() }
   val antlrStat: WACCParser.StatContext = stat()
-    ?: return persistentListOf(SyntacticError("Malformed program at $text")).invalid()
   val stat = antlrStat.asAst()
 
   // Check if the return type matches!

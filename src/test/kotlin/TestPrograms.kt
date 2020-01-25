@@ -3,6 +3,7 @@
 import ic.org.CompileResult
 import ic.org.WACCCompiler
 import ic.org.containsAll
+import ic.org.print
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeFalse
@@ -22,7 +23,7 @@ import java.io.File
  *
  * Additionally, a file that does not have the string [testingKeyword] in its path inside the
  * project will be ignored, this allowing us to select which files testing should be enabled for.
- 
+
  */
 class TestPrograms {
   // Testing constants
@@ -41,6 +42,8 @@ class TestPrograms {
    * expected output
    */
   private fun testSyntax(program: WACCProgram) {
+    program.file.readText().print()
+    program.file.canonicalPath.print()
     val filename = program.file.absolutePath
     val res: CompileResult =
       try {
@@ -61,7 +64,10 @@ class TestPrograms {
     if (program.expectedReturn == 100)
       assertEquals(100, res.exitCode)
     else
-      assertTrue(res.exitCode in listOf(0, 200))
+      assertTrue(res.exitCode in listOf(0, 200)) {
+        "Unexpected failure, expected a succesful syntax check (and that did not happen).\n" +
+          "  Errors:\n ${res.message}"
+      }
   }
 
   /**
