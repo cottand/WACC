@@ -30,6 +30,8 @@ dependencies {
   implementation("io.arrow-kt:arrow-syntax:$arrowVer")
   antlr("org.antlr:antlr4:$antlrVer")
 
+  implementation("com.github.kizitonwose.time:time:1.0.3")
+
   testImplementation("org.junit.jupiter:junit-jupiter:5.6.0")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
 
