@@ -6,7 +6,7 @@ options {
 
 prog: WS* BEGIN WS+ func* WS* stat WS* END WS*;
 
-func: type WS+ ID WS* LBRACKET WS* param_list? WS* RBRACKET WS* IS WS+ stat WS+ END;
+func: type WS+ ID WS* LBRACKET WS* param_list? WS* RBRACKET WS* IS WS* stat WS* END WS*;
 
 stat: SKP
 | type WS+ ID WS* ASSIGN WS* assign_rhs
@@ -15,11 +15,11 @@ stat: SKP
 | FREE WS+ expr
 | RETURN WS+ expr
 | EXIT WS+ expr
-| PRINT WS+ expr
+| PRINT WS* expr
 | PRINTLN WS+ expr
 | IF WS* expr WS* THEN WS* stat WS* ELSE WS* stat WS* FI
-| WHILE WS+ expr WS+ DO WS+ stat WS+ DONE
-| BEGIN WS+ stat WS+ END
+| WHILE WS* expr WS* DO WS* stat WS* DONE
+| BEGIN WS* stat WS* END
 | stat WS* SEMICOLON WS* stat;
 
 expr: expr WS* binary_op WS* expr
@@ -61,7 +61,9 @@ pair_elem: FST WS+ expr | SND WS+ expr;
 
 // Literals
 array_lit: LSQBRACKET WS* (expr WS* (COMMA WS* expr WS*)*)? WS* RSQBRACKET;
-int_lit: SIGN? WS* INTEGER;
+int_lit: int_sign? WS* INTEGER;
+
+int_sign: PLUS | MINUS;
 
 // Operators
 unary_op: NOT

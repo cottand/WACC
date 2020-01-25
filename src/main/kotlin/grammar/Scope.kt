@@ -48,6 +48,9 @@ object GlobalScope : Scope() {
  * [ControlFlowScope] defined inside the [Func].
  */
 data class FuncScope(val func: Func) : Scope() {
+
+  // A [FuncScope] does not have any parent scopes, so if the variable is not here, return an
+  // option.
   override fun getVar(ident: Ident): Option<Variable> = varMap[ident].toOption()
 }
 
@@ -59,8 +62,8 @@ data class FuncScope(val func: Func) : Scope() {
  */
 data class ControlFlowScope(val parent: Scope) : Scope() {
 
+  // Return whatever ident is found in this scope's varMap, and look in its parent's otherwise.
   override fun getVar(ident: Ident): Option<Variable> =
-    // Return whatever ident is found in this scope's varMap, and look in its parent's otherwise.
     varMap[ident].toOption() or parent.getVar(ident)
 
   data class Variable(val declaringStat: Decl, val value: Nothing) // TODO revisit at backend
