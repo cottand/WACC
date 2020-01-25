@@ -9,7 +9,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 
 fun WACCParser.FuncContext.asAst(scope: Scope): Parsed<Func> {
-  println("parsing func")
   val type = this.type().asAst(ControlFlowScope(scope))
   val ident = Ident(this.ID().text).valid() // TODO are there any checks on identifiers needed
   val params = param_list().param().map { it.asAst(ControlFlowScope(scope)) }
@@ -34,7 +33,6 @@ private fun WACCParser.TypeContext.asAst(scope: Scope): Parsed<Type> {
 }
 
 fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
-  println("parsing prog")
   val funcs = func().map { it.asAst(ControlFlowScope(scope)) }
   val antlrStat = stat()
     ?: return persistentListOf(SyntacticError("Malformed program at $text")).invalid()
