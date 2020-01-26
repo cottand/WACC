@@ -50,7 +50,7 @@ fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
 
 private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> = TODO()
 
-private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> {
+private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
   when {
     int_lit() != null -> IntExpr(TODO())
     BOOL_LIT() != null -> BoolExpr(TODO())
@@ -61,8 +61,8 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> {
     array_elem() != null -> ArrayElemExpr(TODO())
     unary_op() != null -> UnaryOperExpr(TODO(), TODO())
     binary_op() != null -> BinaryOperExpr(TODO(), TODO(), TODO())
+    else ->
   }
-  TODO()
 }
 
 

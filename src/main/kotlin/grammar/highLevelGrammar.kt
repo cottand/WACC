@@ -82,10 +82,10 @@ object NDPairT : PairElemT()
 // <expr>
 sealed class Expr
 
-data class IntExpr(val value: Int) : Expr()
-data class BoolExpr(val value: Boolean) : Expr()
-data class CharExpr(val value: Char) : Expr()
-data class StrExpr(val value: String) : Expr()
+data class IntLit(val value: Int) : Expr()
+data class BoolLit(val value: Boolean) : Expr()
+data class CharLit(val value: Char) : Expr()
+data class StrLit(val value: String) : Expr()
 object NullPairExpr : Expr()
 data class IdentExpr(val ident: Ident) : Expr()
 data class ArrayElemExpr(val arrayElem: ArrayElem) : Expr()
