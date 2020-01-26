@@ -5,6 +5,8 @@ import antlr.WACCParser
 import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
 import ic.org.grammar.GlobalScope
+import ic.org.listeners.CollectingErrorListener
+import ic.org.listeners.DummyListener
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker

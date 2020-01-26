@@ -1,5 +1,6 @@
-package ic.org
+package ic.org.listeners
 
+import ic.org.SyntacticError
 import kotlinx.collections.immutable.toPersistentList
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.RecognitionException

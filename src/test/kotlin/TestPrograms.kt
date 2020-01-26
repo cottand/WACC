@@ -12,9 +12,8 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.fail
 import java.io.File
-import kotlin.time.DurationUnit
+import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
-import kotlin.time.toDuration
 
 /**
  * This test class will scan the wacc_examples directory, and attempt to compile all files, one
@@ -28,6 +27,7 @@ import kotlin.time.toDuration
  * project will be ignored, this allowing us to select which files testing should be enabled for.
 
  */
+@ExperimentalTime
 class TestPrograms {
   // Testing constants
   private val waccExamplesPath = "./wacc_examples/"
@@ -44,7 +44,6 @@ class TestPrograms {
    * Tests whether the [WACCCompiler] can perform all syntactic checks on a [program] with the
    * expected output
    */
-  @ExperimentalTime
   private fun testSyntax(program: WACCProgram) {
     program.file.readText().print()
     program.file.canonicalPath.print()
@@ -59,7 +58,7 @@ class TestPrograms {
         // later against the expected result.
         if (e is NotImplementedError) {
           //TODO Check the Duration casting
-          CompileResult.success(0.toDuration(DurationUnit.SECONDS))
+          CompileResult.success(Duration.ZERO)
         } else {
           //If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
           // for some other reason. So fail the test case.
