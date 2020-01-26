@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.extensions.list.foldable.forAll
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
+import org.antlr.v4.runtime.tree.TerminalNode
 
 /**
  * Returns whether a [List] of [Either] contains any [Either.Left]

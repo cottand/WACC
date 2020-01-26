@@ -52,16 +52,23 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> = TODO()
 
 private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
   when {
-    int_lit() != null -> IntExpr(TODO())
-    BOOL_LIT() != null -> BoolExpr(TODO())
-    CHAR_LIT() != null -> CharExpr(TODO())
-    STRING_LIT() != null -> StrExpr(TODO())
-    PAIR_LIT() != null -> NullPairExpr
-    ID() != null -> IdentExpr(TODO())
-    array_elem() != null -> ArrayElemExpr(TODO())
-    unary_op() != null -> UnaryOperExpr(TODO(), TODO())
-    binary_op() != null -> BinaryOperExpr(TODO(), TODO(), TODO())
-    else ->
+    // TODO check there are no cases where toInt() ot toBoolean() would fail
+    int_lit() != null -> IntLit(int_lit().text.toInt()).valid()
+    BOOL_LIT() != null -> BoolLit(BOOL_LIT().text!!.toBoolean()).valid()
+    CHAR_LIT() != null -> CharLit(CHAR_LIT().text.toCharArray()[0]).valid()
+    STRING_LIT() != null -> StrLit(STRING_LIT().text).valid()
+    PAIR_LIT() != null -> NullPairLit.valid()
+    ID() != null ->
+      scope[ID().text].fold({
+        val (line, col) = ID().let { it.symbol.line to it.symbol.charPositionInLine + 1 }
+        VarNotFoundError("At $line:$col, variable not defined: ${ID().text}").toInvalidParsed()
+      }, {
+        IdentExpr(it.declaringStat.id).valid()
+      })
+    array_elem() != null -> ArrayElemExpr(TODO()).valid()
+    unary_op() != null -> UnaryOperExpr(TODO(), TODO()).valid()
+    binary_op() != null -> BinaryOperExpr(TODO(), TODO(), TODO()).valid()
+    else -> TODO()
   }
 }
 

@@ -4,6 +4,7 @@ import arrow.core.Validated
 import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
+import arrow.core.invalid
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -31,6 +32,7 @@ private const val semanticErrorCode = 200
 sealed class CompilationError {
   abstract val msg: String
   abstract val code: Int
+  fun toInvalidParsed() = persistentListOf(this).invalid()
 }
 
 data class SyntacticError(override val msg: String) : CompilationError() {
@@ -40,6 +42,8 @@ data class SyntacticError(override val msg: String) : CompilationError() {
 sealed class SemanticError : CompilationError() {
   override val code = semanticErrorCode
 }
+
+data class VarNotFoundError(override val msg: String) : SemanticError()
 
 inline val <A> Parsed<A>.errors: Errors
   get() = when (this) {
