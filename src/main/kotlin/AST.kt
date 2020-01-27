@@ -1,6 +1,8 @@
 package ic.org
 
 import antlr.WACCParser
+import antlr.WACCParser.Array_elemContext
+import antlr.WACCParser.ExprContext
 import arrow.core.Validated.*
 import arrow.core.invalid
 import arrow.core.valid
@@ -62,33 +64,32 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
     STRING_LIT() != null -> StrLit(STRING_LIT().text).valid()
     PAIR_LIT() != null -> NullPairLit.valid()
 
-    ID() != null ->
-      scope[ID().text].fold({
-        VarNotFoundError(ID().position, ID().text).toInvalidParsed()
-      }, { variable ->
-        IdentExpr(variable).valid()
-      })
-    // TODO check if calling array_elem() twice is possibly a bad idea cos we are getting a child
-    //  twice
+    ID() != null -> scope[ID().text].fold({
+      VarNotFoundError(ID().position, ID().text).toInvalidParsed()
+    }, { variable ->
+      IdentExpr(variable).valid()
+    })
 
-    array_elem() != null -> {
-      val id = array_elem().ID().text
-      val exprs = array_elem().expr().map { it.asAst(scope) }
-      scope[id].fold({
-        (exprs.errors + VarNotFoundError(startPosition, id)).invalid()
-          as Parsed<Expr>
-      }, {
-        if (exprs.areAllValid)
-          ArrayElemExpr.make(startPosition, it.declaringStat.id, exprs.valids, scope)
-        else
-          exprs.errors.invalid()
-      })
-    }
+    array_elem() != null -> array_elem().asAst(scope)
 
     unary_op() != null -> UnaryOperExpr(TODO(), TODO()).valid()
     binary_op() != null -> BinaryOperExpr(TODO(), TODO(), TODO()).valid()
     else -> TODO()
   }
+
+private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
+  val id = ID().text
+  val exprs = expr().map { it.asAst(scope) }
+  return scope[id].fold({
+    (exprs.errors + VarNotFoundError(startPosition, id)).invalid()
+      as Parsed<ArrayElemExpr>
+  }, {
+    if (exprs.areAllValid)
+      ArrayElemExpr.make(startPosition, it, exprs.valids)
+    else
+      exprs.errors.invalid()
+  })
+}
 
 
 

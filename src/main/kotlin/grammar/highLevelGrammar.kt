@@ -140,7 +140,7 @@ data class IdentExpr(val vari: Variable) : Expr() {
 }
 
 data class ArrayElemExpr internal constructor(
-  val ident: Ident,
+  val variable: Variable,
   val exprs: List<Expr>,
   override val type: Type
 ) : Expr() {
@@ -153,24 +153,21 @@ data class ArrayElemExpr internal constructor(
   //}
 
   companion object {
-    fun make(pos: Position, ident: Ident, exprs: List<Expr>, scope: Scope): Parsed<ArrayElemExpr> {
-      return scope[ident].fold({
-        //ifEmpty
-        VarNotFoundError(pos, ident.name).toInvalidParsed()
-      }, { variable ->
-        val arrType = variable.type
-        when {
-          !exprs.forAll { it.type == IntT } -> {
-            val badExpr =
-              exprs.find { it.type != IntT }.getOrElse { throw IllegalArgumentException() }
-            IllegalArrayAccess(pos, badExpr.toString(), badExpr.type).toInvalidParsed()
-          }
-          arrType !is ArrayT -> TODO("Illegal type exception")
-          exprs.size > arrType.depth -> TODO("Illegal type e")
-          else -> ArrayElemExpr(ident, exprs, arrType.nthNestedType(exprs.size)).valid()
+    /**
+     * Builds a type safe [ArrayElemExpr] from [variable]    */
+    fun make(pos: Position, variable: Variable, exprs: List<Expr>): Parsed<ArrayElemExpr> {
+      val arrType = variable.type
+      return when {
+        // Array access indexes must evaluate to ints
+        !exprs.forAll { it.type == IntT } -> {
+          val badExpr =
+            exprs.find { it.type != IntT }.getOrElse { throw IllegalArgumentException() }
+          IllegalArrayAccess(pos, badExpr.toString(), badExpr.type).toInvalidParsed()
         }
-      })
-      // Array access indexes must evaluate to ints
+        arrType !is ArrayT -> TODO("Illegal type exception")
+        exprs.size > arrType.depth -> TODO("Illegal type exception")
+        else -> ArrayElemExpr(variable, exprs, arrType.nthNestedType(exprs.size)).valid()
+      }
     }
   }
 }
