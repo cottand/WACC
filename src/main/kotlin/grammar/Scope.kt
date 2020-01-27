@@ -3,7 +3,6 @@ package ic.org.grammar
 import arrow.core.Option
 import arrow.core.or
 import arrow.core.toOption
-import ic.org.grammar.ControlFlowScope.Variable
 import java.util.LinkedList
 
 /**
@@ -67,9 +66,9 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
   // Return whatever ident is found in this scope's varMap, and look in its parent's otherwise.
   override fun getVar(ident: Ident): Option<Variable> =
     varMap[ident].toOption() or parent.getVar(ident)
+}
 
-  data class Variable(val declaringStat: Decl, val value: Nothing) { // TODO revisit at backend
-    val type = declaringStat.type
-  }
+data class Variable(val declaringStat: Decl, val value: Nothing) { // TODO revisit at backend
+  val type = declaringStat.type
 }
 

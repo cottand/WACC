@@ -5,7 +5,6 @@ import arrow.core.extensions.list.foldable.forAll
 import arrow.core.getOrElse
 import arrow.core.valid
 import ic.org.*
-import ic.org.grammar.ControlFlowScope.Variable
 import java.lang.IllegalArgumentException
 
 // <program>
