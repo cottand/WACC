@@ -57,13 +57,9 @@ sourceSets["test"].withConvention(KotlinSourceSet::class) {
   kotlin.srcDir("src/test-utils/kotlin")
 }
 
-val ignoreTestFailures: String by project
 tasks {
   test {
     useJUnitPlatform()
-    if (project.hasProperty("ignoreTestFailures")) {
-      ignoreFailures = ignoreTestFailures.toBoolean()
-    }
   }
 
   withType<KotlinCompile>().configureEach {
