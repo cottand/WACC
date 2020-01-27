@@ -21,10 +21,12 @@ sealed class Scope {
    * parent's, this scope's will be returned.
    */
   abstract fun getVar(ident: Ident): Option<Variable>
+
   fun getVar(identName: String) = getVar(Ident(identName))
 
   // Some syntactic sugar
   operator fun get(ident: Ident) = getVar(ident)
+
   operator fun get(identName: String) = getVar(identName)
 
   /**
@@ -66,6 +68,8 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
   override fun getVar(ident: Ident): Option<Variable> =
     varMap[ident].toOption() or parent.getVar(ident)
 
-  data class Variable(val declaringStat: Decl, val value: Nothing) // TODO revisit at backend
+  data class Variable(val declaringStat: Decl, val value: Nothing) { // TODO revisit at backend
+    val type = declaringStat.type
+  }
 }
 

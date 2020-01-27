@@ -10,7 +10,9 @@ import kotlinx.collections.immutable.plus
 
 fun WACCParser.FuncContext.asAst(scope: Scope): Parsed<Func> {
   val type = this.type().asAst(ControlFlowScope(scope))
-  val ident = Ident(this.ID().text).valid() // TODO are there any checks on identifiers needed
+  // TODO are there any checks on identifiers needed
+  if (type !is Valid) return type.errors.invalid()
+  val ident = Ident(this.ID().text).valid()
   val params = param_list().param().map { it.asAst(ControlFlowScope(scope)) }
   val stat = stat().asAst(ControlFlowScope(scope))
 
@@ -64,7 +66,7 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
       scope[ID().text].fold({
         VarNotFoundError(ID().position, ID().text).toInvalidParsed()
       }, { variable ->
-        IdentExpr(variable.declaringStat.id).valid()
+        IdentExpr(variable).valid()
       })
     // TODO check if calling array_elem() twice is possibly a bad idea cos we are getting a child
     //  twice
@@ -77,11 +79,12 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
           as Parsed<Expr>
       }, {
         if (exprs.areAllValid)
-          ArrayElemExpr.make(startPosition, it.declaringStat.id, exprs.valids)
+          ArrayElemExpr.make(startPosition, it.declaringStat.id, exprs.valids, scope)
         else
           exprs.errors.invalid()
       })
     }
+
     unary_op() != null -> UnaryOperExpr(TODO(), TODO()).valid()
     binary_op() != null -> BinaryOperExpr(TODO(), TODO(), TODO()).valid()
     else -> TODO()

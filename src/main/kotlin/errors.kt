@@ -5,6 +5,7 @@ import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.invalid
+import arrow.core.valid
 import ic.org.grammar.Type
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf

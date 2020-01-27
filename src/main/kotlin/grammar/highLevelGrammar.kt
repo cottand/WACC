@@ -5,6 +5,7 @@ import arrow.core.extensions.list.foldable.forAll
 import arrow.core.getOrElse
 import arrow.core.valid
 import ic.org.*
+import ic.org.grammar.ControlFlowScope.Variable
 import java.lang.IllegalArgumentException
 
 // <program>
@@ -69,7 +70,11 @@ data class Snd(val expr: Expr) : PairElem()
 sealed class Type
 
 sealed class BaseT : Type()
-data class ArrayT(val type: Type, val depth: Int = 1) : Type() {
+open class AnyArrayT : Type() {
+  //fun isAlsoArray(other: Type) = other is AnyArrayT
+}
+
+data class ArrayT(val type: Type, val depth: Int = 1) : AnyArrayT() {
   init {
     require(depth > 0)
   }
@@ -131,8 +136,8 @@ object NullPairLit : Expr() {
   override val type = TODO()
 }
 
-data class IdentExpr(val ident: Ident) : Expr() {
-  override val type = ident.type
+data class IdentExpr(val vari: Variable) : Expr() {
+  override val type = vari.type
 }
 
 data class ArrayElemExpr internal constructor(
@@ -149,25 +154,40 @@ data class ArrayElemExpr internal constructor(
   //}
 
   companion object {
-    fun make(pos: Position, ident: Ident, exprs: List<Expr>): Parsed<ArrayElemExpr> {
-      // Array access indexes must evaluate to ints
-      return when {
-        !exprs.forAll { it.type == IntT } -> {
-          val badExpr =
-            exprs.find { it.type != IntT }.getOrElse { throw IllegalArgumentException() }
-          IllegalArrayAccess(pos, badExpr.toString(), badExpr.type).toInvalidParsed()
+    fun make(pos: Position, ident: Ident, exprs: List<Expr>, scope: Scope): Parsed<ArrayElemExpr> {
+      return scope[ident].fold({
+        //ifEmpty
+        VarNotFoundError(pos, ident.name).toInvalidParsed()
+      }, { variable ->
+        val arrType = variable.type
+        when {
+          !exprs.forAll { it.type == IntT } -> {
+            val badExpr =
+              exprs.find { it.type != IntT }.getOrElse { throw IllegalArgumentException() }
+            IllegalArrayAccess(pos, badExpr.toString(), badExpr.type).toInvalidParsed()
+          }
+          arrType !is ArrayT -> TODO("Illegal type exception")
+          exprs.size > arrType.depth -> TODO("Illegal type e")
+          else -> ArrayElemExpr(ident, exprs, arrType.nthNestedType(exprs.size)).valid()
         }
-        ident.type !is ArrayT -> TODO("Illegal type exception")
-        exprs.size > ident.type.depth -> TODO("Illegal type e")
-        else -> ArrayElemExpr(ident, exprs, ident.type.nthNestedType(exprs.size)).valid()
-      }
+      })
+      // Array access indexes must evaluate to ints
     }
   }
 }
 
-
 data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override val type: Type = expr.type
+
+  companion object {
+    fun make(e: Expr, unOp: UnaryOper, pos: Position): Parsed<UnaryOperExpr> = TODO()
+    //when {
+    //  // Special case because the unary operator len accepts any array
+    //  unOp.argType is AnyArrayT ->
+    //    TypeError(pos, binOp.inTypes, e1.type, binOp.toString()).toInvalidParsed()
+    //  else -> BinaryOperExpr(e2, binOp, e2).valid()
+    //}
+  }
 }
 
 data class BinaryOperExpr internal constructor(
@@ -178,7 +198,7 @@ data class BinaryOperExpr internal constructor(
   override val type = binaryOper.retType
 
   companion object {
-    fun make(e1: Expr, binOp: BinaryOper, e2: Expr, pos: Position): Parsed<Expr> =
+    fun make(e1: Expr, binOp: BinaryOper, e2: Expr, pos: Position): Parsed<BinaryOperExpr> =
       when {
         e1.type !in binOp.inTypes ->
           TypeError(pos, binOp.inTypes, e1.type, binOp.toString()).toInvalidParsed()
@@ -192,22 +212,45 @@ data class BinaryOperExpr internal constructor(
 }
 
 // <unary-oper>
-sealed class UnaryOper
+sealed class UnaryOper {
+  abstract val argType: Type
+  abstract val retType: Type
+}
 
 // bool:
 object NotUO : UnaryOper()       // !
+{
+  override val argType: Type = BoolT
+  override val retType: Type = BoolT
+}
 
 // int:
 object MinusUO : UnaryOper()     // -
+{
+  override val argType: Type = IntT
+  override val retType: Type = IntT
+}
 
 // int -> char:
 object ChrUO : UnaryOper()       // chr
+{
+  override val argType: Type = IntT
+  override val retType: Type = CharT
+}
 
 // arr -> int:
 object LenUO : UnaryOper()       // len
+{
+  override val argType: Type = AnyArrayT()
+  override val retType: Type = IntT
+}
 
 // char -> int:
 object OrdUO : UnaryOper()       // ord
+{
+  override val argType: Type = CharT
+  override val retType: Type = IntT
+}
 
 // <binary-oper>
 sealed class BinaryOper {
@@ -261,7 +304,7 @@ object AndBO : BoolBinOp()      // &&
 object OrBO : BoolBinOp()       // ||
 
 // <ident>
-data class Ident(val name: String, val type: Type)
+data class Ident(val name: String)
 
 // <array-elem>
 data class ArrayElem(
