@@ -51,7 +51,23 @@ fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
   }
 }
 
-private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> = TODO()
+private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
+  return when{
+    SKP() != null - TODO()
+    ASSIGN() != null -> TODO()
+    READ() != null -> TODO()
+    FREE() != null ->  TODO()
+    RETURN() != null -> TODO()
+    EXIT() != null -> TODO()
+    PRINT() != null -> TODO()
+    PRINTLN() != null -> TODO()
+    IF() != null -> TODO()
+    WHILE() != null -> TODO()
+    BEGIN() != null && END() != null -> TODO()
+    SEMICOLON() != null -> TODO()
+    else -> TODO()
+  }
+}
 
 private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
   when {
