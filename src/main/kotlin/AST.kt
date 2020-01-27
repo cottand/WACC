@@ -35,10 +35,11 @@ private fun WACCParser.TypeContext.asAst(scope: Scope): Parsed<Type> {
 fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
   val funcs = func().map { it.asAst(ControlFlowScope(scope)) }
   val antlrStat = stat()
+  // TODO rewrite syntactic error message with this.startPosition
     ?: return persistentListOf(SyntacticError("Malformed program at $text")).invalid()
   val stat = antlrStat.asAst(ControlFlowScope(scope))
 
-  // Check if the return type matches!
+  // TODO Check if the return type matches!
 
   return if (funcs.areAllValid && stat is Valid) {
     val validFuncs = funcs.map { (it as Valid).a }
@@ -60,12 +61,26 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
     PAIR_LIT() != null -> NullPairLit.valid()
     ID() != null ->
       scope[ID().text].fold({
-        val (line, col) = ID().let { it.symbol.line to it.symbol.charPositionInLine + 1 }
-        VarNotFoundError("At $line:$col, variable not defined: ${ID().text}").toInvalidParsed()
-      }, {
-        IdentExpr(it.declaringStat.id).valid()
+        VarNotFoundError(ID().position, ID().text).toInvalidParsed()
+      }, { variable ->
+        IdentExpr(variable.declaringStat.id).valid()
       })
-    array_elem() != null -> ArrayElemExpr(TODO()).valid()
+    // TODO check if calling array_elem() twice is possibly a bad idea cos we are getting a child
+    //  twice
+    array_elem() != null -> {
+      val id = array_elem().ID().text
+      val exprs = array_elem().expr().map { it.asAst(scope) }
+      scope[id].fold({
+        (exprs.errors + VarNotFoundError(array_elem().startPosition, id)).invalid()
+      }, {
+        val pos = array_elem().ID().position
+        if (exprs.areAllValid) {
+          val validExprs = exprs.map { (it as Valid).a }
+          ArrayElemExpr.make(pos, it.declaringStat.id, validExprs)
+        } else TODO()
+
+      })
+    }
     unary_op() != null -> UnaryOperExpr(TODO(), TODO()).valid()
     binary_op() != null -> BinaryOperExpr(TODO(), TODO(), TODO()).valid()
     else -> TODO()

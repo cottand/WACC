@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.extensions.list.foldable.forAll
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
+import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 
 /**
@@ -34,3 +35,17 @@ fun String.containsAll(words: List<String>, ignoreCase: Boolean = true) =
  * Prints [this], while returning [this]. Useful for [println] debugging.
  */
 inline fun <reified T> T.print() = this.also { println(it) }
+
+/**
+ * Returns this [TerminalNode]'s position in the program by looking at its
+ * [org.antlr.v4.runtime.Token]
+ */
+inline val TerminalNode.position
+  get() = Position(symbol.line,symbol.charPositionInLine + 1)
+
+/**
+ * Returns this [ParserRuleContext]'s start position in the program by looking at its
+ * [org.antlr.v4.runtime.Token]
+ */
+inline val ParserRuleContext.startPosition
+  get() = Position(start.line,start.charPositionInLine + 1)
