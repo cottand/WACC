@@ -53,7 +53,7 @@ fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
 
 private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
   return when{
-    SKP() != null - TODO()
+    SKP() != null -> Skip(scope).valid()
     ASSIGN() != null -> TODO()
     READ() != null -> TODO()
     FREE() != null ->  TODO()
