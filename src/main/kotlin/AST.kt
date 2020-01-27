@@ -58,9 +58,9 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
     SKP() != null -> Skip(scope).valid()
     ASSIGN() != null -> TODO()
     READ() != null -> assign_lhs().asAst(scope).map { Read(it, scope) }
-
     FREE() != null -> {
       expr().asAst(scope).flatMap {
+        // FREE may only be called in expressions that evaluate to types PairT or ArrayT
         if (it.type is AnyPairTs || it.type is AnyArrayT)
           Free(it, scope).valid()
         else
@@ -68,7 +68,6 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
             .toInvalidParsed()
       }
     }
-
     RETURN() != null -> TODO()
     EXIT() != null -> TODO()
     PRINT() != null -> TODO()
