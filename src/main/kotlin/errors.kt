@@ -54,6 +54,10 @@ data class TypeError(override val msg: String) : SemanticError() {
     : this("$pos, for operation $op, expected some type ${expectedTs}, actual: $actual")
 }
 
+data class UnexpecedTypeError(override val msg: String) : SemanticError() {
+  constructor(pos: Position, expected: Type, actual: Type) :
+          this("$pos, expected type: $expected but got: $actual")
+}
 data class UndefinedOp(override val msg: String) : SemanticError() {
   constructor(pos: Position, op: String, vararg ts: Type)
     : this("$pos, undefined operation $op for types $ts")

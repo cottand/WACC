@@ -68,7 +68,7 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
       return if (expr is Valid) {
         Free(expr.a, scope).valid()
       } else {
-        expr.errors.invalid()
+        expr.b.errors.invalid()
       }
     }
     RETURN() != null -> {
@@ -103,7 +103,21 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
         expr.errors.invalid()
       }
     }
-    IF() != null -> TODO()
+    IF() != null -> {
+      val expr = expr().asAst(ControlFlowScope(scope))
+      val statTrue = stat(0).asAst(ControlFlowScope(scope))
+      val statFalse = stat(1).asAst(ControlFlowScope(scope))
+
+      return if (expr is Valid && statTrue is Valid && statFalse is Valid){
+        when {
+            expr.a.type != BoolT -> UnexpecedTypeError(startPosition, BoolT, expr.a.type).toInvalidParsed()
+            TODO("Need to check return types of statTrue and statFalse if they have a return")
+            else -> If(expr.a, statTrue.a, statFalse.a, scope).valid()
+        }
+      } else{
+        (expr.errors + statTrue.errors + statFalse.errors).invalid()
+      }
+    }
     WHILE() != null -> TODO()
     BEGIN() != null && END() != null -> TODO()
     SEMICOLON() != null -> TODO()
