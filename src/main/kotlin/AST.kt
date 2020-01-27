@@ -55,7 +55,14 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
   return when{
     SKP() != null -> Skip(scope).valid()
     ASSIGN() != null -> TODO()
-    READ() != null -> TODO()
+    READ() != null -> {
+      val lhs = assign_lhs().asAst(ControlFlowScope(scope))
+      return if (lhs is Valid) {
+        Read(lhs.a, scope).valid()
+      } else {
+        lhs.errors.invalid()
+      }
+    }
     FREE() != null ->  TODO()
     RETURN() != null -> TODO()
     EXIT() != null -> TODO()
@@ -67,6 +74,10 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
     SEMICOLON() != null -> TODO()
     else -> TODO()
   }
+}
+
+private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> {
+  TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
 }
 
 private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
