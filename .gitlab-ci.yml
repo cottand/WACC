@@ -1,6 +1,7 @@
 stages:
         - compile
         - test
+        - retest
         - deploy
 
 
@@ -17,6 +18,15 @@ check:
                 paths:
                         - build/reports/tests/test/
 
+recheck_failure:
+        stage: retest
+        script:
+                - ./gradlew check -i -PignoreTestFailures=true
+        artifacts:
+                paths:
+                        - build/reports/tests/test/
+        when: on_failure
+
 pages_success:
         stage: deploy
         script:
@@ -30,15 +40,6 @@ pages_success:
         only:
                 - master
         when: on_success
-
-recheck_failure:
-        stage: deploy
-        script:
-                - ./gradlew check -i -PignoreTestFailures=true
-        artifacts:
-                paths:
-                        - build/reports/tests/test/
-        when: on_failure
 
 
 pages_failure:
