@@ -17,11 +17,12 @@ check:
                 paths:
                         - build/reports/tests/test/
 
-
 pages_success:
         stage: deploy
         script:
                 - mv build/reports/tests/test/ public/
+        dependencies:
+                - check
         artifacts:
                 paths:
                         - public
@@ -30,11 +31,22 @@ pages_success:
                 - master
         when: on_success
 
-pages_failure:
+recheck_failure:
         stage: deploy
         script:
                 - ./gradlew check -i -PignoreTestFailures=true
+        artifacts:
+                paths:
+                        - build/reports/tests/test/
+        when: on_failure
+
+
+pages_failure:
+        stage: deploy
+        script:
                 - mv build/reports/tests/test/ public/
+        dependencies:
+                - recheck_failure
         artifacts:
                  paths:
                         - public
