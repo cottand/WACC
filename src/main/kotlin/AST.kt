@@ -95,7 +95,14 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
         expr.errors.invalid()
       }
     }
-    PRINTLN() != null -> TODO()
+    PRINTLN() != null -> {
+      val expr = expr().asAst(ControlFlowScope(scope))
+      return if (expr is Valid) {
+        Println(expr.a, scope).valid()
+      } else {
+        expr.errors.invalid()
+      }
+    }
     IF() != null -> TODO()
     WHILE() != null -> TODO()
     BEGIN() != null && END() != null -> TODO()
