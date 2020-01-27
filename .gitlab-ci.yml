@@ -1,7 +1,6 @@
 stages:
         - compile
         - test
-        - retest
         - deploy
 
 
@@ -17,41 +16,20 @@ check:
         artifacts:
                 paths:
                         - build/reports/tests/test/
+                when: always
 
-recheck_failure:
-        stage: retest
-        script:
-                - ./gradlew check -i -PignoreTestFailures=true
-        artifacts:
-                paths:
-                        - build/reports/tests/test/
-        when: on_failure
 
-pages_success:
+pages:
         stage: deploy
-        script:
-                - mv build/reports/tests/test/ public/
         dependencies:
                 - check
+        script:
+                - mv build/reports/tests/test/ public/
         artifacts:
                 paths:
                         - public
                 expire_in: 30 days
         only:
                 - master
-        when: on_success
+        when: always
 
-
-pages_failure:
-        stage: deploy
-        script:
-                - mv build/reports/tests/test/ public/
-        dependencies:
-                - recheck_failure
-        artifacts:
-                 paths:
-                        - public
-                 expire_in: 30 days
-        only:
-                - master
-        when: on_failure
