@@ -59,6 +59,7 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
     CHAR_LIT() != null -> CharLit(CHAR_LIT().text.toCharArray()[0]).valid()
     STRING_LIT() != null -> StrLit(STRING_LIT().text).valid()
     PAIR_LIT() != null -> NullPairLit.valid()
+
     ID() != null ->
       scope[ID().text].fold({
         VarNotFoundError(ID().position, ID().text).toInvalidParsed()
@@ -67,25 +68,25 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
       })
     // TODO check if calling array_elem() twice is possibly a bad idea cos we are getting a child
     //  twice
+
     array_elem() != null -> {
       val id = array_elem().ID().text
       val exprs = array_elem().expr().map { it.asAst(scope) }
       scope[id].fold({
-        (exprs.errors + VarNotFoundError(array_elem().startPosition, id)).invalid()
+        (exprs.errors + VarNotFoundError(startPosition, id)).invalid()
+          as Parsed<Expr>
       }, {
-        val pos = array_elem().ID().position
-        if (exprs.areAllValid) {
-          val validExprs = exprs.map { (it as Valid).a }
-          ArrayElemExpr.make(pos, it.declaringStat.id, validExprs)
-        } else TODO()
-
+        if (exprs.areAllValid)
+          ArrayElemExpr.make(startPosition, it.declaringStat.id, exprs.valids)
+        else
+          exprs.errors.invalid()
       })
     }
     unary_op() != null -> UnaryOperExpr(TODO(), TODO()).valid()
     binary_op() != null -> BinaryOperExpr(TODO(), TODO(), TODO()).valid()
     else -> TODO()
   }
-}
+
 
 
 

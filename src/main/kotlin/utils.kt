@@ -1,6 +1,8 @@
 package ic.org
 
 import arrow.core.Either
+import arrow.core.Validated
+import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
@@ -41,11 +43,14 @@ inline fun <reified T> T.print() = this.also { println(it) }
  * [org.antlr.v4.runtime.Token]
  */
 inline val TerminalNode.position
-  get() = Position(symbol.line,symbol.charPositionInLine + 1)
+  get() = Position(symbol.line, symbol.charPositionInLine + 1)
 
 /**
  * Returns this [ParserRuleContext]'s start position in the program by looking at its
  * [org.antlr.v4.runtime.Token]
  */
 inline val ParserRuleContext.startPosition
-  get() = Position(start.line,start.charPositionInLine + 1)
+  get() = Position(start.line, start.charPositionInLine + 1)
+
+inline val <reified E, reified V> List<Validated<E, V>>.valids
+  get() = this.filterIsInstance<Valid<V>>().map { it.a }

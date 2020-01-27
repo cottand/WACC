@@ -164,7 +164,7 @@ data class ArrayElemExpr internal constructor(
     }
   }
 }
-}
+
 
 data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override val type: Type = expr.type
@@ -178,7 +178,7 @@ data class BinaryOperExpr internal constructor(
   override val type = binaryOper.retType
 
   companion object {
-    fun make(e1: Expr, binOp: BinaryOper, e2: Expr, pos: Pair<Int, Int>): Parsed<Expr> =
+    fun make(e1: Expr, binOp: BinaryOper, e2: Expr, pos: Position): Parsed<Expr> =
       when {
         e1.type !in binOp.inTypes ->
           TypeError(pos, binOp.inTypes, e1.type, binOp.toString()).toInvalidParsed()
