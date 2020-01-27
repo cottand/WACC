@@ -121,9 +121,35 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
 
     unary_op() != null -> UnaryOperExpr(TODO(), TODO()).valid()
     binary_op() != null -> BinaryOperExpr(TODO(), TODO(), TODO()).valid()
+    binary_op() != null -> {
+      val e1 = expr()[0].asAst(scope)
+      val e2 = expr()[1].asAst(scope)
+      val binOp = binary_op().asAst()
+      when {
+          e1 is Valid && binOp is Valid && e2 is Valid-> BinaryOperExpr.make(e1.a, binOp.a, e2.a, startPosition)
+        else -> (e1.errors + e2.errors).invalid()
+      }
+    }
+
     else -> TODO()
   }
 
-
+private fun WACCParser.Binary_opContext.asAst(): Parsed<BinaryOper> =
+  when {
+    MUL() != null -> TimesBO.valid()
+    DIV() != null -> DivisionBO.valid()
+    MOD() != null -> ModBO.valid()
+    PLUS() != null -> PlusBO.valid()
+    MINUS() != null -> MinusBO.valid()
+    GRT() != null -> GtBO.valid()
+    GRT_EQ() != null -> GeqBO.valid()
+    LESS() != null -> LtBO.valid()
+    LESS_EQ() != null -> LeqBO.valid()
+    EQ() != null -> EqBO.valid()
+    NOT_EQ() != null -> NeqBO.valid()
+    AND() != null -> AndBO.valid()
+    OR() != null -> OrBO.valid()
+    else -> TODO()
+  }
 
 
