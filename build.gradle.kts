@@ -57,7 +57,6 @@ sourceSets["test"].withConvention(KotlinSourceSet::class) {
   kotlin.srcDir("src/test-utils/kotlin")
 }
 
-
 tasks {
   test {
     useJUnitPlatform()

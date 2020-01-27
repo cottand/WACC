@@ -94,7 +94,8 @@ data class ArrayT(val type: Type, val depth: Int = 1) : AnyArrayT() {
   }
 }
 
-data class PairT(val fstT: PairElemT, val sndT: PairElemT) : Type()
+open class AnyPairTs : Type()
+data class PairT(val fstT: PairElemT, val sndT: PairElemT) : AnyPairTs()
 
 // <base-type>
 object IntT : BaseT()

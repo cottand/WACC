@@ -51,17 +51,17 @@ data class VarNotFoundError(override val msg: String) : SemanticError() {
 
 data class TypeError(override val msg: String) : SemanticError() {
   constructor(pos: Position, expectedTs: List<Type>, actual: Type, op: String)
-    : this("$pos, for operation $op, expected some type ${expectedTs}, actual: $actual")
+    : this("$pos, for operation `$op`, expected some type ${expectedTs}, actual: $actual")
 }
 
 data class UndefinedOp(override val msg: String) : SemanticError() {
   constructor(pos: Position, op: String, vararg ts: Type)
-    : this("$pos, undefined operation $op for types $ts")
+    : this("$pos, undefined operation `$op` for types $ts")
 }
 
 data class IllegalArrayAccess(override val msg: String) : SemanticError() {
   constructor(pos: Position, expr: String, badT: Type)
-    : this("$pos, illegal type in $expr for array acces. Expected an Int, actual: $badT")
+    : this("$pos, illegal type in `$expr` for array acces. Expected an Int, actual: $badT")
 }
 
 inline val <A> Parsed<A>.errors: Errors
@@ -83,6 +83,11 @@ inline val <A> List<Parsed<A>>.areAllValid: Boolean
 fun List<CompilationError>.asLines(filename: String) =
   "In file $filename:\n" +
     fold("") { str, err -> "$str  ${err.msg}\n" } + '\n'
+
+fun <A, B> Parsed<A>.flatMap(transform: (A) -> Parsed<B>): Parsed<B> = when (this) {
+  is Valid -> transform(a)
+  is Invalid -> this
+}
 
 data class Position(val l: Int, val col: Int) {
   override fun toString(): String = "At $l:$col"

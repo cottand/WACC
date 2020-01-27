@@ -16,6 +16,7 @@ check:
         artifacts:
                 paths:
                         - build/reports/tests/test/
+                when: always
 
 
 pages:
@@ -30,4 +31,5 @@ pages:
                 expire_in: 30 days
         only:
                 - master
+        when: always
 
