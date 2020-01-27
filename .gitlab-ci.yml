@@ -18,10 +18,8 @@ check:
                         - build/reports/tests/test/
 
 
-pages:
+pages_success:
         stage: deploy
-        dependencies:
-                - check
         script:
                 - mv build/reports/tests/test/ public/
         artifacts:
@@ -30,4 +28,17 @@ pages:
                 expire_in: 30 days
         only:
                 - master
+        when: on_success
 
+pages_failure:
+        stage: deploy
+        script:
+                - ./gradlew check -i -PignoreTestFailures=true
+                - mv build/reports/tests/test/ public/
+        artifacts:
+                 paths:
+                        - public
+                 expire_in: 30 days
+        only:
+                - master
+        when: on_failure
