@@ -88,7 +88,12 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
       }
     }
     WHILE() != null -> TODO()
-    BEGIN() != null && END() != null -> TODO()
+    BEGIN() != null && END() != null -> {
+      // Should only have one stat
+      assert(stat().size == 1)
+      val newScope = ControlFlowScope(scope)
+      return stat()[0].asAst(newScope).map { BegEnd(it, newScope) }
+    }
     SEMICOLON() != null -> {
       // In a stat chain, we should only have two statements
       assert(stat().size == 2)
