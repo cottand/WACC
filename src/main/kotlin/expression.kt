@@ -29,7 +29,7 @@ data class StrLit(val value: String) : Expr() {
 }
 
 object NullPairLit : Expr() {
-  override val type = TODO()
+  override val type = AnyPairTs() // TODO double check
 }
 
 data class IdentExpr(val vari: Variable) : Expr() {
