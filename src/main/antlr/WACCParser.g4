@@ -20,7 +20,7 @@ stat: SKP
 | IF WS* expr WS* THEN WS* stat WS* ELSE WS* stat WS* FI
 | WHILE WS* expr WS* DO WS* stat WS* DONE
 | BEGIN WS* stat WS* END
-| stat WS* SEMICOLON WS* stat;
+| <assoc=right> stat WS* SEMICOLON WS* stat;
 
 expr: expr WS* binary_op WS* expr
 | int_lit

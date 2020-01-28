@@ -52,8 +52,21 @@ data class VarNotFoundError(override val msg: String) : SemanticError() {
 data class TypeError(override val msg: String) : SemanticError() {
   constructor(pos: Position, expectedTs: List<Type>, actual: Type, op: String)
     : this("$pos, for operation `$op`, expected some type ${expectedTs}, actual: $actual")
+
   constructor(pos: Position, expectedT: Type, actual: Type, op: String)
-          : this("$pos, for operation `$op`, expected type ${expectedT}, actual: $actual")
+    : this("$pos, for operation `$op`, expected type ${expectedT}, actual: $actual")
+}
+
+data class ControlFlowTypeError(override val msg: String) : SemanticError() {
+  constructor(thenType: Type, elseType: Type) :
+    this(
+      "differing returning types in if-else branching.\n" +
+        "    Got `$thenType` in the 'then' branch and `$elseType` in the 'else' branch"
+    )
+  constructor(type: Type)
+  : this("missing return statement on branch. Expecting `$type`")
+  override fun toString() = msg
+  fun asTypeError(pos: Position) = TypeError("$pos, $this")
 }
 
 data class UndefinedOp(override val msg: String) : SemanticError() {
