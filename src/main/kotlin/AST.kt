@@ -89,7 +89,19 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
     }
     WHILE() != null -> TODO()
     BEGIN() != null && END() != null -> TODO()
-    SEMICOLON() != null -> TODO()
+    SEMICOLON() != null -> {
+      // In a stat chain, we should only have two statements
+      assert(stat().size == 2)
+      // Make sure the two statements are valid
+      val stat1 = stat()[0].asAst(scope)
+      val stat2 = stat()[1].asAst(scope)
+
+      return if (stat1 is Valid && stat2 is Valid) {
+        StatChain(stat1.a, stat2.a, scope).valid()
+      } else {
+        (stat1.errors + stat2.errors).invalid()
+      }
+    }
     else -> TODO()
   }
 }
