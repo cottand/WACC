@@ -124,13 +124,6 @@ object MinusUO : UnaryOper()     // -
   override val retType: Type = IntT
 }
 
-// int -> char:
-object ChrUO : UnaryOper()       // chr
-{
-  override val argType: Type = IntT
-  override val retType: Type = CharT
-}
-
 // arr -> int:
 object LenUO : UnaryOper()       // len
 {
@@ -144,6 +137,14 @@ object OrdUO : UnaryOper()       // ord
   override val argType: Type = CharT
   override val retType: Type = IntT
 }
+
+// int -> char:
+object ChrUO : UnaryOper()       // chr
+{
+  override val argType: Type = IntT
+  override val retType: Type = CharT
+}
+
 
 // <binary-oper>
 sealed class BinaryOper {
