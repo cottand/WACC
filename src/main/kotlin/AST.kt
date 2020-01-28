@@ -71,7 +71,7 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
     RETURN() != null -> TODO()
     EXIT() != null -> TODO()
     PRINT() != null -> expr().asAst(scope).map { Print(it, scope) }
-    PRINTLN() != null -> TODO()
+    PRINTLN() != null -> expr().asAst(scope).map { Println(it, scope) }
     IF() != null -> TODO()
     WHILE() != null -> TODO()
     BEGIN() != null && END() != null -> TODO()
