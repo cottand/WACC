@@ -41,7 +41,7 @@ fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
   val antlrStat = stat()
   // TODO rewrite syntactic error message with this.startPosition
     ?: return persistentListOf(SyntacticError("Malformed program at $text")).invalid()
-  val stat = antlrStat.asAst(ControlFlowScope(scope))
+  val stat = antlrStat.asAst(GlobalScope)
 
   // TODO Check if the return type matches!
 
@@ -87,7 +87,6 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
       }
     }
     RETURN() != null -> {
-      println(scope)
       return if (scope is GlobalScope) {
         InvalidReturn(RETURN().position).toInvalidParsed()
       } else {
