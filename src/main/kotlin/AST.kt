@@ -115,14 +115,13 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
 
     array_elem() != null -> array_elem().asAst(scope)
 
-    unary_op() != null -> UnaryOperExpr(TODO(), TODO()).valid()
     unary_op() != null -> {
-      val expr = expr()[0].asAst(scope)
+      val e = expr()[0].asAst(scope)
       val unaryOp = unary_op().asAst()
-      if (expr is Valid && unaryOp is Valid)
-        UnaryOperExpr.make(expr.a, unaryOp.a, startPosition)
+      if (e is Valid && unaryOp is Valid)
+        UnaryOperExpr.make(e.a, unaryOp.a, startPosition)
       else
-        (expr.errors + unaryOp.errors).invalid()
+        (e.errors + unaryOp.errors).invalid()
 
     }
 
