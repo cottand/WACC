@@ -1,11 +1,6 @@
 package ic.org.grammar
 
-import arrow.core.extensions.list.foldable.find
-import arrow.core.extensions.list.foldable.forAll
-import arrow.core.getOrElse
-import arrow.core.valid
-import ic.org.*
-import java.lang.IllegalArgumentException
+import ic.org.Expr
 
 // <program>
 data class Prog(
@@ -25,7 +20,7 @@ data class Func(
 data class Param(val type: Type, val ident: Ident)
 
 // <stat>
-sealed class Stat() {
+sealed class Stat {
   abstract val scope: Scope
 }
 
@@ -110,7 +105,6 @@ sealed class PairElemT
 data class PairElemBaseT(val baseType: BaseT) : PairElemT()
 data class PairElemArrayT(val arrayType: ArrayT) : PairElemT()
 object NDPairT : PairElemT()
-
 
 // <ident>
 data class Ident(val name: String)

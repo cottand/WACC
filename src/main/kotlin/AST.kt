@@ -2,8 +2,7 @@ package ic.org
 
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
-import antlr.WACCParser.ExprContext
-import arrow.core.Validated.*
+import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.grammar.*
@@ -45,12 +44,10 @@ fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
 
   // TODO Check if the return type matches!
 
-  return if (funcs.areAllValid && stat is Valid) {
-    val validFuncs = funcs.map { (it as Valid).a }
-    Prog(validFuncs, stat.a).valid()
-  } else {
+  return if (funcs.areAllValid && stat is Valid)
+    Prog(funcs.valids, stat.a).valid()
+  else
     (funcs.errors + stat.errors).invalid()
-  }
 }
 
 private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
@@ -99,11 +96,16 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
 
       return if (expr is Valid && statTrue is Valid && statFalse is Valid) {
         when {
-          expr.a.type != BoolT -> TypeError(startPosition, BoolT, expr.a.type, IF().text).toInvalidParsed()
+          expr.a.type != BoolT -> TypeError(
+            startPosition,
+            BoolT,
+            expr.a.type,
+            IF().text
+          ).toInvalidParsed()
           else -> TODO("Need to check return types of statTrue and statFalse if they have a return")
-//          else -> If(expr.a, statTrue.a, statFalse.a, scope).valid()
+          //          else -> If(expr.a, statTrue.a, statFalse.a, scope).valid()
         }
-      } else{
+      } else {
         (expr.errors + statTrue.errors + statFalse.errors).invalid()
       }
     }
@@ -115,11 +117,10 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
       val e = expr().asAst(scope)
       val s = stat()[0].asAst(newScope)
 
-      return if (e is Valid && s is Valid) {
+      return if (e is Valid && s is Valid)
         While(e.a, s.a, scope).valid()
-      } else {
+      else
         (e.errors + s.errors).invalid()
-      }
     }
     BEGIN() != null && END() != null -> {
       // Should only have one stat
@@ -176,7 +177,6 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
         UnaryOperExpr.make(e.a, unOp.a, startPosition)
       else
         (e.errors + unOp.errors).invalid()
-
     }
 
     binary_op() != null -> {
@@ -212,7 +212,7 @@ private fun WACCParser.Unary_opContext.asAst(): Parsed<UnaryOper> =
     LEN() != null -> LenUO.valid()
     ORD() != null -> OrdUO.valid()
     CHR() != null -> ChrUO.valid()
-    else ->  TODO()
+    else -> TODO()
   }
 
 private fun WACCParser.Binary_opContext.asAst(): Parsed<BinaryOper> =
@@ -230,7 +230,7 @@ private fun WACCParser.Binary_opContext.asAst(): Parsed<BinaryOper> =
     NOT_EQ() != null -> NeqBO.valid()
     AND() != null -> AndBO.valid()
     OR() != null -> OrBO.valid()
-    else ->  TODO()
+    else -> TODO()
   }
 
 
