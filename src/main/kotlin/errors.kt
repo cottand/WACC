@@ -66,6 +66,10 @@ data class IllegalArrayAccess(override val msg: String) : SemanticError() {
     : this("$pos, illegal type in `$expr` for array acces. Expected an Int, actual: $badT")
 }
 
+data class InvalidReturn(override val msg: String) : SemanticError() {
+  constructor(pos: Position) : this("$pos, return statement is not allowed in given scope (use exit maybe?)")
+}
+
 inline val <A> Parsed<A>.errors: Errors
   get() = when (this) {
     is Invalid -> this.e

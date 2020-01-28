@@ -8,6 +8,7 @@ import arrow.core.valid
 import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
+import javax.naming.ldap.Control
 
 fun WACCParser.FuncContext.asAst(scope: Scope): Parsed<Func> {
   val type = this.type().asAst(ControlFlowScope(scope))
@@ -85,8 +86,27 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
             .toInvalidParsed()
       }
     }
-    RETURN() != null -> TODO()
-    EXIT() != null -> TODO()
+    RETURN() != null -> {
+      println(scope)
+      return if (scope is GlobalScope) {
+        InvalidReturn(RETURN().position).toInvalidParsed()
+      } else {
+        expr().asAst(scope).map { Return(it, scope) }
+      }
+    }
+    EXIT() != null -> {
+      val expr = expr().asAst(scope)
+      return if (expr is Valid) {
+        // Make sure we return an int
+        if (expr.a.type != IntT) {
+          TypeError(expr().startPosition, IntT, expr.a.type, "exit").toInvalidParsed()
+        } else {
+          expr.map { Exit(it, scope) }
+        }
+      } else {
+        expr.errors.invalid()
+      }
+    }
     PRINT() != null -> expr().asAst(scope).map { Print(it, scope) }
     PRINTLN() != null -> expr().asAst(scope).map { Println(it, scope) }
     IF() != null -> {
