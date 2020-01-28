@@ -55,7 +55,16 @@ fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
 private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
   return when {
     SKP() != null -> Skip(scope).valid()
-    ASSIGN() != null -> TODO()
+    ASSIGN() != null -> {
+      val lhs = assign_lhs().asAst(scope)
+      val rhs = assign_rhs().asAst(scope)
+
+      return if (lhs is Valid && rhs is Valid) {
+        Assign(lhs.a, rhs.a, scope).valid()
+      } else {
+        (lhs.errors + rhs.errors).invalid()
+      }
+    }
     READ() != null -> assign_lhs().asAst(scope).map { Read(it, scope) }
     FREE() != null -> {
       expr().asAst(scope).flatMap {
@@ -69,18 +78,66 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
     }
     RETURN() != null -> TODO()
     EXIT() != null -> TODO()
-    PRINT() != null -> TODO()
-    PRINTLN() != null -> TODO()
-    IF() != null -> TODO()
-    WHILE() != null -> TODO()
-    BEGIN() != null && END() != null -> TODO()
-    SEMICOLON() != null -> TODO()
+    PRINT() != null -> expr().asAst(scope).map { Print(it, scope) }
+    PRINTLN() != null -> expr().asAst(scope).map { Println(it, scope) }
+    IF() != null -> {
+      val expr = expr().asAst(ControlFlowScope(scope))
+      val statTrue = stat(0).asAst(ControlFlowScope(scope))
+      val statFalse = stat(1).asAst(ControlFlowScope(scope))
+
+      return if (expr is Valid && statTrue is Valid && statFalse is Valid) {
+        when {
+          expr.a.type != BoolT -> TypeError(startPosition, BoolT, expr.a.type, IF().text).toInvalidParsed()
+          else -> TODO("Need to check return types of statTrue and statFalse if they have a return")
+//          else -> If(expr.a, statTrue.a, statFalse.a, scope).valid()
+        }
+      } else{
+        (expr.errors + statTrue.errors + statFalse.errors).invalid()
+      }
+    }
+    WHILE() != null -> {
+      assert(stat().size == 1)
+
+      val newScope = ControlFlowScope(scope)
+
+      val e = expr().asAst(scope)
+      val s = stat()[0].asAst(newScope)
+
+      return if (e is Valid && s is Valid) {
+        While(e.a, s.a, scope).valid()
+      } else {
+        (e.errors + s.errors).invalid()
+      }
+    }
+    BEGIN() != null && END() != null -> {
+      // Should only have one stat
+      assert(stat().size == 1)
+      val newScope = ControlFlowScope(scope)
+      return stat()[0].asAst(newScope).map { BegEnd(it, newScope) }
+    }
+    SEMICOLON() != null -> {
+      // In a stat chain, we should only have two statements
+      assert(stat().size == 2)
+      // Make sure the two statements are valid
+      val stat1 = stat()[0].asAst(scope)
+      val stat2 = stat()[1].asAst(scope)
+
+      return if (stat1 is Valid && stat2 is Valid) {
+        StatChain(stat1.a, stat2.a, scope).valid()
+      } else {
+        (stat1.errors + stat2.errors).invalid()
+      }
+    }
     else -> TODO()
   }
 }
 
 private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> {
   TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+}
+
+private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
+  TODO("not implemented")
 }
 
 private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
@@ -100,8 +157,16 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
 
     array_elem() != null -> array_elem().asAst(scope)
 
-    unary_op() != null -> UnaryOperExpr(TODO(), TODO()).valid()
-    binary_op() != null -> BinaryOperExpr(TODO(), TODO(), TODO()).valid()
+    unary_op() != null -> {
+      val e = expr()[0].asAst(scope)
+      val unOp = unary_op().asAst()
+      if (e is Valid && unOp is Valid)
+        UnaryOperExpr.make(e.a, unOp.a, startPosition)
+      else
+        (e.errors + unOp.errors).invalid()
+
+    }
+
     binary_op() != null -> {
       val e1 = expr()[0].asAst(scope)
       val e2 = expr()[1].asAst(scope)
@@ -109,7 +174,7 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
       if (e1 is Valid && binOp is Valid && e2 is Valid)
         BinaryOperExpr.make(e1.a, binOp.a, e2.a, startPosition)
       else
-        (e1.errors + e2.errors).invalid()
+        (e1.errors + binOp.errors + e2.errors).invalid()
     }
     else -> TODO()
   }
@@ -128,6 +193,16 @@ private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
   })
 }
 
+private fun WACCParser.Unary_opContext.asAst(): Parsed<UnaryOper> =
+  when {
+    NOT() != null -> NotUO.valid()
+    MINUS() != null -> MinusUO.valid()
+    LEN() != null -> LenUO.valid()
+    ORD() != null -> OrdUO.valid()
+    CHR() != null -> ChrUO.valid()
+    else ->  TODO()
+  }
+
 private fun WACCParser.Binary_opContext.asAst(): Parsed<BinaryOper> =
   when {
     MUL() != null -> TimesBO.valid()
@@ -143,7 +218,7 @@ private fun WACCParser.Binary_opContext.asAst(): Parsed<BinaryOper> =
     NOT_EQ() != null -> NeqBO.valid()
     AND() != null -> AndBO.valid()
     OR() != null -> OrBO.valid()
-    else -> TODO()
+    else ->  TODO()
   }
 
 

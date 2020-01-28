@@ -73,13 +73,12 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override val type: Type = expr.type
 
   companion object {
-    fun make(e: Expr, unOp: UnaryOper, pos: Position): Parsed<UnaryOperExpr> = TODO()
-    //when {
-    //  // Special case because the unary operator len accepts any array
-    //  unOp.argType is AnyArrayT ->
-    //    TypeError(pos, binOp.inTypes, e1.type, binOp.toString()).toInvalidParsed()
-    //  else -> BinaryOperExpr(e2, binOp, e2).valid()
-    //}
+    fun make(e: Expr, unOp: UnaryOper, pos: Position): Parsed<UnaryOperExpr> =
+      when {
+        e.type != unOp.argType ->
+          TypeError(pos, unOp.argType, e.type, unOp.toString()).toInvalidParsed()
+        else -> UnaryOperExpr(unOp, e).valid()
+      }
   }
 }
 
@@ -124,13 +123,6 @@ object MinusUO : UnaryOper()     // -
   override val retType: Type = IntT
 }
 
-// int -> char:
-object ChrUO : UnaryOper()       // chr
-{
-  override val argType: Type = IntT
-  override val retType: Type = CharT
-}
-
 // arr -> int:
 object LenUO : UnaryOper()       // len
 {
@@ -144,6 +136,14 @@ object OrdUO : UnaryOper()       // ord
   override val argType: Type = CharT
   override val retType: Type = IntT
 }
+
+// int -> char:
+object ChrUO : UnaryOper()       // chr
+{
+  override val argType: Type = IntT
+  override val retType: Type = CharT
+}
+
 
 // <binary-oper>
 sealed class BinaryOper {
