@@ -111,17 +111,20 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
     }
     WHILE() != null -> {
       assert(stat().size == 1)
-
       val newScope = ControlFlowScope(scope)
-
       val e = expr().asAst(scope)
       val s = stat()[0].asAst(newScope)
 
-      return if (e is Valid && s is Valid)
-        While(e.a, s.a, scope).valid()
-      else
-        (e.errors + s.errors).invalid()
+      return when {
+        e !is Valid || s !is Valid ->
+          (e.errors + s.errors).invalid()
+        e.a.type != BoolT ->
+          TypeError(WHILE().position, BoolT, e.a.type, "While condition").toInvalidParsed()
+        else ->
+          While(e.a, s.a, newScope).valid()
+      }
     }
+    
     BEGIN() != null && END() != null -> {
       // Should only have one stat
       assert(stat().size == 1)
