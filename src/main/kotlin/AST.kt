@@ -77,7 +77,7 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
       val statTrue = stat(0).asAst(ControlFlowScope(scope))
       val statFalse = stat(1).asAst(ControlFlowScope(scope))
 
-      return if (expr is Valid && statTrue is Valid && statFalse is Valid){
+      return if (expr is Valid && statTrue is Valid && statFalse is Valid) {
         when {
           expr.a.type != BoolT -> TypeError(startPosition, BoolT, expr.a.type, IF().text).toInvalidParsed()
           else -> TODO("Need to check return types of statTrue and statFalse if they have a return")
@@ -87,8 +87,26 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
         (expr.errors + statTrue.errors + statFalse.errors).invalid()
       }
     }
-    WHILE() != null -> TODO()
-    BEGIN() != null && END() != null -> TODO()
+    WHILE() != null -> {
+      assert(stat().size == 0)
+
+      val newScope = ControlFlowScope(scope)
+
+      val e = expr().asAst(scope)
+      val s = stat()[0].asAst(newScope)
+
+      return if (e is Valid && s is Valid) {
+        While(e.a, s.a, scope).valid()
+      } else {
+        (e.errors + s.errors).invalid()
+      }
+    }
+    BEGIN() != null && END() != null -> {
+      // Should only have one stat
+      assert(stat().size == 1)
+      val newScope = ControlFlowScope(scope)
+      return stat()[0].asAst(newScope).map { BegEnd(it, newScope) }
+    }
     SEMICOLON() != null -> {
       // In a stat chain, we should only have two statements
       assert(stat().size == 2)
