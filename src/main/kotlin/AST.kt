@@ -56,7 +56,7 @@ fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
 private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
   return when {
     SKP() != null -> Skip(scope).valid()
-    ASSIGN() != null -> {
+    ASSIGN() != null && assign_lhs() != null -> {
       val lhs = assign_lhs().asAst(scope)
       val rhs = assign_rhs().asAst(scope)
 
@@ -64,6 +64,17 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
         Assign(lhs.a, rhs.a, scope).valid()
       } else {
         (lhs.errors + rhs.errors).invalid()
+      }
+    }
+    ASSIGN() != null && assign_lhs() == null -> {
+      val type = type().asAst(scope)
+      val ident = Ident(ID().text).valid()
+      val rhs = assign_rhs().asAst(scope)
+
+      return if (type is Valid && ident is Valid && rhs is Valid) {
+        Decl(type.a, ident.a, rhs.a, scope).valid()
+      } else {
+        (type.errors + rhs.errors).invalid()
       }
     }
     READ() != null -> assign_lhs().asAst(scope).map { Read(it, scope) }
