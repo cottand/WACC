@@ -80,8 +80,8 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
       return if (expr is Valid && statTrue is Valid && statFalse is Valid){
         when {
           expr.a.type != BoolT -> UnexpecedTypeError(startPosition, BoolT, expr.a.type).toInvalidParsed()
-          TODO("Need to check return types of statTrue and statFalse if they have a return")
-          else -> If(expr.a, statTrue.a, statFalse.a, scope).valid()
+          else -> TODO("Need to check return types of statTrue and statFalse if they have a return")
+//          else -> If(expr.a, statTrue.a, statFalse.a, scope).valid()
         }
       } else{
         (expr.errors + statTrue.errors + statFalse.errors).invalid()
