@@ -1,11 +1,11 @@
 package ic.org.grammar
 
-import arrow.core.extensions.list.foldable.find
-import arrow.core.extensions.list.foldable.forAll
-import arrow.core.getOrElse
+import arrow.core.Validated.Valid
+import arrow.core.invalid
 import arrow.core.valid
 import ic.org.*
 import java.lang.IllegalArgumentException
+import kotlinx.collections.immutable.plus
 
 // <program>
 data class Prog(
@@ -25,9 +25,30 @@ data class Func(
 data class Param(val type: Type, val ident: Ident)
 
 // <stat>
-sealed class Stat() {
+sealed class Stat {
   abstract val scope: Scope
+
+  val returnT: Parsed<ReturnT> = when (this) {
+    is Exit -> ExitR.valid()
+    is If -> {
+      val (r1, r2) = then.returnT to `else`.returnT
+      when {
+        r1 !is Valid || r2 !is Valid -> (r1.errors + r2.errors).invalid()
+        r1.a == ExitR || r2.a == ExitR -> ExitR.valid()
+        r1.a == r2.a -> r1
+        else -> TODO("UnexpectedReturnTypeError")
+      }
+    }
+    is Return -> ReturnType(expr.type).valid()
+    is StatChain -> stat2.returnT
+    else -> TODO("UnexpectedReturnTypeError") // What about while??
+    //TODO BegEnd case
+  }
 }
+
+sealed class ReturnT
+data class ReturnType(val t: Type) : ReturnT()
+object ExitR : ReturnT()
 
 data class Skip(override val scope: Scope) : Stat()
 data class Decl(val type: Type, val id: Ident, val rhs: AssRHS, override val scope: Scope) : Stat()
@@ -110,7 +131,6 @@ sealed class PairElemT
 data class PairElemBaseT(val baseType: BaseT) : PairElemT()
 data class PairElemArrayT(val arrayType: ArrayT) : PairElemT()
 object NDPairT : PairElemT()
-
 
 // <ident>
 data class Ident(val name: String)

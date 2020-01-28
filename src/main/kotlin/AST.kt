@@ -2,8 +2,7 @@ package ic.org
 
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
-import antlr.WACCParser.ExprContext
-import arrow.core.Validated.*
+import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.grammar.*
