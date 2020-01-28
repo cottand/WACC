@@ -36,7 +36,10 @@ data class Println(val expr: Expr, override val scope: Scope) : Stat()
 data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val scope: Scope) : Stat()
 data class While(val cond: Expr, val stat: Stat, override val scope: Scope) : Stat()
 data class BegEnd(val stat: Stat, override val scope: Scope) : Stat()
-data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope) : Stat()
+data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope) : Stat() {
+  val thisStat = stat1
+  val nextStat = stat2
+}
 
 // <assign-lhs>
 sealed class AssLHS
