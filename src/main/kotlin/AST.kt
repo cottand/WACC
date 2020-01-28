@@ -1,6 +1,8 @@
 package ic.org
 
 import antlr.WACCParser
+import antlr.WACCParser.Array_elemContext
+import antlr.WACCParser.ExprContext
 import arrow.core.Validated.*
 import arrow.core.invalid
 import arrow.core.valid
@@ -52,72 +54,25 @@ fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
 }
 
 private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
-  return when{
+  return when {
     SKP() != null -> Skip(scope).valid()
     ASSIGN() != null -> TODO()
-    READ() != null -> {
-      val lhs = assign_lhs().asAst(ControlFlowScope(scope))
-      return if (lhs is Valid) {
-        Read(lhs.a, scope).valid()
-      } else {
-        lhs.errors.invalid()
-      }
-    }
+    READ() != null -> assign_lhs().asAst(scope).map { Read(it, scope) }
     FREE() != null -> {
-      val expr = expr().asAst(ControlFlowScope(scope))
-      return if (expr is Valid) {
-        Free(expr.a, scope).valid()
-      } else {
-        expr.b.errors.invalid()
+      expr().asAst(scope).flatMap {
+        // FREE may only be called in expressions that evaluate to types PairT or ArrayT
+        if (it.type is AnyPairTs || it.type is AnyArrayT)
+          Free(it, scope).valid()
+        else
+          TypeError(startPosition, listOf(AnyArrayT(), AnyPairTs()), it.type, "Free")
+            .toInvalidParsed()
       }
     }
-    RETURN() != null -> {
-      val expr = expr().asAst(ControlFlowScope(scope))
-      return if (expr is Valid) {
-        Return(expr.a, scope).valid()
-      } else {
-        expr.errors.invalid()
-      }
-    }
-    EXIT() != null -> {
-      val expr = expr().asAst(ControlFlowScope(scope))
-      return if (expr is Valid) {
-        Exit(expr.a, scope).valid()
-      } else {
-        expr.errors.invalid()
-      }
-    }
-    PRINT() != null -> {
-      val expr = expr().asAst(ControlFlowScope(scope))
-      return if (expr is Valid) {
-        Print(expr.a, scope).valid()
-      } else {
-        expr.errors.invalid()
-      }
-    }
-    PRINTLN() != null -> {
-      val expr = expr().asAst(ControlFlowScope(scope))
-      return if (expr is Valid) {
-        Println(expr.a, scope).valid()
-      } else {
-        expr.errors.invalid()
-      }
-    }
-    IF() != null -> {
-      val expr = expr().asAst(ControlFlowScope(scope))
-      val statTrue = stat(0).asAst(ControlFlowScope(scope))
-      val statFalse = stat(1).asAst(ControlFlowScope(scope))
-
-      return if (expr is Valid && statTrue is Valid && statFalse is Valid){
-        when {
-            expr.a.type != BoolT -> UnexpecedTypeError(startPosition, BoolT, expr.a.type).toInvalidParsed()
-            TODO("Need to check return types of statTrue and statFalse if they have a return")
-            else -> If(expr.a, statTrue.a, statFalse.a, scope).valid()
-        }
-      } else{
-        (expr.errors + statTrue.errors + statFalse.errors).invalid()
-      }
-    }
+    RETURN() != null -> TODO()
+    EXIT() != null -> TODO()
+    PRINT() != null -> TODO()
+    PRINTLN() != null -> TODO()
+    IF() != null -> TODO()
     WHILE() != null -> TODO()
     BEGIN() != null && END() != null -> TODO()
     SEMICOLON() != null -> TODO()
@@ -138,34 +93,58 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
     STRING_LIT() != null -> StrLit(STRING_LIT().text).valid()
     PAIR_LIT() != null -> NullPairLit.valid()
 
-    ID() != null ->
-      scope[ID().text].fold({
-        VarNotFoundError(ID().position, ID().text).toInvalidParsed()
-      }, { variable ->
-        IdentExpr(variable).valid()
-      })
-    // TODO check if calling array_elem() twice is possibly a bad idea cos we are getting a child
-    //  twice
+    ID() != null -> scope[ID().text].fold({
+      VarNotFoundError(ID().position, ID().text).toInvalidParsed()
+    }, { variable ->
+      IdentExpr(variable).valid()
+    })
 
-    array_elem() != null -> {
-      val id = array_elem().ID().text
-      val exprs = array_elem().expr().map { it.asAst(scope) }
-      scope[id].fold({
-        (exprs.errors + VarNotFoundError(startPosition, id)).invalid()
-          as Parsed<Expr>
-      }, {
-        if (exprs.areAllValid)
-          ArrayElemExpr.make(startPosition, it.declaringStat.id, exprs.valids, scope)
-        else
-          exprs.errors.invalid()
-      })
-    }
+    array_elem() != null -> array_elem().asAst(scope)
 
     unary_op() != null -> UnaryOperExpr(TODO(), TODO()).valid()
     binary_op() != null -> BinaryOperExpr(TODO(), TODO(), TODO()).valid()
+    binary_op() != null -> {
+      val e1 = expr()[0].asAst(scope)
+      val e2 = expr()[1].asAst(scope)
+      val binOp = binary_op().asAst()
+      if (e1 is Valid && binOp is Valid && e2 is Valid)
+        BinaryOperExpr.make(e1.a, binOp.a, e2.a, startPosition)
+      else
+        (e1.errors + e2.errors).invalid()
+    }
     else -> TODO()
   }
 
+private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
+  val id = ID().text
+  val exprs = expr().map { it.asAst(scope) }
+  return scope[id].fold({
+    (exprs.errors + VarNotFoundError(startPosition, id)).invalid()
+      as Parsed<ArrayElemExpr>
+  }, {
+    if (exprs.areAllValid)
+      ArrayElemExpr.make(startPosition, it, exprs.valids)
+    else
+      exprs.errors.invalid()
+  })
+}
 
+private fun WACCParser.Binary_opContext.asAst(): Parsed<BinaryOper> =
+  when {
+    MUL() != null -> TimesBO.valid()
+    DIV() != null -> DivisionBO.valid()
+    MOD() != null -> ModBO.valid()
+    PLUS() != null -> PlusBO.valid()
+    MINUS() != null -> MinusBO.valid()
+    GRT() != null -> GtBO.valid()
+    GRT_EQ() != null -> GeqBO.valid()
+    LESS() != null -> LtBO.valid()
+    LESS_EQ() != null -> LeqBO.valid()
+    EQ() != null -> EqBO.valid()
+    NOT_EQ() != null -> NeqBO.valid()
+    AND() != null -> AndBO.valid()
+    OR() != null -> OrBO.valid()
+    else -> TODO()
+  }
 
 
