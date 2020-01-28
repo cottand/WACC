@@ -102,7 +102,16 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
     array_elem() != null -> array_elem().asAst(scope)
 
     unary_op() != null -> UnaryOperExpr(TODO(), TODO()).valid()
-    binary_op() != null -> BinaryOperExpr(TODO(), TODO(), TODO()).valid()
+    unary_op() != null -> {
+      val expr = expr()[0].asAst(scope)
+      val unaryOp = unary_op().asAst()
+      if (expr is Valid && unaryOp is Valid)
+        UnaryOperExpr.make(expr.a, unaryOp.a, startPosition)
+      else
+        (expr.errors + unaryOp.errors).invalid()
+
+    }
+
     binary_op() != null -> {
       val e1 = expr()[0].asAst(scope)
       val e2 = expr()[1].asAst(scope)
@@ -110,7 +119,7 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
       if (e1 is Valid && binOp is Valid && e2 is Valid)
         BinaryOperExpr.make(e1.a, binOp.a, e2.a, startPosition)
       else
-        (e1.errors + e2.errors).invalid()
+        (e1.errors + binOp.errors + e2.errors).invalid()
     }
     else -> TODO()
   }
@@ -128,6 +137,16 @@ private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
       exprs.errors.invalid()
   })
 }
+
+private fun WACCParser.Unary_opContext.asAst(): Parsed<UnaryOper> =
+  when {
+    NOT() != null -> NotUO.valid()
+    MINUS() != null -> MinusUO.valid()
+    LEN() != null -> LenUO.valid()
+    ORD() != null -> OrdUO.valid()
+    CHR() != null -> ChrUO.valid()
+    else -> TODO()
+  }
 
 private fun WACCParser.Binary_opContext.asAst(): Parsed<BinaryOper> =
   when {
