@@ -67,34 +67,22 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> {
     }
     EXIT() != null -> {
       val expr = expr().asAst(scope)
-      return if (expr is Valid) {
-        // Make sure we return an int
-        if (expr.a.type != IntT) {
+      return if (expr is Valid)
+      // Make sure we return an int
+        if (expr.a.type != IntT)
           TypeError(
-            expr().startPosition,
-            IntT,
-            expr.a.type,
-            "exit"
+            pos = expr().startPosition,
+            expectedT = IntT,
+            actual = expr.a.type,
+            op = "exit"
           ).toInvalidParsed()
-        } else {
+        else
           expr.map { Exit(it, scope) }
-        }
-      } else {
+      else
         expr.errors.invalid()
-      }
     }
-    PRINT() != null -> expr().asAst(scope).map {
-      Print(
-        it,
-        scope
-      )
-    }
-    PRINTLN() != null -> expr().asAst(scope).map {
-      Println(
-        it,
-        scope
-      )
-    }
+    PRINT() != null -> expr().asAst(scope).map { Print(it, scope) }
+    PRINTLN() != null -> expr().asAst(scope).map { Println(it, scope) }
     IF() != null -> {
       val expr = expr().asAst(ControlFlowScope(scope))
       val statTrue = stat(0).asAst(ControlFlowScope(scope))
@@ -120,7 +108,6 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> {
       val newScope = ControlFlowScope(scope)
       val e = expr().asAst(scope)
       val s = stat()[0].asAst(newScope)
-
       return when {
         e !is Valid || s !is Valid ->
           (e.errors + s.errors).invalid()
@@ -138,14 +125,9 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> {
 
     BEGIN() != null && END() != null -> {
       // Should only have one stat
-      assert(stat().size == 1)
+      require(stat().size == 1)
       val newScope = ControlFlowScope(scope)
-      return stat()[0].asAst(newScope).map {
-        BegEnd(
-          it,
-          newScope
-        )
-      }
+      return stat()[0].asAst(newScope).map { BegEnd(it, newScope) }
     }
     SEMICOLON() != null -> {
       // In a stat chain, we should only have two statements
