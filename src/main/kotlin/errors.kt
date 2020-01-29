@@ -6,6 +6,8 @@ import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.invalid
 import arrow.core.valid
+import ic.org.grammar.Return
+import ic.org.grammar.Stat
 import ic.org.grammar.Type
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -63,6 +65,9 @@ data class ControlFlowTypeError(override val msg: String) : SemanticError() {
       "differing returning types in if-else branching.\n" +
         "    Got `$thenType` in the 'then' branch and `$elseType` in the 'else' branch"
     )
+  constructor(pos: Position, stat: String)
+    : this("$pos, unreachable statement `$stat`")
+
   constructor(type: Type)
   : this("missing return statement on branch. Expecting `$type`")
   override fun toString() = msg

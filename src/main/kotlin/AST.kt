@@ -143,7 +143,7 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
           While(e.a, s.a, newScope).valid()
       }
     }
-    
+
     BEGIN() != null && END() != null -> {
       // Should only have one stat
       assert(stat().size == 1)
@@ -157,10 +157,13 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
       val stat1 = stat()[0].asAst(scope)
       val stat2 = stat()[1].asAst(scope)
 
-      return if (stat1 is Valid && stat2 is Valid) {
-        StatChain(stat1.a, stat2.a, scope).valid()
-      } else {
-        (stat1.errors + stat2.errors).invalid()
+      return when {
+        stat1 !is Valid || stat2 !is Valid ->
+          (stat1.errors + stat2.errors).invalid()
+        stat1.a is Exit || stat1.a is Return ->
+          // TODO this might break with an NPE because of revisiting nodes
+          ControlFlowTypeError(stat()[1].startPosition, stat()[1].text).toInvalidParsed()
+        else -> StatChain(stat1.a, stat2.a, scope).valid()
       }
     }
     else -> TODO()

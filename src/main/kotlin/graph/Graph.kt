@@ -44,6 +44,7 @@ sealed class Node {
       }
     }
     is TerminalIfElseNode -> TODO()
+    is BegEndNode -> TODO()
   }
 }
 
@@ -65,27 +66,45 @@ fun checkTypeDiscrepancies(t1: Type, t2: Type): Parsed<Option<Type>> =
 
 class StatementNode(val next: Node) : Node()
 class IfElseNode(val thenBody: Node, val elseBody: Node, val next: Node) : Node()
+class BegEndNode(val scopeBody: Node, val next: Node) : Node()
 class TerminalIfElseNode(val thenBody: Node, val elseBody: Node) : Node()
 class LeafReturn(val type: Type) : Node()
 object LeafExit : Node()
 
-fun Stat.asGraph(expectedType: Type): Node = when (this) {
-  is StatChain ->
-    if (thisStat is If)
-      IfElseNode(
-        thenBody = thisStat.then.asGraph(expectedType),
-        elseBody = thisStat.`else`.asGraph(expectedType),
-        next = nextStat.asGraph(expectedType)
-      )
-    else nextStat.asGraph(expectedType)
-  is Return -> LeafReturn(expr.type)
-  // We tolerate an exit statement where a Return would be expected
-  is Exit -> LeafReturn(expectedType)
-  is If -> TerminalIfElseNode(
-    thenBody = then.asGraph(expectedType),
-    elseBody = `else`.asGraph(expectedType)
-  )
-  is While -> TODO()
-  is BegEnd -> TODO()
-  else -> LeafExit
+data class UnexpectedExit(val stat: Stat) : Exception("$stat")
+
+fun Stat.asGraph(expectedType: Type): Node {
+  fun Stat.asGraphHelper(): Node = when (this) {
+    is StatChain ->
+      when (thisStat) {
+        is If -> IfElseNode(
+          thenBody = thisStat.then.asGraphHelper(),
+          elseBody = thisStat.`else`.asGraphHelper(),
+          next = nextStat.asGraphHelper()
+        )
+        is BegEnd -> BegEndNode(
+          scopeBody = thisStat.stat.asGraphHelper(),
+          next = nextStat.asGraphHelper()
+        )
+        is Return, is Exit ->
+          // Checked at [asAst()] generation
+          throw IllegalStateException("Stat chain should never come followed by an exit")
+        is While -> TODO()
+        else -> nextStat.asGraphHelper()
+      }
+
+    is Return -> LeafReturn(expr.type)
+    // We tolerate an exit statement where a Return would be expected
+    is Exit -> LeafReturn(expectedType)
+
+    is If -> TerminalIfElseNode(
+      thenBody = then.asGraphHelper(),
+      elseBody = `else`.asGraphHelper()
+    )
+
+    is While -> TODO()
+    is BegEnd -> TODO()
+    else -> LeafExit
+  }
+  return asGraphHelper()
 }
