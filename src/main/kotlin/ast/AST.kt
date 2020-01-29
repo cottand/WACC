@@ -1,4 +1,4 @@
-package ic.org
+package ic.org.ast
 
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
@@ -6,6 +6,7 @@ import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.toOption
 import arrow.core.valid
+import ic.org.*
 import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
@@ -128,7 +129,12 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
                 if (it.type is AnyPairTs || it.type is AnyArrayT)
                     Free(it, scope).valid()
                 else
-                    TypeError(startPosition, listOf(AnyArrayT(), AnyPairTs()), it.type, "Free")
+                    TypeError(
+                        startPosition,
+                        listOf(AnyArrayT(), AnyPairTs()),
+                        it.type,
+                        "Free"
+                    )
                         .toInvalidParsed()
             }
         }
@@ -144,7 +150,12 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
             return if (expr is Valid) {
                 // Make sure we return an int
                 if (expr.a.type != IntT) {
-                    TypeError(expr().startPosition, IntT, expr.a.type, "exit").toInvalidParsed()
+                    TypeError(
+                        expr().startPosition,
+                        IntT,
+                        expr.a.type,
+                        "exit"
+                    ).toInvalidParsed()
                 } else {
                     expr.map { Exit(it, scope) }
                 }
@@ -184,7 +195,12 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
                 e !is Valid || s !is Valid ->
                     (e.errors + s.errors).invalid()
                 e.a.type != BoolT ->
-                    TypeError(WHILE().position, BoolT, e.a.type, "While condition").toInvalidParsed()
+                    TypeError(
+                        WHILE().position,
+                        BoolT,
+                        e.a.type,
+                        "While condition"
+                    ).toInvalidParsed()
                 else ->
                     While(e.a, s.a, newScope).valid()
             }

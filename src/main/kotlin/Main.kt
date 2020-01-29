@@ -4,6 +4,7 @@ import antlr.WACCLexer
 import antlr.WACCParser
 import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
+import ic.org.ast.asAst
 import ic.org.grammar.GlobalScope
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
