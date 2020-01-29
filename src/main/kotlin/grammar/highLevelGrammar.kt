@@ -1,7 +1,6 @@
 package ic.org.grammar
 
 import arrow.core.Option
-import ic.org.Expr
 import ic.org.Position
 
 // <program>

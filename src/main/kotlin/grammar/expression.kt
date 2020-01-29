@@ -1,10 +1,10 @@
-package ic.org
+package ic.org.grammar
 
 import arrow.core.extensions.list.foldable.find
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.getOrElse
 import arrow.core.valid
-import ic.org.grammar.*
+import ic.org.*
 import java.lang.IllegalArgumentException
 
 // <expr>
@@ -63,7 +63,11 @@ data class ArrayElemExpr internal constructor(
         }
         arrType !is ArrayT -> TODO("Illegal type exception")
         exprs.size > arrType.depth -> TODO("Illegal type exception")
-        else -> ArrayElemExpr(variable, exprs, arrType.nthNestedType(exprs.size)).valid()
+        else -> ArrayElemExpr(
+          variable,
+          exprs,
+          arrType.nthNestedType(exprs.size)
+        ).valid()
       }
     }
   }
