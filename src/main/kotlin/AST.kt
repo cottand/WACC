@@ -14,7 +14,9 @@ fun WACCParser.FuncContext.asAst(scope: Scope): Parsed<Func> {
   // TODO are there any checks on identifiers needed
   if (type !is Valid) return type.errors.invalid()
   val ident = Ident(this.ID().text).valid()
-  val params = param_list().param().map { it.asAst(ControlFlowScope(scope)) }
+  val params = param_list()
+    .param()
+    .map { it.asAst(ControlFlowScope(scope)) }
   val stat = stat().asAst(ControlFlowScope(scope))
 
   //TODO("Is this func valid? We probably need to make checks on the stat")
@@ -31,8 +33,48 @@ private fun WACCParser.ParamContext.asAst(scope: Scope): Parsed<Param> {
   TODO("not implemented")
 }
 
-private fun WACCParser.TypeContext.asAst(scope: Scope): Parsed<Type> {
-  TODO("not implemented")
+private fun WACCParser.TypeContext.asAst(scope: Scope): Parsed<Type> =
+  when {
+    base_type() != null -> base_type().asAst(scope)
+    pair_type() != null -> pair_type().asAst(scope)
+    array_type() != null -> array_type().asAst(scope)
+    //TODO Make IllegalStateExceptions messages more explicit
+    else -> throw IllegalStateException("Should never be reached (invalid statement)")
+  }
+
+private fun WACCParser.Base_typeContext.asAst(scope: Scope): Parsed<BaseT> =
+  when {
+    INT() != null -> IntT.valid()
+    BOOL() != null -> BoolT.valid()
+    CHAR() != null -> CharT.valid()
+    STRING() != null -> StringT.valid()
+    else -> throw IllegalStateException("Should never be reached (invalid statement)")
+  }
+
+private fun WACCParser.Pair_typeContext.asAst(scope: Scope): Parsed<PairT> {
+  val fstType = pair_elem_type(0).asAst(scope)
+  val sndType = pair_elem_type(1).asAst(scope)
+  return if(fstType is Valid && sndType is Valid)
+    PairT(fstType.a, sndType.a).valid()
+  else
+    (fstType.errors + sndType.errors).invalid()
+}
+
+private fun WACCParser.Pair_elem_typeContext.asAst(scope: Scope): Parsed<Type> =
+  when {
+    base_type() != null -> base_type().asAst(scope)
+    array_type() != null -> array_type().asAst(scope)
+    PAIR() != null -> NDPairT.valid()
+    else -> throw IllegalStateException("Should never be reached (invalid statement)")
+  }
+
+private fun WACCParser.Array_typeContext.asAst(scope: Scope): Parsed<ArrayT> {
+  fun recurseArrayT(arrayT : WACCParser.Array_typeContext, currentDepth : Int) : Parsed<Pair<Type, Int>>
+          = when { base_type() != null -> base_type().asAst(scope).map { it to currentDepth }
+                   pair_type() != null -> pair_type().asAst(scope).map { it to currentDepth}
+                   array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
+                   else -> throw IllegalStateException("Should never be reached (invalid statement)")}
+  return recurseArrayT(this, 1).map { (type, depth) -> ArrayT(type, depth)}
 }
 
 fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
@@ -142,7 +184,7 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
           While(e.a, s.a, newScope).valid()
       }
     }
-    
+
     BEGIN() != null && END() != null -> {
       // Should only have one stat
       assert(stat().size == 1)

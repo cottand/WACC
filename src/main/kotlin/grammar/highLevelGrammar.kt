@@ -68,6 +68,10 @@ open class AnyArrayT : Type() {
   //fun isAlsoArray(other: Type) = other is AnyArrayT
 }
 
+// TODO Write more documentation comments for types
+/**
+ * [depth] = 1 for 1-dimensional Array
+ */
 data class ArrayT(val type: Type, val depth: Int = 1) : AnyArrayT() {
   init {
     require(depth > 0)
@@ -90,7 +94,8 @@ data class ArrayT(val type: Type, val depth: Int = 1) : AnyArrayT() {
 }
 
 open class AnyPairTs : Type()
-data class PairT(val fstT: PairElemT, val sndT: PairElemT) : AnyPairTs()
+data class PairT(val fstT: Type, val sndT: Type) : AnyPairTs()
+object NDPairT : AnyPairTs()
 
 // <base-type>
 object IntT : BaseT()
@@ -98,13 +103,6 @@ object IntT : BaseT()
 object BoolT : BaseT()
 object CharT : BaseT()
 object StringT : BaseT()
-
-// <pair-elem-type>
-sealed class PairElemT
-
-data class PairElemBaseT(val baseType: BaseT) : PairElemT()
-data class PairElemArrayT(val arrayType: ArrayT) : PairElemT()
-object NDPairT : PairElemT()
 
 // <ident>
 data class Ident(val name: String)
