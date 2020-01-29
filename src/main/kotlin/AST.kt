@@ -8,7 +8,6 @@ import arrow.core.valid
 import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
-import javax.naming.ldap.Control
 
 fun WACCParser.FuncContext.asAst(scope: Scope): Parsed<Func> {
   val type = this.type().asAst(ControlFlowScope(scope))
@@ -163,7 +162,7 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
         (stat1.errors + stat2.errors).invalid()
       }
     }
-    else -> TODO()
+    else -> throw IllegalStateException("Should never be reached (invalid statement)")
   }
 }
 
@@ -210,7 +209,7 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
       else
         (e1.errors + binOp.errors + e2.errors).invalid()
     }
-    else -> TODO()
+    else -> throw IllegalStateException("Should never be reached (invalid expr)")
   }
 
 private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
@@ -234,7 +233,7 @@ private fun WACCParser.Unary_opContext.asAst(): Parsed<UnaryOper> =
     LEN() != null -> LenUO.valid()
     ORD() != null -> OrdUO.valid()
     CHR() != null -> ChrUO.valid()
-    else -> TODO()
+    else -> throw IllegalStateException("Should never be reached (invalid unary op)")
   }
 
 private fun WACCParser.Binary_opContext.asAst(): Parsed<BinaryOper> =
@@ -252,7 +251,7 @@ private fun WACCParser.Binary_opContext.asAst(): Parsed<BinaryOper> =
     NOT_EQ() != null -> NeqBO.valid()
     AND() != null -> AndBO.valid()
     OR() != null -> OrBO.valid()
-    else -> TODO()
+    else -> throw IllegalStateException("Should never be reached (invalid binop)")
   }
 
 
