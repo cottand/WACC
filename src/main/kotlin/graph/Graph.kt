@@ -161,8 +161,6 @@ object LeafExit : Node() {
   override val returnType: Parsed<Option<Type>> = Option.empty<Type>().valid()
 }
 
-data class UnexpectedExit(val stat: Stat) : Exception("$stat")
-
 fun Stat.asGraph(expectedType: Type): Node {
   fun Stat.asGraphHelper(): Node = when (this) {
     is StatChain ->

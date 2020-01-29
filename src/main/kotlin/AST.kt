@@ -160,7 +160,7 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
       return when {
         stat1 !is Valid || stat2 !is Valid ->
           (stat1.errors + stat2.errors).invalid()
-        stat1.a is Exit || stat1.a is Return ->
+        stat1.a is Return ->
           // TODO this might break with an NPE because of revisiting nodes
           ControlFlowTypeError(stat()[1].startPosition, stat()[1].text).toInvalidParsed()
         else -> StatChain(stat1.a, stat2.a, scope).valid()
