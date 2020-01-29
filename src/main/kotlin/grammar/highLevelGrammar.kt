@@ -1,6 +1,8 @@
 package ic.org.grammar
 
+import arrow.core.Option
 import ic.org.Expr
+import ic.org.Position
 
 // <program>
 data class Prog(
@@ -22,6 +24,7 @@ data class Param(val type: Type, val ident: Ident)
 // <stat>
 sealed class Stat {
   abstract val scope: Scope
+  val position: Option<Position> = Option.empty()
 }
 
 data class Skip(override val scope: Scope) : Stat()
