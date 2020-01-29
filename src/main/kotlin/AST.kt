@@ -219,7 +219,7 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
 private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
   when {
     // TODO check there are no cases where toInt() ot toBoolean() would fail
-    int_lit() != null -> IntLit(int_lit().text.toInt()).valid()
+    int_lit() != null -> IntLit((int_lit().int_sign()?.text +  int_lit().text).toInt()).valid()
     BOOL_LIT() != null -> BoolLit(BOOL_LIT().text!!.toBoolean()).valid()
     CHAR_LIT() != null -> CharLit(CHAR_LIT().text.toCharArray()[0]).valid()
     STRING_LIT() != null -> StrLit(STRING_LIT().text).valid()
