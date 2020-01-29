@@ -4,6 +4,7 @@ import arrow.core.*
 import ic.org.ControlFlowTypeError
 import ic.org.Parsed
 import ic.org.errors
+import ic.org.flatMap
 import ic.org.grammar.*
 import kotlinx.collections.immutable.plus
 
@@ -61,17 +62,6 @@ sealed class Node {
 }
 
 /**
- * Node that represents statement Sequentiality, or a '`;`'.
- * It is a Node with a single incomeing edge and a single outgoing edge, [next].
- */
-class StatementNode(val next: Node) : Node() {
-  /**
-   * A `;` returns whatever the next statement returns.
-   */
-  override val returnType: Parsed<Option<Type>> by lazy { next.returnType }
-}
-
-/**
  * Node that represents an [If] followed by more code, [next].
  */
 class IfElseNode(val thenBody: Node, val elseBody: Node, val next: Node) : Node() {
@@ -108,11 +98,23 @@ class IfElseNode(val thenBody: Node, val elseBody: Node, val next: Node) : Node(
 }
 
 /**
- * TODO
+ * Represents a new Scope followed by a statement [enxt]
  */
 class BegEndNode(val scopeBody: Node, val next: Node) : Node() {
-  override val returnType: Parsed<Option<Type>>
-    get() = TODO("not implemented")
+  override val returnType by lazy {
+    scopeBody.returnType.flatMap {
+      it.fold({
+        next.returnType
+      }, {
+        // A new Scope should not contain Return statements if it is followd by a statement.
+        ControlFlowTypeError("Unreachable statement").toInvalidParsed()
+      })
+    }
+  }
+}
+
+class TerminalBegEndNode(private val scopeBody: Node) : Node() {
+  override val returnType by lazy { scopeBody.returnType }
 }
 
 /**
@@ -191,7 +193,7 @@ fun Stat.asGraph(expectedType: Type): Node {
     )
 
     is While -> TODO()
-    is BegEnd -> TODO()
+    is BegEnd -> TerminalBegEndNode(stat.asGraphHelper())
     else -> LeafExit
   }
   return asGraphHelper()
