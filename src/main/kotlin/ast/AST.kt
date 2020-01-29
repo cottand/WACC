@@ -233,7 +233,14 @@ private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> {
 }
 
 private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
-  TODO("not implemented")
+  return when {
+    array_lit() != null -> TODO()
+    NEWPAIR() != null -> TODO()
+    pair_elem() != null -> TODO()
+    CALL() != null -> TODO()
+    expr() != null -> TODO()
+    else -> throw IllegalStateException("Should never be reached (invalid assign_rhs)")
+  }
 }
 
 private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
