@@ -11,25 +11,28 @@ import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 
-fun WACCParser.FuncContext.asAst(scope: Scope): Parsed<Func> {
-  val type = this.type().asAst(ControlFlowScope(scope))
+fun WACCParser.FuncContext.asAst(): Parsed<Func> {
+  val ident = Ident(this.ID().text)
+  val funcScope = FuncScope(ident)
+  val type = this.type().asAst(ControlFlowScope(funcScope))
   // TODO are there any checks on identifiers needed
   if (type !is Valid) return type.errors.invalid()
-  val ident = Ident(this.ID().text).valid()
   val params = param_list().toOption().fold({
     listOf<Parsed<Param>>()
   }, { list ->
-    list.param().map { it.asAst(ControlFlowScope(scope)) }
+    list.param().map { it.asAst(ControlFlowScope(funcScope)) }
   })
-  val stat = stat().asAst(ControlFlowScope(scope))
+  val stat = stat().asAst(ControlFlowScope(funcScope))
 
   //TODO("Is this func valid? We probably need to make checks on the stat")
 
-  return if (params.areAllValid && ident is Valid && type is Valid && stat is Valid) {
+  return if (params.areAllValid && stat is Valid) {
     val validParams = params.map { (it as Valid).a }
-    Func(type.a, ident.a, validParams, stat.a).valid()
+    Func(type.a, ident, validParams, stat.a)
+      .also { GlobalScope.functions.push(it) }
+      .valid()
   } else {
-    (type.errors + ident.errors + params.errors + stat.errors).invalid()
+    (type.errors + params.errors + stat.errors).invalid()
   }
 }
 
@@ -39,14 +42,14 @@ private fun WACCParser.ParamContext.asAst(scope: Scope): Parsed<Param> {
 
 private fun WACCParser.TypeContext.asAst(scope: Scope): Parsed<Type> =
   when {
-    base_type() != null -> base_type().asAst(scope)
-    pair_type() != null -> pair_type().asAst(scope)
-    array_type() != null -> array_type().asAst(scope)
+    base_type() != null -> base_type().asAst()
+    pair_type() != null -> pair_type().asAst()
+    array_type() != null -> array_type().asAst()
     //TODO Make IllegalStateExceptions messages more explicit
     else -> throw IllegalStateException("Should never be reached (invalid statement)")
   }
 
-private fun WACCParser.Base_typeContext.asAst(scope: Scope): Parsed<BaseT> =
+private fun WACCParser.Base_typeContext.asAst(): Parsed<BaseT> =
   when {
     INT() != null -> IntT.valid()
     BOOL() != null -> BoolT.valid()
@@ -55,9 +58,9 @@ private fun WACCParser.Base_typeContext.asAst(scope: Scope): Parsed<BaseT> =
     else -> throw IllegalStateException("Should never be reached (invalid statement)")
   }
 
-private fun WACCParser.Pair_typeContext.asAst(scope: Scope): Parsed<PairT> {
-  val fstType = pair_elem_type(0).asAst(scope)
-  val sndType = pair_elem_type(1).asAst(scope)
+private fun WACCParser.Pair_typeContext.asAst(): Parsed<PairT> {
+  val fstType = pair_elem_type(0).asAst()
+  val sndType = pair_elem_type(1).asAst()
   return if (fstType is Valid && sndType is Valid)
     PairT(fstType.a, sndType.a).valid()
   else
@@ -65,29 +68,29 @@ private fun WACCParser.Pair_typeContext.asAst(scope: Scope): Parsed<PairT> {
 }
 
 // TODO When checking Types: If NDPairT, we need to recurse to find the right Pair Type!
-private fun WACCParser.Pair_elem_typeContext.asAst(scope: Scope): Parsed<Type> =
+private fun WACCParser.Pair_elem_typeContext.asAst(): Parsed<Type> =
   when {
-    base_type() != null -> base_type().asAst(scope)
-    array_type() != null -> array_type().asAst(scope)
+    base_type() != null -> base_type().asAst()
+    array_type() != null -> array_type().asAst()
     PAIR() != null -> NDPairT.valid()
     else -> throw IllegalStateException("Should never be reached (invalid statement)")
   }
 
-private fun WACCParser.Array_typeContext.asAst(scope: Scope): Parsed<ArrayT> {
+private fun WACCParser.Array_typeContext.asAst(): Parsed<ArrayT> {
   fun recurseArrayT(
     arrayT: WACCParser.Array_typeContext,
     currentDepth: Int
   ): Parsed<Pair<Type, Int>> = when {
-    base_type() != null -> base_type().asAst(scope).map { it to currentDepth }
-    pair_type() != null -> pair_type().asAst(scope).map { it to currentDepth }
+    base_type() != null -> base_type().asAst().map { it to currentDepth }
+    pair_type() != null -> pair_type().asAst().map { it to currentDepth }
     array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
     else -> throw IllegalStateException("Should never be reached (invalid statement)")
   }
   return recurseArrayT(this, 1).map { (type, depth) -> ArrayT(type, depth) }
 }
 
-fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
-  val funcs = func().map { it.asAst(ControlFlowScope(scope)) }
+fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
+  val funcs = func().map { it.asAst() }
   val antlrStat = stat()
   // TODO rewrite syntactic error message with this.startPosition
     ?: return persistentListOf(SyntacticError("Malformed program at $text")).invalid()

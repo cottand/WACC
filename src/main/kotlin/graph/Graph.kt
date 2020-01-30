@@ -1,10 +1,7 @@
 package ic.org.graph
 
 import arrow.core.*
-import ic.org.ControlFlowTypeError
-import ic.org.Parsed
-import ic.org.errors
-import ic.org.flatMap
+import ic.org.*
 import ic.org.grammar.*
 import kotlinx.collections.immutable.plus
 
@@ -27,6 +24,17 @@ import kotlinx.collections.immutable.plus
  */
 sealed class Node {
   abstract val returnType: Parsed<Option<Type>>
+
+  fun checkReturnType(expectedType: Type, ident: Ident): Parsed<None> =
+    returnType.flatMap { maybeType ->
+      maybeType.fold({
+        ControlFlowTypeError(expectedType).toInvalidParsed()
+      }, { actualType ->
+        if (actualType != expectedType)
+          IllegalFunctionReturnTypeError(ident, expectedType, actualType).toInvalidParsed()
+        else None.valid()
+      })
+    }
 
   /**
    * Utility functions for type checking in the control flow branches

@@ -6,6 +6,7 @@ import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.invalid
 import ic.org.ast.Constatns
+import ic.org.grammar.Ident
 import ic.org.grammar.Type
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -92,6 +93,11 @@ data class InvalidReturn(override val msg: String) : SemanticError() {
 data class IntegerOverflowError(override val msg: String) : SemanticError(){
   constructor(pos: Position, i: Int)
     : this("$pos, invalid integer `$i`. Not in ${Constatns.intRange}")
+}
+
+data class IllegalFunctionReturnTypeError(override val msg: String) : SemanticError() {
+  constructor(ident: Ident, expected: Type, actual: Type)
+  : this("At function `${ident.name}`, expected return type `$expected` but found `$actual`")
 }
 
 inline val <A> Parsed<A>.errors: Errors

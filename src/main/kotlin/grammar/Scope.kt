@@ -33,6 +33,8 @@ sealed class Scope {
    */
   val variables = LinkedList<Variable>()
 
+  val functions = LinkedList<Func>()
+
   internal val varMap
     get() = variables.map { it.declaringStat.id to it }.toMap()
 }
@@ -45,10 +47,10 @@ object GlobalScope : Scope() {
 }
 
 /**
- * Scope created by [func]. Does not see [GlobalScope] variables, and is parent of
+ * Scope created by [funcIdent]. Does not see [GlobalScope] variables, and is parent of
  * [ControlFlowScope] defined inside the [Func].
  */
-data class FuncScope(val func: Func) : Scope() {
+data class FuncScope(val funcIdent: Ident) : Scope() {
 
   // A [FuncScope] does not have any parent scopes, so if the variable is not here, return an
   // option.
