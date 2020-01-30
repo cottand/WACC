@@ -257,7 +257,18 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
 
       return ArrayLit(valid).valid()
     }
-    NEWPAIR() != null -> TODO()
+    NEWPAIR() != null -> {
+      assert(expr().size == 2)
+
+      val e1 = expr()[0].asAst(scope)
+      val e2 = expr()[1].asAst(scope)
+
+      return if (e1 is Valid && e2 is Valid) {
+        Newpair(e1.a, e2.a).valid()
+      } else {
+        (e1.errors + e2.errors).invalid()
+      }
+    }
     pair_elem() != null -> TODO()
     CALL() != null -> TODO()
     expr() != null -> TODO()
