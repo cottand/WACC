@@ -204,7 +204,6 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
           While(e.a, s.a, newScope).valid()
       }
     }
-
     BEGIN() != null && END() != null -> {
       // Should only have one stat
       assert(stat().size == 1)

@@ -2,6 +2,7 @@ package ic.org.grammar
 
 import arrow.core.Option
 import ic.org.Position
+import arrow.core.Some
 
 // <program>
 data class Prog(
@@ -44,11 +45,19 @@ data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope
 }
 
 // <assign-lhs>
-sealed class AssLHS
+sealed class AssLHS {
+  abstract fun fetchType(scope: Scope) : Option<Type>
+}
 
-data class IdentLHS(val ident: Ident) : AssLHS()
-data class ArrayElemLHS(val arrayElem: ArrayElem) : AssLHS()
-data class PairElemLHS(val pairElem: PairElem) : AssLHS()
+data class IdentLHS(val ident: Ident) : AssLHS() {
+  override fun fetchType(scope: Scope): Option<Type> = scope[ident].map { it.type }
+}
+data class ArrayElemLHS(val arrayElem: ArrayElem) : AssLHS() {
+  override fun fetchType(scope: Scope): Option<Type> = scope[arrayElem.ident].map { it.type }
+}
+data class PairElemLHS(val pairElem: PairElem) : AssLHS() {
+  override fun fetchType(scope: Scope): Option<Type> = Some(pairElem.expr.type)
+}
 
 // <assign-rhs>
 sealed class AssRHS
@@ -60,10 +69,12 @@ data class PairElemRHS(val pairElem: PairElem) : AssRHS()
 data class Call(val id: Ident, val args: List<Expr>) : AssRHS()
 
 // <pair-elem>
-sealed class PairElem
+sealed class PairElem {
+  abstract val expr: Expr
+}
 
-data class Fst(val expr: Expr) : PairElem()
-data class Snd(val expr: Expr) : PairElem()
+data class Fst(override val expr: Expr) : PairElem()
+data class Snd(override val expr: Expr) : PairElem()
 
 // <type>
 sealed class Type
