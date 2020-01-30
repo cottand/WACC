@@ -1,5 +1,6 @@
 package ic.org.grammar
 
+import arrow.core.None
 import arrow.core.Option
 import ic.org.Position
 import arrow.core.Some
@@ -60,13 +61,42 @@ data class PairElemLHS(val pairElem: PairElem) : AssLHS() {
 }
 
 // <assign-rhs>
-sealed class AssRHS
+sealed class AssRHS {
+  abstract fun fetchType(scope: Scope) : Option<Type>
+}
 
-data class ExprRHS(val expr: Expr) : AssRHS()
-data class ArrayLit(val exprs: List<Expr>) : AssRHS()
-data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS()
-data class PairElemRHS(val pairElem: PairElem) : AssRHS()
-data class Call(val id: Ident, val args: List<Expr>) : AssRHS()
+data class ExprRHS(val expr: Expr) : AssRHS() {
+  override fun fetchType(scope: Scope): Option<Type> = Some(expr.type)
+}
+data class ArrayLit(val exprs: List<Expr>) : AssRHS() {
+  override fun fetchType(scope: Scope): Option<Type> {
+    if (exprs.isEmpty()) {
+      return None
+    }
+
+    // Make sure expressions all have the same type
+    val t = exprs[0].type
+    for (e in exprs) {
+      if (e.type != t) {
+        return None
+      }
+    }
+
+    return Some(t)
+  }
+}
+data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
+  override fun fetchType(scope: Scope): Option<Type> {
+    //return Some(PairT(expr1.type, expr2.type))
+    TODO("not implemented")
+  }
+}
+data class PairElemRHS(val pairElem: PairElem) : AssRHS() {
+  override fun fetchType(scope: Scope): Option<Type> = Some(pairElem.expr.type)
+}
+data class Call(val id: Ident, val args: List<Expr>) : AssRHS() {
+  override fun fetchType(scope: Scope): Option<Type> = scope.get(id).map { it.type }
+}
 
 // <pair-elem>
 sealed class PairElem {
@@ -128,4 +158,3 @@ data class ArrayElem(
   val ident: Ident,
   val indices: List<Expr>
 )
-

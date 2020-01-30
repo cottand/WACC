@@ -319,5 +319,3 @@ private fun WACCParser.Binary_opContext.asAst(): BinaryOper =
     OR() != null -> OrBO
     else -> NOT_REACHED()
   }
-
-
