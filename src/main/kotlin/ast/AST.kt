@@ -2,6 +2,7 @@ package ic.org.ast
 
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
+import arrow.core.None
 import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.toOption
@@ -233,7 +234,30 @@ private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> {
 
 private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
   return when {
-    array_lit() != null -> TODO()
+    array_lit() != null -> {
+      val tok_exprs = array_lit(0).expr()
+      if (tok_exprs.isEmpty()) {
+        return ArrayLit(emptyList()).valid()
+      }
+
+      // Transform all the expressions to ASTs
+      val exprs = tok_exprs.map { it.asAst(scope) }
+      if (!exprs.areAllValid) {
+        return exprs.errors.invalid()
+      }
+
+      val valid = exprs.valids
+
+      // Make sure expressions all have the same type
+      val t = valid[0].type
+      for (e in valid) {
+        if (e.type != t) {
+          return TypeError(tok_exprs[0].startPosition, t, e.type, "array building").toInvalidParsed()
+        }
+      }
+
+      return ArrayLit(valid).valid()
+    }
     NEWPAIR() != null -> TODO()
     pair_elem() != null -> TODO()
     CALL() != null -> TODO()

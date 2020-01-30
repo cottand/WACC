@@ -71,24 +71,22 @@ data class ExprRHS(val expr: Expr) : AssRHS() {
 data class ArrayLit(val exprs: List<Expr>) : AssRHS() {
   override fun fetchType(scope: Scope): Option<Type> {
     if (exprs.isEmpty()) {
+      // TODO should this be type empty array somehow?
       return None
     }
 
     // Make sure expressions all have the same type
+    // We assert since it should always be the case
     val t = exprs[0].type
     for (e in exprs) {
-      if (e.type != t) {
-        return None
-      }
+      assert (e.type != t)
     }
 
     return Some(t)
   }
 }
 data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
-  override fun fetchType(scope: Scope): Option<Type> {
-    return Some(PairT(expr1.type, expr2.type))
-  }
+  override fun fetchType(scope: Scope): Option<Type> = Some(PairT(expr1.type, expr2.type))
 }
 data class PairElemRHS(val pairElem: PairElem) : AssRHS() {
   override fun fetchType(scope: Scope): Option<Type> = Some(pairElem.expr.type)
