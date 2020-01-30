@@ -2,9 +2,6 @@ package ic.org
 
 import antlr.WACCLexer
 import antlr.WACCParser
-import arrow.core.None
-import arrow.core.Validated.Invalid
-import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.ast.asAst
@@ -16,7 +13,6 @@ import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.io.File
-import kotlin.time.ClockMark
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
@@ -42,7 +38,7 @@ data class CompileResult(val success: Boolean, val exitCode: Int, val message: S
 
 @ExperimentalTime
 class WACCCompiler(private val filename: String) {
-  fun compile(syntaxOnly: Boolean = false): CompileResult {
+  fun compile(): CompileResult {
     val start = MonoClock.markNow()
     val input = File(filename)
     if (!(input.exists() && input.isFile)) {
