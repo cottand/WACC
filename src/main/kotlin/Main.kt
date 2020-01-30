@@ -2,10 +2,14 @@ package ic.org
 
 import antlr.WACCLexer
 import antlr.WACCParser
+import arrow.core.None
 import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
+import arrow.core.invalid
+import arrow.core.valid
 import ic.org.ast.asAst
-import ic.org.grammar.GlobalScope
+import ic.org.grammar.Prog
+import ic.org.graph.asGraph
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
 import org.antlr.v4.runtime.CharStreams
@@ -47,35 +51,46 @@ class WACCCompiler(private val filename: String) {
     val lexer = WACCLexer(stream)
     val tokens = CommonTokenStream(lexer)
     val parser = WACCParser(tokens)
-    val syntacticErrors = checkSyntax(parser)
-    return if (syntacticErrors.isNotEmpty())
-      CompileResult(
-        success = false,
-        exitCode = syntacticErrors.first().code,
-        message = syntacticErrors.asLines(filename)
-      )
-    else when (val ast = parser.prog().asAst(GlobalScope)) {
-      is Valid -> CompileResult.success(duration = start.elapsedNow())
-      is Invalid -> CompileResult(
-        success = false,
-        exitCode = ast.e.first().code,
-        message = ast.e.asLines(filename)
-      )
-    }
+    return checkSyntax(parser)
+      .flatMap { it.prog().asAst() }
+      .flatMap { it.checkControlFlow() }
+      .fold({ errors ->
+        CompileResult(
+          success = false,
+          exitCode = errors.first().code,
+          message = errors.asLines(filename)
+        )
+      }, {
+        CompileResult.success(duration = start.elapsedNow())
+      })
   }
 
   companion object {
-    private fun checkSyntax(parser: WACCParser): List<SyntacticError> {
+    private fun checkSyntax(parser: WACCParser): Parsed<WACCParser> {
       val listener = CollectingErrorListener()
       parser.removeErrorListeners()
       parser.addErrorListener(listener)
       parser.tokenStream.seek(0)
       ParseTreeWalker().walk(DummyListener(), parser.prog())
       parser.tokenStream.seek(0)
-      return listener.errorsSoFar
+      return if (listener.errorsSoFar.isEmpty())
+        parser.valid()
+      else
+        listener.errorsSoFar.invalid()
     }
+
+    fun Prog.checkControlFlow(): Parsed<Prog> = funcs
+      .map { it.stat.asGraph(it.retType) to it }
+      .map { (graph, func) -> graph.checkReturnType(func.retType, func.ident) }
+      .let {
+        if (it.areAllValid)
+          this.valid()
+        else
+          it.errors.invalid()
+      }
   }
 }
+
 
 
 

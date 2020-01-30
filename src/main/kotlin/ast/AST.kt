@@ -2,9 +2,7 @@ package ic.org.ast
 
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
-import arrow.core.Some
 import arrow.core.Validated.Valid
-import arrow.core.extensions.option.monad.flatMap
 import arrow.core.invalid
 import arrow.core.toOption
 import arrow.core.valid
@@ -75,17 +73,17 @@ private fun WACCParser.Pair_elem_typeContext.asAst(scope: Scope): Parsed<Type> =
         else -> throw IllegalStateException("Should never be reached (invalid statement)")
     }
 
-private fun WACCParser.Array_typeContext.asAst(scope: Scope): Parsed<ArrayT> {
+private fun WACCParser.Array_typeContext.asAst(): Parsed<ArrayT> {
     fun recurseArrayT(
         arrayT: WACCParser.Array_typeContext,
         currentDepth: Int
     ): Parsed<Pair<Type, Int>> = when {
-        base_type() != null -> base_type().asAst(scope).map { it to currentDepth }
-        pair_type() != null -> pair_type().asAst(scope).map { it to currentDepth }
-        array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
-        else -> throw IllegalStateException("Should never be reached (invalid statement)")
-    }
-    return recurseArrayT(this, 1).map { (type, depth) -> ArrayT(type, depth) }
+        base_type() != null -> base_type().asAst().map { it to currentDepth }
+    pair_type() != null -> pair_type().asAst().map { it to currentDepth }
+    array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
+    else -> throw IllegalStateException("Should never be reached (invalid statement)")
+  }
+  return recurseArrayT(this, 1).map { (type, depth) -> ArrayT(type, depth) }
 }
 
 fun WACCParser.ProgContext.asAst(scope: Scope): Parsed<Prog> {
@@ -235,7 +233,7 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
 }
 
 private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
-    when {
+  when {
         ID() != null -> scope[ID().text].fold({
             VarNotFoundError(startPosition, ID().text).toInvalidParsed()
         }, {
@@ -261,16 +259,17 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
 }
 
 private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
-    when {
-        // TODO check there are no cases where toInt() ot toBoolean() would fail
-        // TODO int_lit().text seems to not return right number when int_sign is not null
-        int_lit() != null -> IntLit(
-            (int_lit().int_sign()?.text ?: "" + int_lit().text).toInt()
-        ).valid()
-        BOOL_LIT() != null -> BoolLit(BOOL_LIT().text!!.toBoolean()).valid()
-        CHAR_LIT() != null -> CharLit(CHAR_LIT().text.toCharArray()[0]).valid()
-        STRING_LIT() != null -> StrLit(STRING_LIT().text).valid()
-        PAIR_LIT() != null -> NullPairLit.valid()
+  when {
+    // TODO why is the int overflow test not passing
+    int_lit() != null -> when (val i = int_lit().text.toInt()) {
+      in Constatns.intRange -> IntLit(i).valid()
+      else -> IntegerOverflowError(startPosition, i).toInvalidParsed().print()
+    }
+    BOOL_LIT() != null
+    -> BoolLit(BOOL_LIT().text!!.toBoolean()).valid()
+    CHAR_LIT() != null -> CharLit(CHAR_LIT().text.toCharArray()[0]).valid()
+    STRING_LIT() != null -> StrLit(STRING_LIT().text).valid()
+    PAIR_LIT() != null -> NullPairLit.valid()
 
         ID() != null -> scope[ID().text].fold({
             VarNotFoundError(ID().position, ID().text).toInvalidParsed()
