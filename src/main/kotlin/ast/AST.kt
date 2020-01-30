@@ -269,7 +269,22 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
         (e1.errors + e2.errors).invalid()
       }
     }
-    pair_elem() != null -> TODO()
+    pair_elem() != null -> {
+      assert(pair_elem().FST() != null || pair_elem().SND() != null)
+      assert(expr().size == 1)
+
+      val e = expr()[0].asAst(scope)
+
+      return if (e is Valid) {
+        if (pair_elem().FST() != null) {
+          PairElemRHS(Fst(e.a)).valid()
+        } else {
+          PairElemRHS(Snd(e.a)).valid()
+        }
+      } else {
+        e.errors.invalid()
+      }
+    }
     CALL() != null -> TODO()
     expr() != null -> TODO()
     else -> throw IllegalStateException("Should never be reached (invalid assign_rhs)")
