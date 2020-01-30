@@ -92,7 +92,7 @@ data class PairElemRHS(val pairElem: PairElem) : AssRHS() {
   override fun fetchType(scope: Scope): Option<Type> = Some(pairElem.expr.type)
 }
 data class Call(val id: Ident, val args: List<Expr>) : AssRHS() {
-  override fun fetchType(scope: Scope): Option<Type> = scope.get(id).map { it.type }
+  override fun fetchType(scope: Scope): Option<Type> = scope[id].map { it.type }
 }
 
 // <pair-elem>

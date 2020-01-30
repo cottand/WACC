@@ -2,11 +2,8 @@ package ic.org.ast
 
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
-import arrow.core.Some
+import arrow.core.*
 import arrow.core.Validated.Valid
-import arrow.core.invalid
-import arrow.core.toOption
-import arrow.core.valid
 import ic.org.*
 import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
@@ -81,9 +78,9 @@ private fun WACCParser.Array_typeContext.asAst(): Parsed<ArrayT> {
     arrayT: WACCParser.Array_typeContext,
     currentDepth: Int
   ): Parsed<Pair<Type, Int>> = when {
-    base_type() != null -> base_type().asAst().valid().map { it to currentDepth }
-    pair_type() != null -> pair_type().asAst().map { it to currentDepth }
-    array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
+    arrayT.base_type() != null -> arrayT.base_type().asAst().valid().map { it to currentDepth }
+    arrayT.pair_type() != null -> arrayT.pair_type().asAst().map { it to currentDepth }
+    arrayT.array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
     else -> NOT_REACHED()
   }
   return recurseArrayT(this, 1).map { (type, depth) -> ArrayT(type, depth) }
@@ -240,7 +237,6 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
         return ArrayLit(emptyList()).valid()
       }
 
-
       // Transform all the expressions to ASTs
       val exprs = tokExprs.map { it.asAst(scope) }
       if (!exprs.areAllValid) {
@@ -273,9 +269,8 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
     }
     pair_elem() != null -> {
       assert(pair_elem().FST() != null || pair_elem().SND() != null)
-      assert(expr().size == 1)
 
-      val e = expr()[0].asAst(scope)
+      val e = pair_elem().expr().asAst(scope)
 
       return if (e is Valid) {
         if (pair_elem().FST() != null) {
@@ -289,7 +284,10 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
     }
     CALL() != null -> {
       // Make ASTs out of all the args
-      val args = arg_list().expr().map { it.asAst(scope) }
+      val args: List<Parsed<Expr>> =
+        arg_list()
+          ?.expr().toOption().getOrElse { emptyList() }
+          .map { it.asAst(scope) }
       if (!args.areAllValid) {
         return args.errors.invalid()
       }
@@ -310,7 +308,7 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
       return if (e is Valid) {
         ExprRHS(e.a).valid()
       } else {
-         e.errors.invalid()
+        e.errors.invalid()
       }
     }
     else -> throw IllegalStateException("Should never be reached (invalid assign_rhs)")
@@ -324,8 +322,8 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
       in IntLit.range -> IntLit(i.toInt()).valid()
       else -> IntegerOverflowError(startPosition, i).toInvalidParsed().print()
     }
-    BOOL_LIT() != null
-    -> BoolLit(BOOL_LIT().text!!.toBoolean()).valid()
+
+    BOOL_LIT() != null -> BoolLit(BOOL_LIT().text!!.toBoolean()).valid()
     CHAR_LIT() != null -> CharLit(CHAR_LIT().text.toCharArray()[0]).valid()
     STRING_LIT() != null -> StrLit(STRING_LIT().text).valid()
     PAIR_LIT() != null -> NullPairLit.valid()
@@ -335,22 +333,20 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
     }, { variable ->
       IdentExpr(variable).valid()
     })
-
     array_elem() != null -> array_elem().asAst(scope)
-
-    unary_op() != null -> expr()[0].asAst(scope)
+    unary_op() != null -> expr(0).asAst(scope)
       .flatMap { UnaryOperExpr.make(it, unary_op().asAst(), startPosition) }
-
     binary_op() != null -> {
-      val e1 = expr()[0].asAst(scope)
-      val e2 = expr()[1].asAst(scope)
+      val e1 = expr(0).asAst(scope)
+      val e2 = expr(1).asAst(scope)
       val binOp = binary_op().asAst()
       if (e1 is Valid && e2 is Valid)
         BinaryOperExpr.make(e1.a, binOp, e2.a, startPosition)
       else
         (e1.errors + e2.errors).invalid()
     }
-    else -> NOT_REACHED()
+    // The remaining case is a nested expression
+    else -> expr(0).asAst(scope)
   }
 
 private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {

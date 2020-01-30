@@ -16,6 +16,7 @@ import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.io.File
+import kotlin.time.ClockMark
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
@@ -41,7 +42,7 @@ data class CompileResult(val success: Boolean, val exitCode: Int, val message: S
 
 @ExperimentalTime
 class WACCCompiler(private val filename: String) {
-  fun compile(): CompileResult {
+  fun compile(syntaxOnly: Boolean = false): CompileResult {
     val start = MonoClock.markNow()
     val input = File(filename)
     if (!(input.exists() && input.isFile)) {

@@ -200,12 +200,12 @@ object GeqBO : CompBinOp()      // >=
 object LtBO : CompBinOp()       // <
 object LeqBO : CompBinOp()      // <=
 object EqBO : BinaryOper() {       // ==
-  override val inTypes = listOf(IntT, BoolT, CharT, StringT, TODO("Add?"))
+  override val inTypes = listOf(IntT, BoolT, CharT, StringT) //TODO add?
   override val retType = BoolT
 }
 
 object NeqBO : BinaryOper() {      // !=
-  override val inTypes = listOf(IntT, BoolT, CharT, StringT, TODO("Add?"))
+  override val inTypes = listOf(IntT, BoolT, CharT, StringT) // TODO add?
   override val retType = BoolT
 }
 
