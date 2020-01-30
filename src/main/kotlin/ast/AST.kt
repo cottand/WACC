@@ -301,30 +301,30 @@ private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
 
 private fun WACCParser.Unary_opContext.asAst(): Parsed<UnaryOper> =
   when {
-    NOT() != null -> NotUO.valid()
-    MINUS() != null -> MinusUO.valid()
-    LEN() != null -> LenUO.valid()
-    ORD() != null -> OrdUO.valid()
-    CHR() != null -> ChrUO.valid()
+    NOT() != null -> NotUO
+    MINUS() != null -> MinusUO
+    LEN() != null -> LenUO
+    ORD() != null -> OrdUO
+    CHR() != null -> ChrUO
     else -> throw IllegalStateException("Should never be reached (invalid unary op)")
-  }
+  }.valid()
 
 private fun WACCParser.Binary_opContext.asAst(): Parsed<BinaryOper> =
   when {
-    MUL() != null -> TimesBO.valid()
-    DIV() != null -> DivisionBO.valid()
-    MOD() != null -> ModBO.valid()
-    PLUS() != null -> PlusBO.valid()
-    MINUS() != null -> MinusBO.valid()
-    GRT() != null -> GtBO.valid()
-    GRT_EQ() != null -> GeqBO.valid()
-    LESS() != null -> LtBO.valid()
-    LESS_EQ() != null -> LeqBO.valid()
-    EQ() != null -> EqBO.valid()
-    NOT_EQ() != null -> NeqBO.valid()
-    AND() != null -> AndBO.valid()
-    OR() != null -> OrBO.valid()
+    MUL() != null -> TimesBO
+    DIV() != null -> DivisionBO
+    MOD() != null -> ModBO
+    PLUS() != null -> PlusBO
+    MINUS() != null -> MinusBO
+    GRT() != null -> GtBO
+    GRT_EQ() != null -> GeqBO
+    LESS() != null -> LtBO
+    LESS_EQ() != null -> LeqBO
+    EQ() != null -> EqBO
+    NOT_EQ() != null -> NeqBO
+    AND() != null -> AndBO
+    OR() != null -> OrBO
     else -> throw IllegalStateException("Should never be reached (invalid binop)")
-  }
+  }.valid()
 
 
