@@ -2,7 +2,6 @@ package ic.org.ast
 
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
-import arrow.core.None
 import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.toOption
@@ -233,15 +232,15 @@ private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> {
 }
 
 private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
-  return when {
+  when {
     array_lit() != null -> {
-      val tok_exprs = array_lit(0).expr()
-      if (tok_exprs.isEmpty()) {
+      val tokExprs = array_lit().expr()
+      if (tokExprs.isEmpty()) {
         return ArrayLit(emptyList()).valid()
       }
 
       // Transform all the expressions to ASTs
-      val exprs = tok_exprs.map { it.asAst(scope) }
+      val exprs = tokExprs.map { it.asAst(scope) }
       if (!exprs.areAllValid) {
         return exprs.errors.invalid()
       }
@@ -252,7 +251,7 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
       val t = valid[0].type
       for (e in valid) {
         if (e.type != t) {
-          return TypeError(tok_exprs[0].startPosition, t, e.type, "array building").toInvalidParsed()
+          return TypeError(tokExprs[0].startPosition, t, e.type, "array building").toInvalidParsed()
         }
       }
 
