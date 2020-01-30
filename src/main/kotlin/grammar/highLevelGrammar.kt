@@ -87,8 +87,7 @@ data class ArrayLit(val exprs: List<Expr>) : AssRHS() {
 }
 data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
   override fun fetchType(scope: Scope): Option<Type> {
-    //return Some(PairT(expr1.type, expr2.type))
-    TODO("not implemented")
+    return Some(PairT(expr1.type, expr2.type))
   }
 }
 data class PairElemRHS(val pairElem: PairElem) : AssRHS() {
