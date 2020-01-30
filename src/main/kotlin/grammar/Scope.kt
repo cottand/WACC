@@ -36,7 +36,7 @@ sealed class Scope {
   val functions = LinkedList<Func>()
 
   internal val varMap
-    get() = variables.map { it.declaringStat.id to it }.toMap()
+    get() = variables.map { it.ident to it }.toMap()
 }
 
 /**
@@ -70,7 +70,17 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
     varMap[ident].toOption() or parent.getVar(ident)
 }
 
-data class Variable(val declaringStat: Decl, val value: Nothing) { // TODO revisit at backend
-  val type = declaringStat.type
+
+// TODO Change all scope accesses to fit with these new definitions of Variable:
+sealed class Variable  {
+  abstract val type: Type
+  abstract val ident: Ident
+  abstract val value: Nothing // TODO revisit at backend
 }
+data class DeclVariable(val declaringStat: Decl, override val value: Nothing) : Variable() {
+  override val type = declaringStat.type
+  override val ident = declaringStat.id
+}
+
+data class ParamVariable(override val type: Type, override val ident: Ident, override val value: Nothing) : Variable()
 
