@@ -46,8 +46,8 @@ sealed class SemanticError : CompilationError() {
   override val code = semanticErrorCode
 }
 
-data class VarNotFoundError(override val msg: String) : SemanticError() {
-  constructor(pos: Position, varName: String) : this("$pos, variable not defined: $varName")
+data class UndefinedIdentifier(override val msg: String) : SemanticError() {
+  constructor(pos: Position, id: String) : this("$pos, undefined identifier: $id")
 }
 
 data class TypeError(override val msg: String) : SemanticError() {

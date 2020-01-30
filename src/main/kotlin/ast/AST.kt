@@ -2,6 +2,7 @@ package ic.org.ast
 
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
+import arrow.core.Some
 import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.toOption
@@ -239,6 +240,7 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
         return ArrayLit(emptyList()).valid()
       }
 
+
       // Transform all the expressions to ASTs
       val exprs = tokExprs.map { it.asAst(scope) }
       if (!exprs.areAllValid) {
@@ -285,8 +287,32 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
         e.errors.invalid()
       }
     }
-    CALL() != null -> TODO()
-    expr() != null -> TODO()
+    CALL() != null -> {
+      // Make ASTs out of all the args
+      val args = arg_list().expr().map { it.asAst(scope) }
+      if (!args.areAllValid) {
+        return args.errors.invalid()
+      }
+
+      // TODO make sure arg types are good
+
+      val id = scope.get(ID().text)
+      return if (id is Some) {
+        Call(Ident(ID().text), args.valids).valid()
+      } else {
+        UndefinedIdentifier(ID().position, ID().text).toInvalidParsed()
+      }
+    }
+    expr() != null -> {
+      assert(expr().size == 1)
+
+      val e = expr()[0].asAst(scope)
+      return if (e is Valid) {
+        ExprRHS(e.a).valid()
+      } else {
+         e.errors.invalid()
+      }
+    }
     else -> throw IllegalStateException("Should never be reached (invalid assign_rhs)")
   }
 }
@@ -305,7 +331,7 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
     PAIR_LIT() != null -> NullPairLit.valid()
 
     ID() != null -> scope[ID().text].fold({
-      VarNotFoundError(ID().position, ID().text).toInvalidParsed()
+      UndefinedIdentifier(ID().position, ID().text).toInvalidParsed()
     }, { variable ->
       IdentExpr(variable).valid()
     })
@@ -331,7 +357,7 @@ private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
   val id = ID().text
   val exprs = expr().map { it.asAst(scope) }
   return scope[id].fold({
-    (exprs.errors + VarNotFoundError(startPosition, id)).invalid()
+    (exprs.errors + UndefinedIdentifier(startPosition, id)).invalid()
       as Parsed<ArrayElemExpr>
   }, {
     if (exprs.areAllValid)
