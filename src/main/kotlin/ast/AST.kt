@@ -45,8 +45,7 @@ private fun WACCParser.TypeContext.asAst(scope: Scope): Parsed<Type> =
     base_type() != null -> base_type().asAst()
     pair_type() != null -> pair_type().asAst()
     array_type() != null -> array_type().asAst()
-    //TODO Make IllegalStateExceptions messages more explicit
-    else -> throw IllegalStateException("Should never be reached (invalid statement)")
+    else -> NOT_REACHED()
   }
 
 private fun WACCParser.Base_typeContext.asAst(): Parsed<BaseT> =
@@ -55,7 +54,7 @@ private fun WACCParser.Base_typeContext.asAst(): Parsed<BaseT> =
     BOOL() != null -> BoolT.valid()
     CHAR() != null -> CharT.valid()
     STRING() != null -> StringT.valid()
-    else -> throw IllegalStateException("Should never be reached (invalid statement)")
+    else -> NOT_REACHED()
   }
 
 private fun WACCParser.Pair_typeContext.asAst(): Parsed<PairT> {
@@ -73,7 +72,7 @@ private fun WACCParser.Pair_elem_typeContext.asAst(): Parsed<Type> =
     base_type() != null -> base_type().asAst()
     array_type() != null -> array_type().asAst()
     PAIR() != null -> NDPairT.valid()
-    else -> throw IllegalStateException("Should never be reached (invalid statement)")
+    else -> NOT_REACHED()
   }
 
 private fun WACCParser.Array_typeContext.asAst(): Parsed<ArrayT> {
@@ -84,7 +83,7 @@ private fun WACCParser.Array_typeContext.asAst(): Parsed<ArrayT> {
     base_type() != null -> base_type().asAst().map { it to currentDepth }
     pair_type() != null -> pair_type().asAst().map { it to currentDepth }
     array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
-    else -> throw IllegalStateException("Should never be reached (invalid statement)")
+    else -> NOT_REACHED()
   }
   return recurseArrayT(this, 1).map { (type, depth) -> ArrayT(type, depth) }
 }
@@ -231,7 +230,7 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
         (stat1.errors + stat2.errors).invalid()
       }
     }
-    else -> throw IllegalStateException("Should never be reached (invalid statement)")
+    else -> NOT_REACHED()
   }
 }
 
@@ -264,25 +263,19 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
 
     array_elem() != null -> array_elem().asAst(scope)
 
-    unary_op() != null -> {
-      val e = expr()[0].asAst(scope)
-      val unOp = unary_op().asAst()
-      if (e is Valid && unOp is Valid)
-        UnaryOperExpr.make(e.a, unOp.a, startPosition)
-      else
-        (e.errors + unOp.errors).invalid()
-    }
+    unary_op() != null -> expr()[0].asAst(scope)
+      .flatMap { UnaryOperExpr.make(it, unary_op().asAst(), startPosition) }
 
     binary_op() != null -> {
       val e1 = expr()[0].asAst(scope)
       val e2 = expr()[1].asAst(scope)
       val binOp = binary_op().asAst()
-      if (e1 is Valid && binOp is Valid && e2 is Valid)
-        BinaryOperExpr.make(e1.a, binOp.a, e2.a, startPosition)
+      if (e1 is Valid && e2 is Valid)
+        BinaryOperExpr.make(e1.a, binOp, e2.a, startPosition)
       else
-        (e1.errors + binOp.errors + e2.errors).invalid()
+        (e1.errors + e2.errors).invalid()
     }
-    else -> throw IllegalStateException("Should never be reached (invalid expr)")
+    else -> NOT_REACHED()
   }
 
 private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
@@ -299,17 +292,17 @@ private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
   })
 }
 
-private fun WACCParser.Unary_opContext.asAst(): Parsed<UnaryOper> =
+private fun WACCParser.Unary_opContext.asAst(): UnaryOper =
   when {
     NOT() != null -> NotUO
     MINUS() != null -> MinusUO
     LEN() != null -> LenUO
     ORD() != null -> OrdUO
     CHR() != null -> ChrUO
-    else -> throw IllegalStateException("Should never be reached (invalid unary op)")
-  }.valid()
+    else -> NOT_REACHED()
+  }
 
-private fun WACCParser.Binary_opContext.asAst(): Parsed<BinaryOper> =
+private fun WACCParser.Binary_opContext.asAst(): BinaryOper =
   when {
     MUL() != null -> TimesBO
     DIV() != null -> DivisionBO
@@ -324,7 +317,7 @@ private fun WACCParser.Binary_opContext.asAst(): Parsed<BinaryOper> =
     NOT_EQ() != null -> NeqBO
     AND() != null -> AndBO
     OR() != null -> OrBO
-    else -> throw IllegalStateException("Should never be reached (invalid binop)")
-  }.valid()
+    else -> NOT_REACHED()
+  }
 
 
