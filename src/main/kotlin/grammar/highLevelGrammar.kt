@@ -47,7 +47,7 @@ data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope
 sealed class AssLHS
 
 data class IdentLHS(val ident: Ident) : AssLHS()
-data class ArrauElemLHS(val arrayElem: ArrayElem) : AssLHS()
+data class ArrayElemLHS(val arrayElem: ArrayElem) : AssLHS()
 data class PairElemLHS(val pairElem: PairElem) : AssLHS()
 
 // <assign-rhs>

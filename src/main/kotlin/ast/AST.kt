@@ -2,7 +2,9 @@ package ic.org.ast
 
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
+import arrow.core.Some
 import arrow.core.Validated.Valid
+import arrow.core.extensions.option.monad.flatMap
 import arrow.core.invalid
 import arrow.core.toOption
 import arrow.core.valid
@@ -74,7 +76,10 @@ private fun WACCParser.Pair_elem_typeContext.asAst(scope: Scope): Parsed<Type> =
     }
 
 private fun WACCParser.Array_typeContext.asAst(scope: Scope): Parsed<ArrayT> {
-    fun recurseArrayT(arrayT: WACCParser.Array_typeContext, currentDepth: Int): Parsed<Pair<Type, Int>> = when {
+    fun recurseArrayT(
+        arrayT: WACCParser.Array_typeContext,
+        currentDepth: Int
+    ): Parsed<Pair<Type, Int>> = when {
         base_type() != null -> base_type().asAst(scope).map { it to currentDepth }
         pair_type() != null -> pair_type().asAst(scope).map { it to currentDepth }
         array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
@@ -229,9 +234,27 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
     }
 }
 
-private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-}
+private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
+    when {
+        ID() != null -> scope[ID().text].fold({
+            VarNotFoundError(startPosition, ID().text).toInvalidParsed()
+        }, {
+            IdentLHS(it.declaringStat.id).valid()
+        })
+        array_elem() != null -> {
+            scope[ID().text].fold({
+                VarNotFoundError(startPosition, ID().text).toInvalidParsed()
+            }, {
+                val exprs = array_elem().expr().map { expr -> expr.asAst(scope) }
+                if (exprs.areAllValid)
+                    ArrayElemLHS(ArrayElem(it.declaringStat.id, exprs.valids)).valid()
+                else
+                    exprs.errors.invalid()
+            })
+        }
+        pair_elem() != null -> TODO()
+        else -> TODO()
+    }
 
 private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
     TODO("not implemented")
@@ -241,7 +264,9 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
     when {
         // TODO check there are no cases where toInt() ot toBoolean() would fail
         // TODO int_lit().text seems to not return right number when int_sign is not null
-        int_lit() != null -> IntLit((int_lit().int_sign()?.text?:"" + int_lit().text).toInt()).valid()
+        int_lit() != null -> IntLit(
+            (int_lit().int_sign()?.text ?: "" + int_lit().text).toInt()
+        ).valid()
         BOOL_LIT() != null -> BoolLit(BOOL_LIT().text!!.toBoolean()).valid()
         CHAR_LIT() != null -> CharLit(CHAR_LIT().text.toCharArray()[0]).valid()
         STRING_LIT() != null -> StrLit(STRING_LIT().text).valid()
