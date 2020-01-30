@@ -39,6 +39,7 @@ fun String.containsAll(words: List<String>, ignoreCase: Boolean = true) =
  */
 inline fun <reified T> T.print() = this.also { println(it) }
 
+@Suppress("FunctionName")
 fun NOT_REACHED(): Nothing = throw IllegalStateException("Case should never be reached")
 
 /**

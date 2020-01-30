@@ -14,7 +14,7 @@ import kotlinx.collections.immutable.plus
 fun WACCParser.FuncContext.asAst(): Parsed<Func> {
   val ident = Ident(this.ID().text)
   val funcScope = FuncScope(ident)
-  val type = this.type().asAst(ControlFlowScope(funcScope))
+  val type = type().asAst()
   // TODO are there any checks on identifiers needed
   if (type !is Valid) return type.errors.invalid()
   val params = param_list().toOption().fold({
@@ -40,20 +40,20 @@ private fun WACCParser.ParamContext.asAst(scope: Scope): Parsed<Param> {
   TODO("not implemented")
 }
 
-private fun WACCParser.TypeContext.asAst(scope: Scope): Parsed<Type> =
+private fun WACCParser.TypeContext.asAst(): Parsed<Type> =
   when {
-    base_type() != null -> base_type().asAst()
+    base_type() != null -> base_type().asAst().valid()
     pair_type() != null -> pair_type().asAst()
     array_type() != null -> array_type().asAst()
     else -> NOT_REACHED()
   }
 
-private fun WACCParser.Base_typeContext.asAst(): Parsed<BaseT> =
+private fun WACCParser.Base_typeContext.asAst(): BaseT =
   when {
-    INT() != null -> IntT.valid()
-    BOOL() != null -> BoolT.valid()
-    CHAR() != null -> CharT.valid()
-    STRING() != null -> StringT.valid()
+    INT() != null -> IntT
+    BOOL() != null -> BoolT
+    CHAR() != null -> CharT
+    STRING() != null -> StringT
     else -> NOT_REACHED()
   }
 
@@ -69,7 +69,7 @@ private fun WACCParser.Pair_typeContext.asAst(): Parsed<PairT> {
 // TODO When checking Types: If NDPairT, we need to recurse to find the right Pair Type!
 private fun WACCParser.Pair_elem_typeContext.asAst(): Parsed<Type> =
   when {
-    base_type() != null -> base_type().asAst()
+    base_type() != null -> base_type().asAst().valid()
     array_type() != null -> array_type().asAst()
     PAIR() != null -> NDPairT.valid()
     else -> NOT_REACHED()
@@ -80,7 +80,7 @@ private fun WACCParser.Array_typeContext.asAst(): Parsed<ArrayT> {
     arrayT: WACCParser.Array_typeContext,
     currentDepth: Int
   ): Parsed<Pair<Type, Int>> = when {
-    base_type() != null -> base_type().asAst().map { it to currentDepth }
+    base_type() != null -> base_type().asAst().valid().map { it to currentDepth }
     pair_type() != null -> pair_type().asAst().map { it to currentDepth }
     array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
     else -> NOT_REACHED()
@@ -117,7 +117,7 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
       }
     }
     ASSIGN() != null && assign_lhs() == null -> {
-      val type = type().asAst(scope)
+      val type = type().asAst()
       val ident = Ident(ID().text).valid()
       val rhs = assign_rhs().asAst(scope)
 
