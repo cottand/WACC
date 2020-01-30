@@ -36,9 +36,13 @@ fun WACCParser.FuncContext.asAst(): Parsed<Func> {
     }
 }
 
-private fun WACCParser.ParamContext.asAst(scope: Scope): Parsed<Param> {
-    TODO("not implemented")
-}
+private fun WACCParser.ParamContext.asAst(scope: ControlFlowScope): Parsed<Param> =
+    type().asAst(scope).map { type ->
+      val id = Ident(ID().text)
+        Param(type, id).also {
+          scope.variables.push(ParamVariable(type, id, TODO("Find out what to do with value")))
+        }
+    }
 
 private fun WACCParser.TypeContext.asAst(scope: Scope): Parsed<Type> =
     when {
@@ -240,7 +244,7 @@ private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
         ID() != null -> scope[ID().text].fold({
             VarNotFoundError(startPosition, ID().text).toInvalidParsed()
         }, {
-            IdentLHS(it.declaringStat.id).valid()
+            IdentLHS(it.ident).valid()
         })
         array_elem() != null -> {
             scope[ID().text].fold({
@@ -248,7 +252,7 @@ private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
             }, {
                 val exprs = array_elem().expr().map { expr -> expr.asAst(scope) }
                 if (exprs.areAllValid)
-                    ArrayElemLHS(ArrayElem(it.declaringStat.id, exprs.valids)).valid()
+                    ArrayElemLHS(ArrayElem(it.ident, exprs.valids)).valid()
                 else
                     exprs.errors.invalid()
             })
