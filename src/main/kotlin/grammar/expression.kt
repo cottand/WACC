@@ -76,6 +76,8 @@ data class ArrayElemExpr internal constructor(
 data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override val type: Type = expr.type
 
+  override fun toString(): String = "$unaryOper $expr"
+
   companion object {
     fun make(e: Expr, unOp: UnaryOper, pos: Position): Parsed<UnaryOperExpr> =
       when {
@@ -93,6 +95,8 @@ data class BinaryOperExpr internal constructor(
 ) : Expr() {
   override val type = binaryOper.retType
 
+  override fun toString(): String = "$expr1 $binaryOper $expr2"
+
   companion object {
     fun make(e1: Expr, binOp: BinaryOper, e2: Expr, pos: Position): Parsed<BinaryOperExpr> =
       when {
@@ -102,7 +106,7 @@ data class BinaryOperExpr internal constructor(
           TypeError(pos, binOp.inTypes, e2.type, binOp.toString()).toInvalidParsed()
         e1.type != e2.type ->
           UndefinedOp(pos, binOp.toString(), e1.type, e2.type).toInvalidParsed()
-        else -> BinaryOperExpr(e2, binOp, e2).valid()
+        else -> BinaryOperExpr(e1, binOp, e2).valid()
       }
   }
 }
@@ -125,6 +129,7 @@ object MinusUO : UnaryOper()     // -
 {
   override val argType: Type = IntT
   override val retType: Type = IntT
+  override fun toString(): String = "-"
 }
 
 // arr -> int:
@@ -177,7 +182,10 @@ object TimesBO : IntBinOp()    // *
 object DivisionBO : IntBinOp() // /
 object ModBO : IntBinOp()      // %
 object PlusBO : IntBinOp()     // +
-object MinusBO : IntBinOp()    // -
+object MinusBO : IntBinOp() {
+  override fun toString(): String = "-"
+}    // -
+
 
 // (int, int) -> bool:
 object GtBO : CompBinOp()       // >

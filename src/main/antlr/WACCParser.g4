@@ -61,9 +61,11 @@ pair_elem: FST WS+ expr | SND WS+ expr;
 
 // Literals
 array_lit: LSQBRACKET WS* (expr WS* (COMMA WS* expr WS*)*)? WS* RSQBRACKET;
-int_lit: int_sign? WS* INTEGER;
+//int_lit: int_sign? WS* INTEGER;
+//
+//int_sign: PLUS | MINUS;
+int_lit: PLUS? WS* INTEGER;
 
-int_sign: PLUS | MINUS;
 
 // Operators
 unary_op: NOT

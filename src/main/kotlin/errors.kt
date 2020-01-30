@@ -5,6 +5,7 @@ import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.invalid
+import ic.org.ast.Constatns
 import ic.org.grammar.Type
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -86,6 +87,11 @@ data class IllegalArrayAccess(override val msg: String) : SemanticError() {
 data class InvalidReturn(override val msg: String) : SemanticError() {
   constructor(pos: Position)
     : this("$pos, `return` statement is not allowed in given scope (use `exit` maybe?)")
+}
+
+data class IntegerOverflowError(override val msg: String) : SemanticError(){
+  constructor(pos: Position, i: Int)
+    : this("$pos, invalid integer `$i`. Not in ${Constatns.intRange}")
 }
 
 inline val <A> Parsed<A>.errors: Errors
