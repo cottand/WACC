@@ -14,6 +14,14 @@ sealed class Expr {
 
 data class IntLit(val value: Int) : Expr() {
   override val type = IntT
+
+  companion object {
+    /**
+     * Range which a WACC Int can represent. Beacuse its implementation is a 32 bit signed number,
+     * it is the same range as the JVM Int primitive.
+     */
+    val range = Int.MIN_VALUE..Int.MAX_VALUE
+  }
 }
 
 data class BoolLit(val value: Boolean) : Expr() {
@@ -153,7 +161,6 @@ object ChrUO : UnaryOper()       // chr
   override val retType: Type = CharT
 }
 
-
 // <binary-oper>
 sealed class BinaryOper {
   //abstract val argsTypes: Type
@@ -185,7 +192,6 @@ object PlusBO : IntBinOp()     // +
 object MinusBO : IntBinOp() {
   override fun toString(): String = "-"
 }    // -
-
 
 // (int, int) -> bool:
 object GtBO : CompBinOp()       // >

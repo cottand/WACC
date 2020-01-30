@@ -320,8 +320,8 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
 private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
   when {
     // TODO why is the int overflow test not passing
-    int_lit() != null -> when (val i = int_lit().text.toInt()) {
-      in Constatns.intRange -> IntLit(i).valid()
+    int_lit() != null -> when (val i = int_lit().text.toLong()) {
+      in IntLit.range -> IntLit(i.toInt()).valid()
       else -> IntegerOverflowError(startPosition, i).toInvalidParsed().print()
     }
     BOOL_LIT() != null

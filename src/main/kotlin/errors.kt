@@ -5,8 +5,8 @@ import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.invalid
-import ic.org.ast.Constatns
 import ic.org.grammar.Ident
+import ic.org.grammar.IntLit
 import ic.org.grammar.Type
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -38,7 +38,7 @@ sealed class CompilationError {
   fun toInvalidParsed() = persistentListOf(this).invalid()
 }
 
-data class SyntacticError(override val msg: String) : CompilationError() {
+open class SyntacticError(override val msg: String) : CompilationError() {
   override val code = syntacticErrorCode
 }
 
@@ -90,9 +90,9 @@ data class InvalidReturn(override val msg: String) : SemanticError() {
     : this("$pos, `return` statement is not allowed in given scope (use `exit` maybe?)")
 }
 
-data class IntegerOverflowError(override val msg: String) : SemanticError(){
-  constructor(pos: Position, i: Int)
-    : this("$pos, invalid integer `$i`. Not in ${Constatns.intRange}")
+data class IntegerOverflowError(override val msg: String) : SyntacticError(msg){
+  constructor(pos: Position, i: Number)
+    : this("$pos, invalid integer `$i`. Not in ${IntLit.range}")
 }
 
 data class IllegalFunctionReturnTypeError(override val msg: String) : SemanticError() {
