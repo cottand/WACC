@@ -51,7 +51,7 @@ class WACCCompiler(private val filename: String) {
     val lexer = WACCLexer(stream)
     val tokens = CommonTokenStream(lexer)
     val parser = WACCParser(tokens)
-    checkSyntax(parser)
+    return checkSyntax(parser)
       .flatMap { it.prog().asAst() }
       .flatMap { it.checkControlFlow() }
       .fold({ errors ->
