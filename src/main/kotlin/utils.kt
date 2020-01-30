@@ -8,6 +8,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
+import java.lang.IllegalStateException
 
 /**
  * Returns whether a [List] of [Either] contains any [Either.Left]
@@ -37,6 +38,9 @@ fun String.containsAll(words: List<String>, ignoreCase: Boolean = true) =
  * Prints [this], while returning [this]. Useful for [println] debugging.
  */
 inline fun <reified T> T.print() = this.also { println(it) }
+
+@Suppress("FunctionName")
+fun NOT_REACHED(): Nothing = throw IllegalStateException("Case should never be reached")
 
 /**
  * Returns this [TerminalNode]'s position in the program by looking at its
