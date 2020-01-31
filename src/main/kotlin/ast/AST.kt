@@ -2,8 +2,10 @@ package ic.org.ast
 
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
-import arrow.core.*
 import arrow.core.Validated.Valid
+import arrow.core.invalid
+import arrow.core.toOption
+import arrow.core.valid
 import ic.org.*
 import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
@@ -225,9 +227,33 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
   }
 }
 
-private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> {
-  TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-}
+private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
+    when {
+        ID() != null -> scope[ID().text].fold({
+            VarNotFoundError(startPosition, ID().text).toInvalidParsed()
+        }, { IdentLHS(it.ident).valid() })
+        array_elem() != null -> {
+            scope[array_elem().text].fold({
+                VarNotFoundError(startPosition, array_elem().text).toInvalidParsed()
+            }, {
+                val exprs = array_elem().expr().map { expr -> expr.asAst(scope) }
+                if (exprs.areAllValid)
+                    ArrayElemLHS(ArrayElem(it.ident, exprs.valids)).valid()
+                else
+                    exprs.errors.invalid()
+            })
+        }
+        pair_elem() != null -> {
+            scope[pair_elem().text].fold({
+                VarNotFoundError(startPosition, pair_elem().text).toInvalidParsed()
+            }, {
+                pair_elem().expr().asAst(scope).map {
+                    if (pair_elem().FST() != null) PairElemLHS(Fst(it)) else PairElemLHS(Snd(it))
+                }
+            })
+        }
+        else -> throw IllegalStateException("Should never be reached (invalid statement)")
+    }
 
 private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
   TODO()
@@ -275,7 +301,7 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
         else
           PairElemRHS(Snd(it))
       }
-    
+
     CALL() != null -> {
       // Make ASTs out of all the args
       val args: List<Parsed<Expr>> =
@@ -384,3 +410,5 @@ private fun WACCParser.Binary_opContext.asAst(): BinaryOper =
     OR() != null -> OrBO
     else -> NOT_REACHED()
   }
+
+
