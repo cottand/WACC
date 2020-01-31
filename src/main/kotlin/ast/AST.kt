@@ -243,8 +243,8 @@ private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
             IdentLHS(it.declaringStat.id).valid()
         })
         array_elem() != null -> {
-            scope[ID().text].fold({
-                VarNotFoundError(startPosition, ID().text).toInvalidParsed()
+            scope[array_elem().text].fold({
+                VarNotFoundError(startPosition, array_elem().text).toInvalidParsed()
             }, {
                 val exprs = array_elem().expr().map { expr -> expr.asAst(scope) }
                 if (exprs.areAllValid)
@@ -253,7 +253,15 @@ private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
                     exprs.errors.invalid()
             })
         }
-        pair_elem() != null -> TODO()
+        pair_elem() != null -> {
+            scope[pair_elem().text].fold({
+                VarNotFoundError(startPosition, pair_elem().text).toInvalidParsed()
+            }, {
+                pair_elem().expr().asAst(scope).map {
+                    if (pair_elem().FST() != null) PairElemLHS(Fst(it)) else PairElemLHS(Snd(it))
+                }
+            })
+        }
         else -> TODO()
     }
 
