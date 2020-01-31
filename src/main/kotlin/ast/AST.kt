@@ -230,6 +230,7 @@ private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> {
 }
 
 private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
+  TODO()
   when {
     array_lit() != null -> {
       val tokExprs = array_lit().expr()
