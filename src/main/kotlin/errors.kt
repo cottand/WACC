@@ -5,6 +5,7 @@ import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.invalid
+import arrow.core.valid
 import ic.org.grammar.Ident
 import ic.org.grammar.IntLit
 import ic.org.grammar.Type
@@ -91,14 +92,14 @@ data class InvalidReturn(override val msg: String) : SemanticError() {
     : this("$pos, `return` statement is not allowed in given scope (use `exit` maybe?)")
 }
 
-data class IntegerOverflowError(override val msg: String) : SyntacticError(msg){
+data class IntegerOverflowError(override val msg: String) : SyntacticError(msg) {
   constructor(pos: Position, i: Number)
     : this("$pos, invalid integer `$i`. Not in ${IntLit.range}")
 }
 
 data class IllegalFunctionReturnTypeError(override val msg: String) : SemanticError() {
   constructor(ident: Ident, expected: Type, actual: Type)
-  : this("At function `${ident.name}`, expected return type `$expected` but found `$actual`")
+    : this("At function `${ident.name}`, expected return type `$expected` but found `$actual`")
 }
 
 data class RedeclarationError(val pos: Position, val ident: Ident) : SemanticError() {
@@ -129,6 +130,15 @@ fun <A, B> Parsed<A>.flatMap(transform: (A) -> Parsed<B>): Parsed<B> = when (thi
   is Valid -> transform(a)
   is Invalid -> this
 }
+
+fun <A> Parsed<A>.validate(predicate: (A) -> Boolean, error: (A) -> CompilationError) : Parsed<A> =
+  flatMap {
+    if (predicate(it))
+      it.valid()
+    else
+      error(it).toInvalidParsed()
+  }
+
 
 data class Position(val l: Int, val col: Int) {
   override fun toString(): String = "At $l:$col"

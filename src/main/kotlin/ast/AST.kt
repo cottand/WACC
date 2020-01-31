@@ -3,7 +3,6 @@ package ic.org.ast
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
 import arrow.core.*
-import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
 import ic.org.*
 import ic.org.grammar.*
@@ -245,13 +244,21 @@ private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
     })
 
     // TODO revisit pair_elem().text vs ID().text
-    pair_elem() != null -> scope[pair_elem().text].fold({
-      UndefinedIdentifier(startPosition, pair_elem().text).toInvalidParsed()
-    }, {
-      pair_elem().expr().asAst(scope).map {
-        if (pair_elem().FST() != null) PairElemLHS(Fst(it)) else PairElemLHS(Snd(it))
+    pair_elem() != null -> pair_elem().expr().asAst(scope)
+      .validate(
+        { it is IdentExpr },
+        { TypeError(startPosition, AnyPairTs(), it.type, pair_elem().text) })
+      .flatMap { pairIdent ->
+        scope[pair_elem().expr().text].fold({
+          UndefinedIdentifier(startPosition, pair_elem().text).toInvalidParsed()
+        }, {
+          if (pair_elem().FST() != null)
+            PairElemLHS(Fst(pairIdent))
+          else {
+            PairElemLHS(Snd(pairIdent))
+          }.valid()
+        })
       }
-    })
 
     else -> NOT_REACHED()
   }
