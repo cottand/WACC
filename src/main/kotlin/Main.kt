@@ -5,6 +5,7 @@ import antlr.WACCParser
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.ast.asAst
+import ic.org.grammar.GlobalScope
 import ic.org.grammar.Prog
 import ic.org.graph.asGraph
 import ic.org.listeners.CollectingErrorListener
@@ -60,6 +61,9 @@ class WACCCompiler(private val filename: String) {
       }, {
         CompileResult.success(duration = start.elapsedNow())
       })
+      .also {
+        GlobalScope.resetState()
+      }
   }
 
   companion object {

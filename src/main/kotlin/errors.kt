@@ -8,6 +8,7 @@ import arrow.core.invalid
 import ic.org.grammar.Ident
 import ic.org.grammar.IntLit
 import ic.org.grammar.Type
+import ic.org.grammar.Variable
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -98,6 +99,10 @@ data class IntegerOverflowError(override val msg: String) : SyntacticError(msg){
 data class IllegalFunctionReturnTypeError(override val msg: String) : SemanticError() {
   constructor(ident: Ident, expected: Type, actual: Type)
   : this("At function `${ident.name}`, expected return type `$expected` but found `$actual`")
+}
+
+data class RedeclarationError(val pos: Position, val ident: Ident) : SemanticError() {
+  override val msg: String = "$pos, already delcared in scope: `${ident.name}`"
 }
 
 inline val <A> Parsed<A>.errors: Errors

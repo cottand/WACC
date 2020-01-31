@@ -2,10 +2,9 @@ package ic.org.ast
 
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
+import arrow.core.*
+import arrow.core.Validated.Invalid
 import arrow.core.Validated.Valid
-import arrow.core.invalid
-import arrow.core.toOption
-import arrow.core.valid
 import ic.org.*
 import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
@@ -18,7 +17,7 @@ fun WACCParser.FuncContext.asAst(): Parsed<Func> {
   // TODO are there any checks on identifiers needed
   if (type !is Valid) return type.errors.invalid()
   val params = param_list().toOption().fold({
-    listOf<Parsed<Param>>()
+    emptyList<Parsed<Param>>()
   }, { list ->
     list.param().map { it.asAst(ControlFlowScope(funcScope)) }
   })
@@ -29,7 +28,7 @@ fun WACCParser.FuncContext.asAst(): Parsed<Func> {
   return if (params.areAllValid && stat is Valid) {
     val validParams = params.map { (it as Valid).a }
     Func(type.a, ident, validParams, stat.a)
-      .also { GlobalScope.functions.push(it) }
+      .also { GlobalScope.addFunction(startPosition, it) }
       .valid()
   } else {
     (type.errors + params.errors + stat.errors).invalid()
@@ -80,12 +79,12 @@ private fun WACCParser.Array_typeContext.asAst(): Parsed<ArrayT> {
     arrayT: WACCParser.Array_typeContext,
     currentDepth: Int
   ): Parsed<Pair<Type, Int>> = when {
+    arrayT.array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
     arrayT.base_type() != null -> arrayT.base_type().asAst().valid().map { it to currentDepth }
     arrayT.pair_type() != null -> arrayT.pair_type().asAst().map { it to currentDepth }
-    arrayT.array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
     else -> NOT_REACHED()
   }
-  return recurseArrayT(this, 1).map { (type, depth) -> ArrayT(type, depth) }
+  return recurseArrayT(this, 1).map { (type, depth) -> ArrayT.make(type, depth) }
 }
 
 fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
@@ -106,6 +105,7 @@ fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
 private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
   return when {
     SKP() != null -> Skip(scope).valid()
+    // Variable assignment
     ASSIGN() != null && assign_lhs() != null -> {
       val lhs = assign_lhs().asAst(scope)
       val rhs = assign_rhs().asAst(scope)
@@ -116,15 +116,17 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
         (lhs.errors + rhs.errors).invalid()
       }
     }
+    // Variable declaration
     ASSIGN() != null && assign_lhs() == null -> {
-      val type = type().asAst()
-      val ident = Ident(ID().text).valid()
       val rhs = assign_rhs().asAst(scope)
+      if (rhs !is Valid) return rhs.errors.invalid()
 
-      return if (type is Valid && ident is Valid && rhs is Valid) {
-        Decl(type.a, ident.a, rhs.a, scope).valid()
-      } else {
-        (type.errors + rhs.errors).invalid()
+      return type().asAst().map {
+        DeclVariable(it, Ident(ID()), rhs.a)
+      }.flatMap {
+        scope.addVariable(startPosition, it)
+      }.map {
+        Decl(it, rhs.a, scope)
       }
     }
     READ() != null -> assign_lhs().asAst(scope).map { Read(it, scope) }
@@ -172,10 +174,10 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
       return if (expr is Valid && statTrue is Valid && statFalse is Valid) {
         when {
           expr.a.type != BoolT -> TypeError(
-            startPosition,
-            BoolT,
-            expr.a.type,
-            IF().text
+            pos = startPosition,
+            expectedT = BoolT,
+            actual = expr.a.type,
+            op = IF().text
           ).toInvalidParsed()
           else -> TODO("Need to check return types of statTrue and statFalse if they have a return")
           //          else -> If(expr.a, statTrue.a, statFalse.a, scope).valid()
@@ -228,35 +230,34 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
 }
 
 private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
-    when {
-        ID() != null -> scope[ID().text].fold({
-            VarNotFoundError(startPosition, ID().text).toInvalidParsed()
-        }, { IdentLHS(it.ident).valid() })
-        array_elem() != null -> {
-            scope[array_elem().text].fold({
-                VarNotFoundError(startPosition, array_elem().text).toInvalidParsed()
-            }, {
-                val exprs = array_elem().expr().map { expr -> expr.asAst(scope) }
-                if (exprs.areAllValid)
-                    ArrayElemLHS(ArrayElem(it.ident, exprs.valids)).valid()
-                else
-                    exprs.errors.invalid()
-            })
-        }
-        pair_elem() != null -> {
-            scope[pair_elem().text].fold({
-                VarNotFoundError(startPosition, pair_elem().text).toInvalidParsed()
-            }, {
-                pair_elem().expr().asAst(scope).map {
-                    if (pair_elem().FST() != null) PairElemLHS(Fst(it)) else PairElemLHS(Snd(it))
-                }
-            })
-        }
-        else -> throw IllegalStateException("Should never be reached (invalid statement)")
-    }
+  when {
+    ID() != null -> scope[ID().text].fold({
+      UndefinedIdentifier(startPosition, ID().text).toInvalidParsed()
+    }, { IdentLHS(it.ident).valid() })
+
+    array_elem() != null -> scope[array_elem().ID().text].fold({
+      UndefinedIdentifier(startPosition, array_elem().text).toInvalidParsed()
+    }, { variable ->
+      val exprs = array_elem().expr().map { it.asAst(scope) }
+      if (exprs.areAllValid)
+        ArrayElemLHS(ArrayElem(variable.ident, exprs.valids)).valid()
+      else
+        exprs.errors.invalid()
+    })
+
+    // TODO revisit pair_elem().text vs ID().text
+    pair_elem() != null -> scope[pair_elem().text].fold({
+      UndefinedIdentifier(startPosition, pair_elem().text).toInvalidParsed()
+    }, {
+      pair_elem().expr().asAst(scope).map {
+        if (pair_elem().FST() != null) PairElemLHS(Fst(it)) else PairElemLHS(Snd(it))
+      }
+    })
+
+    else -> NOT_REACHED()
+  }
 
 private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
-  TODO()
   when {
     array_lit() != null -> {
       val tokExprs = array_lit().expr()
@@ -276,7 +277,8 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
       val t = valid[0].type
       for (e in valid) {
         if (e.type != t) {
-          return TypeError(tokExprs[0].startPosition, t, e.type, "array building").toInvalidParsed()
+          return TypeError(tokExprs[0].startPosition, t, e.type, "array building")
+            .toInvalidParsed()
         }
       }
 

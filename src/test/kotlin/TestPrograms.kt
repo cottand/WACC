@@ -23,9 +23,13 @@ import kotlin.time.ExperimentalTime
  * expected (read from the comments of the file itself) that test passes. For any other outcome
  * (a crash, or unexpected compiler output or error code) the test fails.
  *
- * Additionally, a file that does not have the string [testingKeyword] in its path inside the
- * project will be ignored, this allowing us to select which files testing should be enabled for.
-
+ * Additionally, a file that does not have the string [testingKeyword] or [ignoreKeyword] in its
+ * path inside the project will be ignored, this allowing us to select which files testing should
+ * be enabled for.
+ *
+ * [ignoreKeyword] takes precedence. Ie, if a directory has [testingKeyword] but a subdirectory has
+ * [ignoreKeyword], the directory will be tested except for the subdirectory/
+ *
  */
 @ExperimentalTime
 class TestPrograms {
@@ -33,12 +37,15 @@ class TestPrograms {
   private val waccExamplesPath = "./wacc_examples/"
   private val testOutputKeywords = false
   private val testingKeyword = "TEST"
+  private val ignoreKeyword = "IGNORE"
 
   private val waccFiles =
     File(waccExamplesPath).walkBottomUp()
       .filter { it.isFile && ".wacc" in it.path }
       .filter { "TEST" in it.canonicalPath } // If a
-      .map { it.asProgram() }.toList()
+      .filterNot { "IGNORE" in it.canonicalPath }
+      .map { it.asProgram() }
+      .toList()
 
   /**
    * Tests whether the [WACCCompiler] can perform all syntactic checks on a [program] with the
