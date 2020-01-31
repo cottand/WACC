@@ -120,7 +120,6 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
     ASSIGN() != null && assign_lhs() == null -> {
       val rhs = assign_rhs().asAst(scope)
       if (rhs !is Valid) return rhs.errors.invalid()
-
       return type().asAst().map {
         DeclVariable(it, Ident(ID()), rhs.a)
       }.flatMap {
