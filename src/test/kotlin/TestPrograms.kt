@@ -126,7 +126,7 @@ class TestPrograms {
   @ExperimentalTime
   @TestFactory
   fun syntacticallyCheckPrograms() = waccFiles.map {
-    DynamicTest.dynamicTest(it.file.absolutePath) { testSyntax(it) }
+    DynamicTest.dynamicTest(it.file.canonicalPath) { testSyntax(it) }
   }
 }
 
