@@ -262,7 +262,7 @@ private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
                 }
             })
         }
-        else -> TODO()
+        else -> throw IllegalStateException("Should never be reached (invalid statement)")
     }
 
 private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
