@@ -258,8 +258,8 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
     NEWPAIR() != null -> {
       assert(expr().size == 2)
 
-      val e1 = expr()[0].asAst(scope)
-      val e2 = expr()[1].asAst(scope)
+      val e1 = expr(0).asAst(scope)
+      val e2 = expr(1).asAst(scope)
 
       return if (e1 is Valid && e2 is Valid) {
         Newpair(e1.a, e2.a).valid()
@@ -267,21 +267,14 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
         (e1.errors + e2.errors).invalid()
       }
     }
-    pair_elem() != null -> {
-      assert(pair_elem().FST() != null || pair_elem().SND() != null)
-
-      val e = pair_elem().expr().asAst(scope)
-
-      return if (e is Valid) {
-        if (pair_elem().FST() != null) {
-          PairElemRHS(Fst(e.a)).valid()
-        } else {
-          PairElemRHS(Snd(e.a)).valid()
-        }
-      } else {
-        e.errors.invalid()
+    pair_elem() != null ->
+      return pair_elem().expr().asAst(scope).map {
+        if (pair_elem().FST() != null)
+          PairElemRHS(Fst(it))
+        else
+          PairElemRHS(Snd(it))
       }
-    }
+    
     CALL() != null -> {
       // Make ASTs out of all the args
       val args: List<Parsed<Expr>> =
@@ -294,12 +287,12 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
 
       // TODO make sure arg types are good
 
-      val id = scope.get(ID().text)
-      return if (id is Some) {
-        Call(Ident(ID().text), args.valids).valid()
-      } else {
-        UndefinedIdentifier(ID().position, ID().text).toInvalidParsed()
-      }
+      val id = ID().text
+      return scope[id].fold({
+        Call(Ident(id), args.valids).valid()
+      }, {
+        UndefinedIdentifier(ID().position, id).toInvalidParsed()
+      })
     }
     expr() != null -> {
       assert(expr().size == 1)
