@@ -22,7 +22,20 @@ stat: SKP
 | BEGIN WS* stat WS* END
 | <assoc=right> stat WS* SEMICOLON WS* stat;
 
-expr: expr WS* binary_op WS* expr
+expr:
+expr WS* MUL WS* expr
+| expr WS* DIV WS* expr
+| expr WS* MOD WS* expr
+| expr WS* PLUS WS* expr
+| expr WS* MINUS WS* expr
+| expr WS* GRT WS* expr
+| expr WS* GRT_EQ WS* expr
+| expr WS* LESS WS* expr
+| expr WS* LESS_EQ WS* expr
+| expr WS* EQ WS* expr
+| expr WS* NOT_EQ WS* expr
+| expr WS* AND WS* expr
+| expr WS* OR WS* expr
 | int_lit
 | BOOL_LIT
 | CHAR_LIT
@@ -65,22 +78,6 @@ array_lit: LSQBRACKET WS* (expr WS* (COMMA WS* expr WS*)*)? WS* RSQBRACKET;
 //
 //int_sign: PLUS | MINUS;
 int_lit: PLUS? WS* INTEGER;
-
-
-// Operators
-binary_op: MUL
-| DIV
-| MOD
-| PLUS
-| MINUS
-| GRT
-| GRT_EQ
-| LESS
-| LESS_EQ
-| EQ
-| NOT_EQ
-| AND
-| OR;
 
 unary_op: NOT
 | MINUS
