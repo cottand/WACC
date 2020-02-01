@@ -260,7 +260,6 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
       if (!exprs.areAllValid) {
         return exprs.errors.invalid()
       }
-
       val valid = exprs.valids
 
       // Make sure expressions all have the same type
@@ -313,17 +312,11 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
         UndefinedIdentifier(ID().position, id).toInvalidParsed()
       })
     }
-    expr() != null -> {
-      assert(expr().size == 1)
 
-      val e = expr()[0].asAst(scope)
-      return if (e is Valid) {
-        ExprRHS(e.a).valid()
-      } else {
-        e.errors.invalid()
-      }
+    expr() != null -> {
+      return expr()[0].asAst(scope).map { ExprRHS(it) }
     }
-    else -> throw IllegalStateException("Should never be reached (invalid assign_rhs)")
+    else -> NOT_REACHED()
   }
 }
 
