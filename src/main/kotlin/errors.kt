@@ -126,11 +126,21 @@ fun List<CompilationError>.asLines(filename: String) =
   "In file $filename:\n" +
     fold("") { str, err -> "$str  ${err.msg}\n" } + '\n'
 
+/**
+ * Flatmap on [Parsed]. Applies [transform] to [this] if [this] is [Valid], and
+ * returns the result.
+ */
 fun <A, B> Parsed<A>.flatMap(transform: (A) -> Parsed<B>): Parsed<B> = when (this) {
   is Valid -> transform(a)
   is Invalid -> this
 }
 
+/**
+ * Tests a [Parsed] against [predicate]. If it passes (ie, if true) then it returns [this],
+ * otherwise it returns [error]'s [CompilationError]
+ *
+ * See [Parsed.flatMap]
+ */
 fun <A> Parsed<A>.validate(predicate: (A) -> Boolean, error: (A) -> CompilationError) : Parsed<A> =
   flatMap {
     if (predicate(it))

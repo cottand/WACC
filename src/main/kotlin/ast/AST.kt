@@ -2,12 +2,16 @@ package ic.org.ast
 
 import antlr.WACCParser
 import antlr.WACCParser.Array_elemContext
-import arrow.core.*
 import arrow.core.Validated.Valid
+import arrow.core.getOrElse
+import arrow.core.invalid
+import arrow.core.toOption
+import arrow.core.valid
 import ic.org.*
 import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
+import kotlin.ranges.contains
 
 fun WACCParser.FuncContext.asAst(): Parsed<Func> {
   val ident = Ident(this.ID().text)
@@ -18,11 +22,9 @@ fun WACCParser.FuncContext.asAst(): Parsed<Func> {
   val params = param_list().toOption().fold({
     emptyList<Parsed<Param>>()
   }, { list ->
-    list.param().map { it.asAst(ControlFlowScope(funcScope)) }
+    list.param().map { it.asAst(funcScope) }
   })
-  val stat = stat().asAst(ControlFlowScope(funcScope))
-
-  //TODO("Is this func valid? We probably need to make checks on the stat")
+  val stat = stat().asAst(funcScope)
 
   return if (params.areAllValid && stat is Valid) {
     val validParams = params.map { (it as Valid).a }
@@ -118,31 +120,24 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
     // Variable declaration
     ASSIGN() != null && assign_lhs() == null -> {
       val rhs = assign_rhs().asAst(scope)
-      if (rhs !is Valid) return rhs.errors.invalid()
-      return type().asAst().map {
-        DeclVariable(it, Ident(ID()), rhs.a)
-      }.flatMap {
-        scope.addVariable(startPosition, it)
-      }.map {
-        Decl(it, rhs.a, scope)
-      }
+      if (rhs !is Valid)
+        rhs.errors.invalid()
+      else
+        type().asAst().map {
+          DeclVariable(it, Ident(ID()), rhs.a)
+        }.flatMap {
+          scope.addVariable(startPosition, it)
+        }.map {
+          Decl(it, rhs.a, scope)
+        }
     }
     READ() != null -> assign_lhs().asAst(scope).map { Read(it, scope) }
-    FREE() != null -> {
-      expr().asAst(scope).flatMap {
-        // FREE may only be called in expressions that evaluate to types PairT or ArrayT
-        if (it.type is AnyPairTs || it.type is AnyArrayT)
-          Free(it, scope).valid()
-        else
-          TypeError(
-            startPosition,
-            listOf(AnyArrayT(), AnyPairTs()),
-            it.type,
-            "Free"
-          )
-            .toInvalidParsed()
-      }
-    }
+    FREE() != null -> expr().asAst(scope)
+      // FREE may only be called in expressions that evaluate to types PairT or ArrayT
+      .validate({ it.type is AnyPairTs || it.type is AnyArrayT },
+        { TypeError(startPosition, listOf(AnyArrayT(), AnyPairTs()), it.type, "Free") })
+      .map { Free(it, scope) }
+
     RETURN() != null -> {
       return if (scope is GlobalScope) {
         InvalidReturn(RETURN().position).toInvalidParsed()
@@ -150,18 +145,11 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
         expr().asAst(scope).map { Return(it, scope) }
       }
     }
-    EXIT() != null -> expr().asAst(scope).flatMap { expr ->
-      // Make sure we return an int
-      if (expr.type != IntT)
-        TypeError(
-          pos = expr().startPosition,
-          expectedT = IntT,
-          actual = expr.type,
-          op = "exit"
-        ).toInvalidParsed()
-      else
-        Exit(expr, scope).valid()
-    }
+    EXIT() != null -> expr().asAst(scope)
+      // Make sure expr has type Int, or return a TypeError
+      .validate({ it.type is IntT }, { TypeError(expr().startPosition, IntT, it.type, "exit") })
+      .map { Exit(it, scope) }
+
     PRINT() != null -> expr().asAst(scope).map { Print(it, scope) }
     PRINTLN() != null -> expr().asAst(scope).map { Println(it, scope) }
     IF() != null -> {
@@ -180,9 +168,8 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
           else -> TODO("Need to check return types of statTrue and statFalse if they have a return")
           //          else -> If(expr.a, statTrue.a, statFalse.a, scope).valid()
         }
-      } else {
+      } else
         (expr.errors + statTrue.errors + statFalse.errors).invalid()
-      }
     }
     WHILE() != null -> {
       assert(stat().size == 1)
@@ -194,12 +181,7 @@ private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
         e !is Valid || s !is Valid ->
           (e.errors + s.errors).invalid()
         e.a.type != BoolT ->
-          TypeError(
-            WHILE().position,
-            BoolT,
-            e.a.type,
-            "While condition"
-          ).toInvalidParsed()
+          TypeError(WHILE().position, BoolT, e.a.type, "While condition").toInvalidParsed()
         else ->
           While(e.a, s.a, newScope).valid()
       }
@@ -345,7 +327,6 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
 
 private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
   when {
-    // TODO why is the int overflow test not passing
     int_lit() != null -> when (val i = int_lit().text.toLong()) {
       in IntLit.range -> IntLit(i.toInt()).valid()
       else -> IntegerOverflowError(startPosition, i).toInvalidParsed().print()
@@ -380,9 +361,8 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
 private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
   val id = ID().text
   val exprs = expr().map { it.asAst(scope) }
-  return scope[id].fold({
+  return scope[id].fold<Parsed<ArrayElemExpr>>({
     (exprs.errors + UndefinedIdentifier(startPosition, id)).invalid()
-      as Parsed<ArrayElemExpr>
   }, {
     if (exprs.areAllValid)
       ArrayElemExpr.make(startPosition, it, exprs.valids)
