@@ -68,12 +68,6 @@ int_lit: PLUS? WS* INTEGER;
 
 
 // Operators
-unary_op: NOT
-| MINUS
-| LEN
-| ORD
-| CHR;
-
 binary_op: MUL
 | DIV
 | MOD
@@ -87,3 +81,9 @@ binary_op: MUL
 | NOT_EQ
 | AND
 | OR;
+
+unary_op: NOT
+| MINUS
+| LEN
+| ORD
+| CHR;
