@@ -49,14 +49,6 @@ data class ArrayElemExpr internal constructor(
   val exprs: List<Expr>,
   override val type: Type
 ) : Expr() {
-  // PRE: exprs.size >= 1
-  //override val type: Type = when {
-  //  exprs.size == 1 -> ident.type
-  //  ident.type !is ArrayT ->
-  //    throw IllegalArgumentException("Called several array getters on a non nested array")
-  //  else -> ident.type.nthNestedType(exprs.size) // TODO check. It's scketchy
-  //}
-
   companion object {
     /**
      * Builds a type safe [ArrayElemExpr] from [variable]    */
@@ -87,12 +79,17 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override fun toString(): String = "$unaryOper $expr"
 
   companion object {
-    fun make(e: Expr, unOp: UnaryOper, pos: Position): Parsed<UnaryOperExpr> =
-      when {
-        e.type != unOp.argType ->
-          TypeError(pos, unOp.argType, e.type, unOp.toString()).toInvalidParsed()
-        else -> UnaryOperExpr(unOp, e).valid()
-      }
+    /**
+     * Factory method for safely building a [UnaryOperExpr] from a [UnaryOper]
+     *
+     * Makes sure [e] is the [Type] that [unOp] expects and returns a [Parsed]
+     * accordingly.
+     */
+    fun build(e: Expr, unOp: UnaryOper, pos: Position): Parsed<UnaryOperExpr> =
+      if (unOp.validArg(e.type))
+        UnaryOperExpr(unOp, e).valid()
+      else
+        TypeError(pos, unOp.argType, e.type, unOp.toString()).toInvalidParsed()
   }
 }
 
@@ -106,21 +103,29 @@ data class BinaryOperExpr internal constructor(
   override fun toString(): String = "$expr1 $binaryOper $expr2"
 
   companion object {
-    fun make(e1: Expr, binOp: BinaryOper, e2: Expr, pos: Position): Parsed<BinaryOperExpr> =
-      when {
-        e1.type !in binOp.inTypes ->
-          TypeError(pos, binOp.inTypes, e1.type, binOp.toString()).toInvalidParsed()
-        e2.type !in binOp.inTypes ->
-          TypeError(pos, binOp.inTypes, e2.type, binOp.toString()).toInvalidParsed()
-        e1.type != e2.type ->
-          UndefinedOp(pos, binOp.toString(), e1.type, e2.type).toInvalidParsed()
-        else -> BinaryOperExpr(e1, binOp, e2).valid()
-      }
+    /**
+     * Factory method for safely building a [BinaryOperExpr] from a [BinaryOper]
+     *
+     * Makes sure [e1] and [e2] are the [Type]s that [binOp] expects and returns a [Parsed]
+     * accordingly.
+     */
+    fun build(e1: Expr, binOp: BinaryOper, e2: Expr, pos: Position) : Parsed<BinaryOperExpr> =
+      if (binOp.validArgs(e1.type, e2.type))
+        BinaryOperExpr(e1, binOp, e2).valid()
+      else
+        TypeError(pos, binOp.inTypes, e1.type to e2.type, binOp.toString()).toInvalidParsed()
   }
 }
 
 // <unary-oper>
+/**
+ * Represents a unary operator, like `!` or `-`.
+ * Type checking is enforced by making each subclass provide typechecking functions.
+ * See [LenUO] for why we chose this design
+ */
 sealed class UnaryOper {
+  internal abstract val validArg: (Type) -> Boolean
+  internal abstract val resCheck: (Type) -> Boolean
   abstract val argType: Type
   abstract val retType: Type
 }
@@ -128,6 +133,8 @@ sealed class UnaryOper {
 // bool:
 object NotUO : UnaryOper()       // !
 {
+  override val validArg: (Type) -> Boolean = { it is BoolT }
+  override val resCheck: (Type) -> Boolean = { it is BoolT }
   override val argType: Type = BoolT
   override val retType: Type = BoolT
 }
@@ -135,14 +142,34 @@ object NotUO : UnaryOper()       // !
 // int:
 object MinusUO : UnaryOper()     // -
 {
+  override val validArg: (Type) -> Boolean = { it is IntT }
+  override val resCheck: (Type) -> Boolean = { it is IntT }
   override val argType: Type = IntT
   override val retType: Type = IntT
   override fun toString(): String = "-"
 }
 
 // arr -> int:
+/**
+ * The operator `len` is a special case, because it takes any kind of [ArrayT],
+ * even though the class [ArrayT] has state depending on the type of the nested arrays. To work
+ * around this, we have chosen to use Kotlin `is` clauses, and make a new [Type], [AnyArrayT],
+ * which is a supertype of [ArrayT]. This whay, the compile time check
+ *
+ * `(ArrayT is ArrayT)`
+ *
+ * will pass for any [ArrayT].
+ *
+ * Another solution was to just compare [Type] variables (ie, t1 == t2) but this would have
+ * involved overriding the JVM's .equals() in a way that would have broken transitivity on
+ * equality... So we chose to type a bit more instead.
+ * (for example, both a [ArrayT](IntT) and a [ArrayT](CharT) would have been equal to a [AnyArrayT]
+ * but not equal between them.
+ */
 object LenUO : UnaryOper()       // len
 {
+  override val validArg: (Type) -> Boolean = { it is ArrayT }
+  override val resCheck: (Type) -> Boolean = { it is IntT }
   override val argType: Type = AnyArrayT()
   override val retType: Type = IntT
 }
@@ -150,6 +177,8 @@ object LenUO : UnaryOper()       // len
 // char -> int:
 object OrdUO : UnaryOper()       // ord
 {
+  override val validArg: (Type) -> Boolean = { it is CharT }
+  override val resCheck: (Type) -> Boolean = { it is IntT }
   override val argType: Type = CharT
   override val retType: Type = IntT
 }
@@ -157,34 +186,52 @@ object OrdUO : UnaryOper()       // ord
 // int -> char:
 object ChrUO : UnaryOper()       // chr
 {
+  override val validArg: (Type) -> Boolean = { it is IntT }
+  override val resCheck: (Type) -> Boolean = { it is CharT }
   override val argType: Type = IntT
   override val retType: Type = CharT
 }
 
 // <binary-oper>
 sealed class BinaryOper {
-  //abstract val argsTypes: Type
+  internal abstract val validArgs: (Type, Type) -> Boolean
+  internal abstract val validReturn: (Type) -> Boolean
+  internal inline fun <reified T : Type> check(t1: Type, t2: Type) = t1 is T && t2 is T
   abstract val retType: Type
   abstract val inTypes: List<Type>
 }
 
+// (int, int) -> int:
 sealed class IntBinOp : BinaryOper() {
+  override val validArgs: (Type, Type) -> Boolean = { i1, i2 -> check<IntT>(i1, i2) }
+  override val validReturn: (Type) -> Boolean = { it is IntT }
   override val inTypes = listOf(IntT)
   override val retType = IntT
 }
 
+//(int, int)/(char, char) -> int
 sealed class CompBinOp : BinaryOper() {
+  override val validArgs: (Type, Type) -> Boolean = { i1, i2 ->
+    check<IntT>(i1, i2) || check<CharT>(i1, i2)
+    // TODO is (int, char) ok????
+  }
+  override val validReturn: (Type) -> Boolean = { it is BoolT }
   override val inTypes = listOf(IntT, CharT)
   override val retType = BoolT
 }
 
+// (bool, bool) -> bool:
 sealed class BoolBinOp : BinaryOper() {
+  override val validArgs: (Type, Type) -> Boolean = { b1, b2 -> check<BoolT>(b1, b2) }
+  override val validReturn: (Type) -> Boolean = { it is IntT }
   override val inTypes = listOf(BoolT)
   override val retType = BoolT
 }
 
-// (int, int) -> int:
 object TimesBO : IntBinOp()    // *
+{
+  override fun toString(): String = "*"
+}
 
 object DivisionBO : IntBinOp() // /
 object ModBO : IntBinOp()      // %
@@ -199,17 +246,25 @@ object GtBO : CompBinOp()       // >
 object GeqBO : CompBinOp()      // >=
 object LtBO : CompBinOp()       // <
 object LeqBO : CompBinOp()      // <=
-object EqBO : BinaryOper() {       // ==
-  override val inTypes = listOf(IntT, BoolT, CharT, StringT) //TODO add?
+
+sealed class EqualityBinOp : BinaryOper() {
+  override val validArgs: (Type, Type) -> Boolean = { b1, b2 ->
+    EqBO.check<BoolT>(b1, b2)
+      || EqBO.check<IntT>(b1, b2)
+      || EqBO.check<CharT>(b1, b2)
+      || EqBO.check<StringT>(b1, b2)
+      || EqBO.check<AnyPairTs>(b1, b2)
+    // TODO? || check<ArrayT>(b1, b2)
+  }
+  override val validReturn: (Type) -> Boolean = { it is BoolT }
+  override val inTypes = listOf(IntT, BoolT, CharT, StringT, AnyArrayT()) //TODO add?
   override val retType = BoolT
 }
 
-object NeqBO : BinaryOper() {      // !=
-  override val inTypes = listOf(IntT, BoolT, CharT, StringT) // TODO add?
-  override val retType = BoolT
-}
+object EqBO : EqualityBinOp()       // ==
 
-// (bool, bool) -> bool:
+object NeqBO : EqualityBinOp()       // !=
+
 object AndBO : BoolBinOp()      // &&
 
 object OrBO : BoolBinOp()       // ||

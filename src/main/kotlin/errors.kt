@@ -55,6 +55,9 @@ data class UndefinedIdentifier(override val msg: String) : SemanticError() {
 data class TypeError(override val msg: String) : SemanticError() {
   constructor(pos: Position, expectedTs: List<Type>, actual: Type, op: String)
     : this("$pos, for operation `$op`, expected some type ${expectedTs}, actual: $actual")
+  constructor(pos: Position, expectedTs: List<Type>, actualTs: Pair<Type, Type>, op: String)
+    : this("$pos, for operation `$op`, " +
+    "expected some type ${expectedTs}, actual: ${actualTs.first} and ${actualTs.second}")
 
   constructor(pos: Position, expectedT: Type, actual: Type, op: String)
     : this("$pos, for operation `$op`, expected type ${expectedT}, actual: $actual")

@@ -339,7 +339,7 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
     })
     array_elem() != null -> array_elem().asAst(scope)
     unary_op() != null -> expr(0).asAst(scope)
-      .flatMap { UnaryOperExpr.make(it, unary_op().asAst(), startPosition) }
+      .flatMap { UnaryOperExpr.build(it, unary_op().asAst(), startPosition) }
     // Nested expression
     LBRACKET() != null -> expr(0).asAst(scope)
 
@@ -349,7 +349,7 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
       val e2 = expr(1).asAst(scope)
       val binOp = extractBinOp()
       if (e1 is Valid && e2 is Valid)
-        BinaryOperExpr.make(e1.a, binOp, e2.a, startPosition)
+        BinaryOperExpr.build(e1.a, binOp, e2.a, startPosition)
       else
         (e1.errors + e2.errors).invalid()
     }
