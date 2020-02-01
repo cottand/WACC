@@ -51,7 +51,7 @@ sealed class Scope {
 /**
  * Global scope. Unique and per program, parent of all [ControlFlowScope]s outside of [FuncScope]s.
  */
-object GlobalScope : Scope() {
+class GlobalScope : Scope() {
   override fun getVar(ident: Ident): Option<Variable> = variables[ident].toOption()
   private val functions = HashMap<Ident, Func>()
 
@@ -61,14 +61,6 @@ object GlobalScope : Scope() {
     else
       RedeclarationError(pos, f.ident).toInvalidParsed()
 
-  /**
-   * Clears the content of this global, shared, mutable scope accross
-   * copmpilations.
-   */
-  fun resetState() {
-    functions.clear()
-    variables.clear()
-  }
 }
 
 /**

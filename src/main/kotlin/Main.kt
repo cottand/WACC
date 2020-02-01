@@ -61,9 +61,6 @@ class WACCCompiler(private val filename: String) {
       }, {
         CompileResult.success(duration = start.elapsedNow())
       })
-      .also {
-        GlobalScope.resetState()
-      }
   }
 
   companion object {

@@ -13,7 +13,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 import kotlin.ranges.contains
 
-fun WACCParser.FuncContext.asAst(): Parsed<Func> {
+fun WACCParser.FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   val ident = Ident(this.ID().text)
   val funcScope = FuncScope(ident)
   val type = type().asAst()
@@ -29,7 +29,7 @@ fun WACCParser.FuncContext.asAst(): Parsed<Func> {
   return if (params.areAllValid && stat is Valid) {
     val validParams = params.map { (it as Valid).a }
     Func(type.a, ident, validParams, stat.a)
-      .also { GlobalScope.addFunction(startPosition, it) }
+      .also { gScope.addFunction(startPosition, it) }
       .valid()
   } else {
     (type.errors + params.errors + stat.errors).invalid()
@@ -88,14 +88,16 @@ private fun WACCParser.Array_typeContext.asAst(): Parsed<ArrayT> {
   return recurseArrayT(this, 1).map { (type, depth) -> ArrayT.make(type, depth) }
 }
 
-fun WACCParser.ProgContext.asAst(): Parsed<Prog> {
-  val funcs = func().map { it.asAst() }
+/**
+ * Entry level of recursive AST conversion. Takes a [Scope], [gScope] or creates a [GlobalScope]
+ * by default, from which all scopes (except [FuncScope]s] inherit from.
+ */
+fun WACCParser.ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
+  val funcs = func().map { it.asAst(gScope) }
   val antlrStat = stat()
   // TODO rewrite syntactic error message with this.startPosition
     ?: return persistentListOf(SyntacticError("Malformed program at $text")).invalid()
-  val stat = antlrStat.asAst(GlobalScope)
-
-  // TODO Check if the return type matches!
+  val stat = antlrStat.asAst(gScope)
 
   return if (funcs.areAllValid && stat is Valid)
     Prog(funcs.valids, stat.a).valid()
