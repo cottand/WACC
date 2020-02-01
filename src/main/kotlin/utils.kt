@@ -66,4 +66,3 @@ fun <A> List<A>.forAny(predicate: (A) -> Boolean): Boolean {
   return false
 }
 
-

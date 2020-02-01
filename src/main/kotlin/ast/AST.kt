@@ -340,18 +340,37 @@ private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
     array_elem() != null -> array_elem().asAst(scope)
     unary_op() != null -> expr(0).asAst(scope)
       .flatMap { UnaryOperExpr.make(it, unary_op().asAst(), startPosition) }
-    binary_op() != null -> {
+    // Nested expression
+    LBRACKET() != null -> expr(0).asAst(scope)
+
+    // Binary operator expression
+    else -> {
       val e1 = expr(0).asAst(scope)
       val e2 = expr(1).asAst(scope)
-      val binOp = binary_op().asAst()
+      val binOp = extractBinOp()
       if (e1 is Valid && e2 is Valid)
         BinaryOperExpr.make(e1.a, binOp, e2.a, startPosition)
       else
         (e1.errors + e2.errors).invalid()
     }
-    // The remaining case is a nested expression
-    else -> expr(0).asAst(scope)
   }
+
+private fun WACCParser.ExprContext.extractBinOp() = when {
+  MUL() != null -> TimesBO
+  DIV() != null -> DivisionBO
+  MOD() != null -> ModBO
+  PLUS() != null -> PlusBO
+  MINUS() != null -> MinusBO
+  GRT() != null -> GtBO
+  GRT_EQ() != null -> GeqBO
+  LESS() != null -> LtBO
+  LESS_EQ() != null -> LeqBO
+  EQ() != null -> EqBO
+  NOT_EQ() != null -> NeqBO
+  AND() != null -> AndBO
+  OR() != null -> OrBO
+  else -> NOT_REACHED()
+}
 
 private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
   val id = ID().text
@@ -375,23 +394,3 @@ private fun WACCParser.Unary_opContext.asAst(): UnaryOper =
     CHR() != null -> ChrUO
     else -> NOT_REACHED()
   }
-
-private fun WACCParser.Binary_opContext.asAst(): BinaryOper =
-  when {
-    MUL() != null -> TimesBO
-    DIV() != null -> DivisionBO
-    MOD() != null -> ModBO
-    PLUS() != null -> PlusBO
-    MINUS() != null -> MinusBO
-    GRT() != null -> GtBO
-    GRT_EQ() != null -> GeqBO
-    LESS() != null -> LtBO
-    LESS_EQ() != null -> LeqBO
-    EQ() != null -> EqBO
-    NOT_EQ() != null -> NeqBO
-    AND() != null -> AndBO
-    OR() != null -> OrBO
-    else -> NOT_REACHED()
-  }
-
-
