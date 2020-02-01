@@ -153,6 +153,22 @@ fun <A> Parsed<A>.validate(predicate: (A) -> Boolean, error: (A) -> CompilationE
   }
 
 
+/**
+ * Tests a [Parsed] against [predicate]. If it passes (ie, if true) then it returns [this],
+ * otherwise it returns [error]'s [CompilationError]
+ *
+ * See [Parsed.flatMap]
+ *
+ * Overloaded version that takes no lambdas.
+ */
+fun <A> Parsed<A>.validate(predicate: Boolean, error: CompilationError) : Parsed<A> =
+  flatMap {
+    if (predicate)
+      it.valid()
+    else
+      error.toInvalidParsed()
+  }
+
 data class Position(val l: Int, val col: Int) {
   override fun toString(): String = "At $l:$col"
 }

@@ -40,7 +40,7 @@ private fun WACCParser.ParamContext.asAst(scope: Scope): Parsed<Param> {
   TODO("not implemented")
 }
 
-private fun WACCParser.TypeContext.asAst(): Parsed<Type> =
+internal fun WACCParser.TypeContext.asAst(): Parsed<Type> =
   when {
     base_type() != null -> base_type().asAst().valid()
     pair_type() != null -> pair_type().asAst()
@@ -105,113 +105,7 @@ fun WACCParser.ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Pr
     (funcs.errors + stat.errors).invalid()
 }
 
-private fun WACCParser.StatContext.asAst(scope: Scope): Parsed<Stat> {
-  return when {
-    SKP() != null -> Skip(scope).valid()
-    // Variable assignment
-    ASSIGN() != null && assign_lhs() != null -> {
-      val lhs = assign_lhs().asAst(scope)
-      val rhs = assign_rhs().asAst(scope)
-
-      return if (lhs is Valid && rhs is Valid) {
-        Assign(lhs.a, rhs.a, scope).valid()
-      } else {
-        (lhs.errors + rhs.errors).invalid()
-      }
-    }
-    // Variable declaration
-    ASSIGN() != null && assign_lhs() == null -> {
-      val rhs = assign_rhs().asAst(scope)
-      if (rhs !is Valid)
-        rhs.errors.invalid()
-      else
-        type().asAst().map {
-          DeclVariable(it, Ident(ID()), rhs.a)
-        }.flatMap {
-          scope.addVariable(startPosition, it)
-        }.map {
-          Decl(it, rhs.a, scope)
-        }
-    }
-    READ() != null -> assign_lhs().asAst(scope).map { Read(it, scope) }
-    FREE() != null -> expr().asAst(scope)
-      // FREE may only be called in expressions that evaluate to types PairT or ArrayT
-      .validate({ it.type is AnyPairTs || it.type is AnyArrayT },
-        { TypeError(startPosition, listOf(AnyArrayT(), AnyPairTs()), it.type, "Free") })
-      .map { Free(it, scope) }
-
-    RETURN() != null -> {
-      return if (scope is GlobalScope) {
-        InvalidReturn(RETURN().position).toInvalidParsed()
-      } else {
-        expr().asAst(scope).map { Return(it, scope) }
-      }
-    }
-    EXIT() != null -> expr().asAst(scope)
-      // Make sure expr has type Int, or return a TypeError
-      .validate({ it.type is IntT }, { TypeError(expr().startPosition, IntT, it.type, "exit") })
-      .map { Exit(it, scope) }
-
-    PRINT() != null -> expr().asAst(scope).map { Print(it, scope) }
-    PRINTLN() != null -> expr().asAst(scope).map { Println(it, scope) }
-    IF() != null -> {
-      val expr = expr().asAst(ControlFlowScope(scope))
-      val statTrue = stat(0).asAst(ControlFlowScope(scope))
-      val statFalse = stat(1).asAst(ControlFlowScope(scope))
-
-      return if (expr is Valid && statTrue is Valid && statFalse is Valid) {
-        when {
-          expr.a.type != BoolT -> TypeError(
-            pos = startPosition,
-            expectedT = BoolT,
-            actual = expr.a.type,
-            op = IF().text
-          ).toInvalidParsed()
-          else -> TODO("Need to check return types of statTrue and statFalse if they have a return")
-          //          else -> If(expr.a, statTrue.a, statFalse.a, scope).valid()
-        }
-      } else
-        (expr.errors + statTrue.errors + statFalse.errors).invalid()
-    }
-    WHILE() != null -> {
-      assert(stat().size == 1)
-      val newScope = ControlFlowScope(scope)
-      val e = expr().asAst(scope)
-      val s = stat()[0].asAst(newScope)
-
-      return when {
-        e !is Valid || s !is Valid ->
-          (e.errors + s.errors).invalid()
-        e.a.type != BoolT ->
-          TypeError(WHILE().position, BoolT, e.a.type, "While condition").toInvalidParsed()
-        else ->
-          While(e.a, s.a, newScope).valid()
-      }
-    }
-    BEGIN() != null && END() != null -> {
-      // Should only have one stat
-      assert(stat().size == 1)
-      val newScope = ControlFlowScope(scope)
-      return stat()[0].asAst(newScope).map { BegEnd(it, newScope) }
-    }
-    SEMICOLON() != null -> {
-      // In a stat chain, we should only have two statements
-      assert(stat().size == 2)
-      // Make sure the two statements are valid
-      val stat1 = stat()[0].asAst(scope)
-      val stat2 = stat()[1].asAst(scope)
-
-      return if (stat1 is Valid && stat2 is Valid) {
-        StatChain(stat1.a, stat2.a, scope).valid()
-      } else {
-        (stat1.errors + stat2.errors).invalid()
-      }
-    }
-    else -> NOT_REACHED()
-  }
-}
-
-private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
+internal fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
   when {
     ID() != null -> scope[ID().text].fold({
       UndefinedIdentifier(startPosition, ID().text).toInvalidParsed()
@@ -247,7 +141,7 @@ private fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
     else -> NOT_REACHED()
   }
 
-private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
+internal fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
   when {
     array_lit() != null -> {
       val tokExprs = array_lit().expr()
@@ -320,7 +214,7 @@ private fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
   }
 }
 
-private fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
+internal fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
   when {
     int_lit() != null -> when (val i = int_lit().text.toLong()) {
       in IntLit.range -> IntLit(i.toInt()).valid()

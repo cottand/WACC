@@ -8,19 +8,20 @@ prog: WS* BEGIN WS+ func* WS* stat WS* END WS* EOF;
 
 func: type WS+ ID WS* LBRACKET WS* param_list? WS* RBRACKET WS* IS WS* stat WS* END WS*;
 
-stat: SKP
-| type WS+ ID WS* ASSIGN WS* assign_rhs
-| assign_lhs WS* ASSIGN WS* assign_rhs
-| READ WS+ assign_lhs
-| FREE WS+ expr
-| RETURN WS+ expr
-| EXIT WS+ expr
-| PRINT WS* expr
-| PRINTLN WS+ expr
-| IF WS* expr WS* THEN WS* stat WS* ELSE WS* stat WS* FI
-| WHILE WS* expr WS* DO WS* stat WS* DONE
-| BEGIN WS* stat WS* END
-| <assoc=right> stat WS* SEMICOLON WS* stat;
+stat: SKP #Skip
+| type WS+ ID WS* ASSIGN WS* assign_rhs #Declare
+| assign_lhs WS* ASSIGN WS* assign_rhs #Assign
+| READ WS+ assign_lhs #ReadStat
+| FREE WS+ expr #FreeStat
+| RETURN WS+ expr #ReturnStat
+| EXIT WS+ expr #ExitStat
+| PRINT WS* expr #PrintStat
+| PRINTLN WS+ expr #PrintlnStat
+| IF WS* expr WS* THEN WS* stat WS* ELSE WS* stat WS* FI #IfElse
+| WHILE WS* expr WS* DO WS* stat WS* DONE #WhileDo
+| BEGIN WS* stat WS* END #NewScope
+| <assoc=right> stat WS* SEMICOLON WS* stat #SemiColon
+;
 
 expr:
 expr WS* MUL WS* expr
