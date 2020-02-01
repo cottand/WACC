@@ -38,7 +38,7 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
     .map { Free(it, scope) }
 
   is ReturnStatContext -> expr().asAst(scope)
-    .validate(scope is GlobalScope, InvalidReturn(startPosition))
+    .validate(scope !is GlobalScope, InvalidReturn(startPosition))
     .map { Return(it, scope) }
 
   is ExitStatContext -> expr().asAst(scope)
