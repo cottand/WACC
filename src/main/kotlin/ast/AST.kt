@@ -1,7 +1,7 @@
 package ic.org.ast
 
 import antlr.WACCParser
-import antlr.WACCParser.Array_elemContext
+import antlr.WACCParser.*
 import arrow.core.Validated.Valid
 import arrow.core.getOrElse
 import arrow.core.invalid
@@ -11,9 +11,8 @@ import ic.org.*
 import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
-import kotlin.ranges.contains
 
-fun WACCParser.FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
+fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   val ident = Ident(this.ID().text)
   val funcScope = FuncScope(ident)
   val type = type().asAst()
@@ -36,11 +35,11 @@ fun WACCParser.FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   }
 }
 
-private fun WACCParser.ParamContext.asAst(scope: Scope): Parsed<Param> {
+private fun ParamContext.asAst(scope: Scope): Parsed<Param> {
   TODO("not implemented")
 }
 
-internal fun WACCParser.TypeContext.asAst(): Parsed<Type> =
+internal fun TypeContext.asAst(): Parsed<Type> =
   when {
     base_type() != null -> base_type().asAst().valid()
     pair_type() != null -> pair_type().asAst()
@@ -48,7 +47,7 @@ internal fun WACCParser.TypeContext.asAst(): Parsed<Type> =
     else -> NOT_REACHED()
   }
 
-private fun WACCParser.Base_typeContext.asAst(): BaseT =
+private fun Base_typeContext.asAst(): BaseT =
   when {
     INT() != null -> IntT
     BOOL() != null -> BoolT
@@ -57,7 +56,7 @@ private fun WACCParser.Base_typeContext.asAst(): BaseT =
     else -> NOT_REACHED()
   }
 
-private fun WACCParser.Pair_typeContext.asAst(): Parsed<PairT> {
+private fun Pair_typeContext.asAst(): Parsed<PairT> {
   val fstType = pair_elem_type(0).asAst()
   val sndType = pair_elem_type(1).asAst()
   return if (fstType is Valid && sndType is Valid)
@@ -67,7 +66,7 @@ private fun WACCParser.Pair_typeContext.asAst(): Parsed<PairT> {
 }
 
 // TODO When checking Types: If NDPairT, we need to recurse to find the right Pair Type!
-private fun WACCParser.Pair_elem_typeContext.asAst(): Parsed<Type> =
+private fun Pair_elem_typeContext.asAst(): Parsed<Type> =
   when {
     base_type() != null -> base_type().asAst().valid()
     array_type() != null -> array_type().asAst()
@@ -75,9 +74,9 @@ private fun WACCParser.Pair_elem_typeContext.asAst(): Parsed<Type> =
     else -> NOT_REACHED()
   }
 
-private fun WACCParser.Array_typeContext.asAst(): Parsed<ArrayT> {
+private fun Array_typeContext.asAst(): Parsed<ArrayT> {
   fun recurseArrayT(
-    arrayT: WACCParser.Array_typeContext,
+    arrayT: Array_typeContext,
     currentDepth: Int
   ): Parsed<Pair<Type, Int>> = when {
     arrayT.array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
@@ -92,7 +91,7 @@ private fun WACCParser.Array_typeContext.asAst(): Parsed<ArrayT> {
  * Entry level of recursive AST conversion. Takes a [Scope], [gScope] or creates a [GlobalScope]
  * by default, from which all scopes (except [FuncScope]s] inherit from.
  */
-fun WACCParser.ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
+fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
   val funcs = func().map { it.asAst(gScope) }
   val antlrStat = stat()
   // TODO rewrite syntactic error message with this.startPosition
@@ -105,7 +104,7 @@ fun WACCParser.ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Pr
     (funcs.errors + stat.errors).invalid()
 }
 
-internal fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
+internal fun Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
   when {
     ID() != null -> scope[ID().text].fold({
       UndefinedIdentifier(startPosition, ID().text).toInvalidParsed()
@@ -141,7 +140,7 @@ internal fun WACCParser.Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
     else -> NOT_REACHED()
   }
 
-internal fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
+internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
   when {
     array_lit() != null -> {
       val tokExprs = array_lit().expr()
@@ -208,83 +207,9 @@ internal fun WACCParser.Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
     }
 
     expr() != null -> {
-      return expr()[0].asAst(scope).map { ExprRHS(it) }
+      return expr(0).asAst(scope).map { ExprRHS(it) }
     }
     else -> NOT_REACHED()
   }
 }
 
-internal fun WACCParser.ExprContext.asAst(scope: Scope): Parsed<Expr> =
-  when {
-    int_lit() != null -> when (val i = int_lit().text.toLong()) {
-      in IntLit.range -> IntLit(i.toInt()).valid()
-      else -> IntegerOverflowError(startPosition, i).toInvalidParsed().print()
-    }
-
-    BOOL_LIT() != null -> BoolLit(BOOL_LIT().text!!.toBoolean()).valid()
-    CHAR_LIT() != null -> CharLit(CHAR_LIT().text.toCharArray()[0]).valid()
-    STRING_LIT() != null -> StrLit(STRING_LIT().text).valid()
-    PAIR_LIT() != null -> NullPairLit.valid()
-
-    ID() != null -> scope[ID().text].fold({
-      UndefinedIdentifier(ID().position, ID().text).toInvalidParsed()
-    }, { variable ->
-      IdentExpr(variable).valid()
-    })
-    array_elem() != null -> array_elem().asAst(scope)
-    unary_op() != null -> expr(0).asAst(scope)
-      .flatMap { UnaryOperExpr.build(it, unary_op().asAst(), startPosition) }
-    // Nested expression
-    LBRACKET() != null -> expr(0).asAst(scope)
-
-    // Binary operator expression
-    else -> {
-      val e1 = expr(0).asAst(scope)
-      val e2 = expr(1).asAst(scope)
-      val binOp = extractBinOp()
-      if (e1 is Valid && e2 is Valid)
-        BinaryOperExpr.build(e1.a, binOp, e2.a, startPosition)
-      else
-        (e1.errors + e2.errors).invalid()
-    }
-  }
-
-private fun WACCParser.ExprContext.extractBinOp() = when {
-  MUL() != null -> TimesBO
-  DIV() != null -> DivisionBO
-  MOD() != null -> ModBO
-  PLUS() != null -> PlusBO
-  MINUS() != null -> MinusBO
-  GRT() != null -> GtBO
-  GRT_EQ() != null -> GeqBO
-  LESS() != null -> LtBO
-  LESS_EQ() != null -> LeqBO
-  EQ() != null -> EqBO
-  NOT_EQ() != null -> NeqBO
-  AND() != null -> AndBO
-  OR() != null -> OrBO
-  else -> NOT_REACHED()
-}
-
-private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
-  val id = ID().text
-  val exprs = expr().map { it.asAst(scope) }
-  return scope[id].fold<Parsed<ArrayElemExpr>>({
-    (exprs.errors + UndefinedIdentifier(startPosition, id)).invalid()
-  }, {
-    if (exprs.areAllValid)
-      ArrayElemExpr.make(startPosition, it, exprs.valids)
-    else
-      exprs.errors.invalid()
-  })
-}
-
-private fun WACCParser.Unary_opContext.asAst(): UnaryOper =
-  when {
-    NOT() != null -> NotUO
-    MINUS() != null -> MinusUO
-    LEN() != null -> LenUO
-    ORD() != null -> OrdUO
-    CHR() != null -> ChrUO
-    else -> NOT_REACHED()
-  }

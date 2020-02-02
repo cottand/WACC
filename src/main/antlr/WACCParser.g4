@@ -24,28 +24,29 @@ stat: SKP #Skip
 ;
 
 expr:
-expr WS* MUL WS* expr
-| expr WS* DIV WS* expr
-| expr WS* MOD WS* expr
-| expr WS* PLUS WS* expr
-| expr WS* MINUS WS* expr
-| expr WS* GRT WS* expr
-| expr WS* GRT_EQ WS* expr
-| expr WS* LESS WS* expr
-| expr WS* LESS_EQ WS* expr
-| expr WS* EQ WS* expr
-| expr WS* NOT_EQ WS* expr
-| expr WS* AND WS* expr
-| expr WS* OR WS* expr
-| int_lit
-| BOOL_LIT
-| CHAR_LIT
-| STRING_LIT
-| PAIR_LIT
-| ID
-| array_elem
-| unary_op WS* expr
-| LBRACKET WS* expr WS* RBRACKET;
+expr WS* MUL WS* expr #BinOp
+| expr WS* DIV WS* expr #BinOp
+| expr WS* MOD WS* expr #BinOp
+| expr WS* PLUS WS* expr #BinOp
+| expr WS* MINUS WS* expr #BinOp
+| expr WS* GRT WS* expr #BinOp
+| expr WS* GRT_EQ WS* expr #BinOp
+| expr WS* LESS WS* expr #BinOp
+| expr WS* LESS_EQ WS* expr #BinOp
+| expr WS* EQ WS* expr #BinOp
+| expr WS* NOT_EQ WS* expr #BinOp
+| expr WS* AND WS* expr #BinOp
+| expr WS* OR WS* expr #BinOp
+| int_lit #IntLitExpr
+| BOOL_LIT #BoolLitExpr
+| CHAR_LIT #CharLitExpr
+| STRING_LIT #StrLitExpr
+| PAIR_LIT #PairLitExpr
+| ID #IdentExpr
+| array_elem #ArrayElemExpr
+| unary_op WS* expr # UnOpExpr
+| LBRACKET WS* expr WS* RBRACKET #NestedExpr
+;
 
 // Assignments
 assign_lhs: ID | array_elem | pair_elem;
