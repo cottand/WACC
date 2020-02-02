@@ -10,6 +10,9 @@ import ic.org.*
 import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
+import kotlinx.collections.immutable.toPersistentList
+import java.util.*
+import kotlin.collections.HashSet
 
 fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   val ident = Ident(this.ID().text)
@@ -20,7 +23,20 @@ fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   val params = param_list().toOption().fold({
     emptyList<Parsed<Param>>()
   }, { list ->
-    list.param().map { it.asAst(funcScope) }
+    val set = HashSet<Param>()
+    val repeats = LinkedList<Param>()
+    val paramList = list.param().map { it.asAst()}
+    if (paramList.areAllValid){
+      paramList.valids.forEach {
+        if (!set.add(it))
+          repeats.add(it)
+      }
+    }
+
+    if (repeats.size > 0)
+      repeats.map{DuplicateParamError(startPosition, it.ident).toInvalidParsed()}.toPersistentList()
+    else
+      paramList
   })
   val stat = stat().asAst(funcScope)
 
@@ -34,9 +50,9 @@ fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   }
 }
 
-private fun ParamContext.asAst(scope: Scope): Parsed<Param> {
-  TODO("not implemented")
-}
+private fun ParamContext.asAst(): Parsed<Param> =
+  this.type().asAst()
+    .map { Param(it, Ident(ID().text)) }
 
 internal fun TypeContext.asAst(): Parsed<Type> =
   when {
