@@ -14,9 +14,9 @@ import java.util.Collections
  * code of the compiler, contained in [expectedReturn])
  */
 data class WACCProgram(
-  val file: File,
-  val expectedReturn: Int,
-  val expectedKeyWords: List<String>
+    val file: File,
+    val expectedReturn: Int,
+    val expectedKeyWords: List<String>
 )
 
 /**
@@ -36,6 +36,6 @@ fun File.asProgram(): WACCProgram {
     val outputLine = content.indexOf("# Output:") + 1
     content[outputLine].split(' ')[1].filter { it != '#' }.split(' ')
   } else Collections.emptyList()
-  
+
   return WACCProgram(this, errorCode, output)
 }

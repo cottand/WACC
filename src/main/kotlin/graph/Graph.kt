@@ -100,7 +100,7 @@ class IfElseNode(val thenBody: Node, val elseBody: Node, val next: Node) : Node(
 
       // No branch returns, so this code block returns whatever the code that follows returns.
       else -> next.returnType
-      //else -> Option.empty<Type>().valid(
+      // else -> Option.empty<Type>().valid(
     }
   }
 }

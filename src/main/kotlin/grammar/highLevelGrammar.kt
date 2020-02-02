@@ -2,22 +2,22 @@ package ic.org.grammar
 
 import arrow.core.None
 import arrow.core.Option
-import ic.org.Position
 import arrow.core.Some
+import ic.org.Position
 import org.antlr.v4.runtime.tree.TerminalNode
 
 // <program>
 data class Prog(
-  val funcs: List<Func>,
-  val firstStat: Stat
+    val funcs: List<Func>,
+    val firstStat: Stat
 )
 
 // <func>
 data class Func(
-  val retType: Type,
-  val ident: Ident,
-  val params: List<Param>,
-  val stat: Stat
+    val retType: Type,
+    val ident: Ident,
+    val params: List<Param>,
+    val stat: Stat
 )
 
 // <param>
@@ -120,7 +120,7 @@ sealed class Type
 
 sealed class BaseT : Type()
 open class AnyArrayT : Type() {
-  //fun isAlsoArray(other: Type) = other is AnyArrayT
+  // fun isAlsoArray(other: Type) = other is AnyArrayT
 }
 
 // TODO Write more documentation comments for types
@@ -136,11 +136,11 @@ data class ArrayT private constructor(val type: Type, val depth: Int = 1) : AnyA
     /**
      * Creates an [ArrayT] of base type [type] with depth [depth]
      */
-    fun make(type: Type, depth: Int) : ArrayT {
+    fun make(type: Type, depth: Int): ArrayT {
       val deepest = ArrayT(type, 1)
-      tailrec fun helper(remainingDepth: Int, prev: ArrayT) : ArrayT = when(remainingDepth) {
+      tailrec fun helper(remainingDepth: Int, prev: ArrayT): ArrayT = when (remainingDepth) {
         depth -> prev
-        else -> helper(remainingDepth -1, ArrayT(prev, remainingDepth))
+        else -> helper(remainingDepth - 1, ArrayT(prev, remainingDepth))
       }
       return helper(depth, deepest)
     }
@@ -180,6 +180,6 @@ data class Ident(val name: String) {
 
 // <array-elem>
 data class ArrayElem(
-  val ident: Ident,
-  val indices: List<Expr>
+    val ident: Ident,
+    val indices: List<Expr>
 )

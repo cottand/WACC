@@ -9,7 +9,6 @@ import arrow.core.valid
 import ic.org.grammar.Ident
 import ic.org.grammar.IntLit
 import ic.org.grammar.Type
-import ic.org.grammar.Variable
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -53,14 +52,14 @@ data class UndefinedIdentifier(override val msg: String) : SemanticError() {
 }
 
 data class TypeError(override val msg: String) : SemanticError() {
-  constructor(pos: Position, expectedTs: List<Type>, actual: Type, op: String)
-    : this("$pos, for operation `$op`, expected some type ${expectedTs}, actual: $actual")
-  constructor(pos: Position, expectedTs: List<Type>, actualTs: Pair<Type, Type>, op: String)
-    : this("$pos, for operation `$op`, " +
-    "expected some type ${expectedTs}, actual: ${actualTs.first} and ${actualTs.second}")
+  constructor(pos: Position, expectedTs: List<Type>, actual: Type, op: String) :
+    this("$pos, for operation `$op`, expected some type $expectedTs, actual: $actual")
+  constructor(pos: Position, expectedTs: List<Type>, actualTs: Pair<Type, Type>, op: String) :
+    this("$pos, for operation `$op`, " +
+    "expected some type $expectedTs, actual: ${actualTs.first} and ${actualTs.second}")
 
-  constructor(pos: Position, expectedT: Type, actual: Type, op: String)
-    : this("$pos, for operation `$op`, expected type ${expectedT}, actual: $actual")
+  constructor(pos: Position, expectedT: Type, actual: Type, op: String) :
+    this("$pos, for operation `$op`, expected type $expectedT, actual: $actual")
 }
 
 data class ControlFlowTypeError(override val msg: String) : SemanticError() {
@@ -70,39 +69,39 @@ data class ControlFlowTypeError(override val msg: String) : SemanticError() {
         "    Got `$thenType` in the 'then' branch and `$elseType` in the 'else' branch"
     )
 
-  constructor(pos: Position, stat: String)
-    : this("$pos, unreachable statement `$stat`")
+  constructor(pos: Position, stat: String) :
+    this("$pos, unreachable statement `$stat`")
 
-  constructor(type: Type)
-    : this("missing return statement on branch. Expecting `$type`")
+  constructor(type: Type) :
+    this("missing return statement on branch. Expecting `$type`")
 
   override fun toString() = msg
   fun asTypeError(pos: Position) = TypeError("$pos, $this")
 }
 
 data class UndefinedOp(override val msg: String) : SemanticError() {
-  constructor(pos: Position, op: String, vararg ts: Type)
-    : this("$pos, undefined operation `$op` for types $ts")
+  constructor(pos: Position, op: String, vararg ts: Type) :
+    this("$pos, undefined operation `$op` for types $ts")
 }
 
 data class IllegalArrayAccess(override val msg: String) : SemanticError() {
-  constructor(pos: Position, expr: String, badT: Type)
-    : this("$pos, illegal type in `$expr` for array acces. Expected an Int, actual: $badT")
+  constructor(pos: Position, expr: String, badT: Type) :
+    this("$pos, illegal type in `$expr` for array acces. Expected an Int, actual: $badT")
 }
 
 data class InvalidReturn(override val msg: String) : SemanticError() {
-  constructor(pos: Position)
-    : this("$pos, `return` statement is not allowed in given scope (use `exit` maybe?)")
+  constructor(pos: Position) :
+    this("$pos, `return` statement is not allowed in given scope (use `exit` maybe?)")
 }
 
 data class IntegerOverflowError(override val msg: String) : SyntacticError(msg) {
-  constructor(pos: Position, i: Number)
-    : this("$pos, invalid integer `$i`. Not in ${IntLit.range}")
+  constructor(pos: Position, i: Number) :
+    this("$pos, invalid integer `$i`. Not in ${IntLit.range}")
 }
 
 data class IllegalFunctionReturnTypeError(override val msg: String) : SemanticError() {
-  constructor(ident: Ident, expected: Type, actual: Type)
-    : this("At function `${ident.name}`, expected return type `$expected` but found `$actual`")
+  constructor(ident: Ident, expected: Type, actual: Type) :
+    this("At function `${ident.name}`, expected return type `$expected` but found `$actual`")
 }
 
 data class RedeclarationError(val pos: Position, val ident: Ident) : SemanticError() {
@@ -144,14 +143,13 @@ fun <A, B> Parsed<A>.flatMap(transform: (A) -> Parsed<B>): Parsed<B> = when (thi
  *
  * See [Parsed.flatMap]
  */
-fun <A> Parsed<A>.validate(predicate: (A) -> Boolean, error: (A) -> CompilationError) : Parsed<A> =
+fun <A> Parsed<A>.validate(predicate: (A) -> Boolean, error: (A) -> CompilationError): Parsed<A> =
   flatMap {
     if (predicate(it))
       it.valid()
     else
       error(it).toInvalidParsed()
   }
-
 
 /**
  * Tests a [Parsed] against [predicate]. If it passes (ie, if true) then it returns [this],
@@ -161,7 +159,7 @@ fun <A> Parsed<A>.validate(predicate: (A) -> Boolean, error: (A) -> CompilationE
  *
  * Overloaded version that takes no lambdas.
  */
-fun <A> Parsed<A>.validate(predicate: Boolean, error: CompilationError) : Parsed<A> =
+fun <A> Parsed<A>.validate(predicate: Boolean, error: CompilationError): Parsed<A> =
   flatMap {
     if (predicate)
       it.valid()

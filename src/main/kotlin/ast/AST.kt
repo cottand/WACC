@@ -1,6 +1,5 @@
 package ic.org.ast
 
-import antlr.WACCParser
 import antlr.WACCParser.*
 import arrow.core.Validated.Valid
 import arrow.core.getOrElse
@@ -76,8 +75,8 @@ private fun Pair_elem_typeContext.asAst(): Parsed<Type> =
 
 private fun Array_typeContext.asAst(): Parsed<ArrayT> {
   fun recurseArrayT(
-    arrayT: Array_typeContext,
-    currentDepth: Int
+      arrayT: Array_typeContext,
+      currentDepth: Int
   ): Parsed<Pair<Type, Int>> = when {
     arrayT.array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
     arrayT.base_type() != null -> arrayT.base_type().asAst().valid().map { it to currentDepth }
@@ -212,4 +211,3 @@ internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
     else -> NOT_REACHED()
   }
 }
-

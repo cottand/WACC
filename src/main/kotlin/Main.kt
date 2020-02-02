@@ -5,18 +5,17 @@ import antlr.WACCParser
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.ast.asAst
-import ic.org.grammar.GlobalScope
 import ic.org.grammar.Prog
 import ic.org.graph.asGraph
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.io.File
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.tree.ParseTreeWalker
 
 @ExperimentalTime
 object Main {
@@ -88,7 +87,3 @@ class WACCCompiler(private val filename: String) {
       }
   }
 }
-
-
-
-

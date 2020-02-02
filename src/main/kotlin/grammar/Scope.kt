@@ -4,7 +4,6 @@ import arrow.core.*
 import ic.org.Parsed
 import ic.org.Position
 import ic.org.RedeclarationError
-import java.util.LinkedList
 
 /**
  * Represents a WACC Scope.
@@ -60,7 +59,6 @@ class GlobalScope : Scope() {
       f.valid()
     else
       RedeclarationError(pos, f.ident).toInvalidParsed()
-
 }
 
 /**
@@ -91,17 +89,16 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
 sealed class Variable {
   abstract val type: Type
   abstract val ident: Ident
-  //abstract val value: Nothing // TODO revisit at backend
+  // abstract val value: Nothing // TODO revisit at backend
 }
 
 data class DeclVariable(
-  override val type: Type,
-  override val ident: Ident,
-  val rhs: AssRHS
+    override val type: Type,
+    override val ident: Ident,
+    val rhs: AssRHS
 ) : Variable()
 
 data class ParamVariable(
-  override val type: Type,
-  override val ident: Ident
+    override val type: Type,
+    override val ident: Ident
 ) : Variable()
-

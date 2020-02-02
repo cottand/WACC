@@ -38,7 +38,6 @@ dependencies {
   // JUnit5
   testImplementation("org.junit.jupiter:junit-jupiter:5.6.0")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.6.0")
-
 }
 // Antlr compile grammar task
 val antlrOut = "build/generated/source/antlr/"
@@ -67,4 +66,3 @@ tasks {
     dependsOn(generateGrammarSource)
   }
 }
-

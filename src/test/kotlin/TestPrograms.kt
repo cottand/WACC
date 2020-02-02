@@ -4,6 +4,9 @@ import ic.org.CompileResult
 import ic.org.WACCCompiler
 import ic.org.containsAll
 import ic.org.print
+import java.io.File
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeFalse
@@ -11,9 +14,6 @@ import org.junit.jupiter.api.Assumptions.assumingThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.fail
-import java.io.File
-import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 
 /**
  * This test class will scan the wacc_examples directory, and attempt to compile all files, one
@@ -64,10 +64,10 @@ class TestPrograms {
         // syntactic check succeeded and returned. So we 'fake' a 0 return code to be checked
         // later against the expected result.
         if (e is NotImplementedError) {
-          //TODO Check the Duration casting
+          // TODO Check the Duration casting
           CompileResult.success(Duration.ZERO)
         } else {
-          //If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
+          // If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
           // for some other reason. So fail the test case.
           System.err.println("Failed to compile ${program.file.canonicalPath} with exception:")
           fail(e)
@@ -94,7 +94,7 @@ class TestPrograms {
         WACCCompiler(filename).compile()
       } catch (e: Throwable) {
         assumeFalse(e is NotImplementedError)
-        //If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
+        // If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
         // for some other reason. So fail the test case.
         System.err.println("Failed to compile ${program.file.canonicalPath} with exception:")
         fail(e)
@@ -129,4 +129,3 @@ class TestPrograms {
     DynamicTest.dynamicTest(it.file.canonicalPath) { testSyntax(it) }
   }
 }
-
