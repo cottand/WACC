@@ -1,9 +1,8 @@
 package ic.org.ast
 
 import antlr.WACCParser.*
+import arrow.core.*
 import arrow.core.Validated.Valid
-import arrow.core.invalid
-import arrow.core.valid
 import ic.org.*
 import ic.org.grammar.*
 import kotlinx.collections.immutable.plus
@@ -28,9 +27,20 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
       .map { Decl(it, rhs, scope) }
   }
 
-  is ReadStatContext -> assign_lhs().asAst(scope).map {
-    Read(it, scope)
-  }
+  is ReadStatContext -> assign_lhs().asAst(scope)
+      .validate ({
+        it.fetchType(scope).fold({
+          false
+        },{ it is IntT || it is StringT || it is CharT })
+      }, {
+        TypeError(
+          assign_lhs().startPosition,
+          listOf(IntT, StringT, CharT),
+          it.fetchType(scope).getOrElse { "failed to compute LHS expr type" }.toString(),
+          "read"
+        )
+      }).map { Read(it, scope) }
+
   is FreeStatContext -> expr().asAst(scope)
     // FREE may only be called in expressions that evaluate to types PairT or ArrayT
     .validate({ it.type is AnyPairTs || it.type is AnyArrayT },

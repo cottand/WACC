@@ -15,7 +15,7 @@ fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   val ident = Ident(this.ID().text)
   val funcScope = FuncScope(ident)
   val type = type().asAst()
-  // TODO are there any checks on identifiers needed
+
   if (type !is Valid) return type.errors.invalid()
   val params = param_list().toOption().fold({
     emptyList<Parsed<Param>>()
