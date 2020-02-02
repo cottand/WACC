@@ -38,6 +38,7 @@ class TestPrograms {
   private val testOutputKeywords = false
   private val testingKeyword = "TEST"
   private val ignoreKeyword = "IGNORE"
+  private val testSemanticsOnly = true
 
   private val waccFiles =
     File(waccExamplesPath).walkBottomUp()
@@ -125,7 +126,9 @@ class TestPrograms {
    */
   @ExperimentalTime
   @TestFactory
-  fun syntacticallyCheckPrograms() = waccFiles.map {
+  fun syntacticallyCheckPrograms() = waccFiles
+    .filterNot { testSemanticsOnly }
+    .map {
     DynamicTest.dynamicTest(it.file.canonicalPath) { testSyntax(it) }
   }
 }

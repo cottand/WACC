@@ -98,9 +98,19 @@ fun SemiColonContext.asAst(scope: Scope): Parsed<StatChain> {
   val stat1 = stat()[0].asAst(scope)
   val stat2 = stat()[1].asAst(scope)
 
-  return if (stat1 is Valid && stat2 is Valid) {
+  val statChain = if (stat1 is Valid && stat2 is Valid)
     StatChain(stat1.a, stat2.a, scope).valid()
-  } else {
+  else
     (stat1.errors + stat2.errors).invalid()
-  }
+
+  return statChain
+    // It is a semantic error to have a return statement be followed by junk.
+    .validate(
+    { it.thisStat !is Return},
+    { ControlFlowTypeError(startPosition, it.nextStat.toString()) })
+    // It is also an error to have an exit statement followed by junk, unless we are not in a
+    // function.
+    .validate(
+      { it.thisStat !is Exit || scope is GlobalScope},
+      { ControlFlowTypeError(startPosition, it.nextStat.toString()) })
 }
