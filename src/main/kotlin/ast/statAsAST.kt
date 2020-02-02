@@ -106,11 +106,11 @@ fun SemiColonContext.asAst(scope: Scope): Parsed<StatChain> {
   return statChain
     // It is a semantic error to have a return statement be followed by junk.
     .validate(
-    { it.thisStat !is Return},
-    { ControlFlowTypeError(startPosition, it.nextStat.toString()) })
+      { it.thisStat !is Return },
+      { ControlFlowTypeError(startPosition, it.nextStat.toString()) })
     // It is also an error to have an exit statement followed by junk, unless we are not in a
     // function.
     .validate(
-      { it.thisStat !is Exit || scope is GlobalScope},
+      { it.thisStat !is Exit || scope is GlobalScope },
       { ControlFlowTypeError(startPosition, it.nextStat.toString()) })
 }
