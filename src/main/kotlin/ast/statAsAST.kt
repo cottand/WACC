@@ -87,16 +87,17 @@ fun WhileDoContext.asAst(scope: Scope): Parsed<While> {
 }
 
 fun IfElseContext.asAst(scope: Scope): Parsed<If> {
-  val newScope = ControlFlowScope(scope)
+  val thenScope = ControlFlowScope(scope)
+  val elseScope = ControlFlowScope(scope)
   val cond = expr().asAst(scope)
     .validate(
       { it.type is BoolT },
       { TypeError(startPosition, BoolT, it.type, "If condition") }
     )
-  val then = stat(0).asAst(newScope)
-  val `else` = stat(1).asAst(newScope)
+  val then = stat(0).asAst(thenScope)
+  val `else` = stat(1).asAst(elseScope)
   return if (cond is Valid && then is Valid && `else` is Valid)
-    If(cond.a, then.a, `else`.a, newScope).valid()
+    If(cond.a, then.a, `else`.a, scope).valid()
   else
     (cond.errors + then.errors + `else`.errors).invalid()
 }
