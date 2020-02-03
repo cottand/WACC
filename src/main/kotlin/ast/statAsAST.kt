@@ -14,32 +14,58 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
     val lhs = assign_lhs().asAst(scope)
     val rhs = assign_rhs().asAst(scope)
 
-    if (lhs is Valid && rhs is Valid)
-      Assign(lhs.a, rhs.a, scope).valid()
-    else
-      (lhs.errors + rhs.errors).invalid()
+    flatCombine(lhs, rhs) { lhs, rhs ->
+      //if (lhs.type == rhs.type)
+        Assign(lhs, rhs, scope).valid()
+      //else
+      //  TypeError(startPosition, lhs.type, rhs.type, "assignment").toInvalidParsed()
+    }
+      .validate({(lhs, rhs, _) ->
+        lhs.type == rhs.type
+          || lhs.type is AnyArrayT && rhs.type == EmptyArrayT()
+          || lhs.type is PairT && rhs.type == AnyPairTs()
+        //|| it.type is PairT && rhs is ExprRHS && rhs.expr is NullPairLit
+      },
+        { TypeError(startPosition, it.lhs.type, it.rhs.type, "declaration") })
   }
 
   is DeclareContext -> assign_rhs().asAst(scope).flatMap { rhs ->
-    type().asAst()
-      .map { DeclVariable(it, Ident(ID()), rhs) }
+
+    fun inferPairsFromRhs(lhs: PairT, rhs: PairT): PairT {
+      val lhsFst = if (lhs.fstT == AnyPairTs()) rhs.fstT else lhs.fstT
+      val lhsSnd = if (lhs.sndT == AnyPairTs()) rhs.sndT else lhs.sndT
+      return PairT(lhsFst, lhsSnd)
+    }
+
+    val lhsType = type().asAst()
+    // Speical case: if the type of the LHS is AnyPairTs, we have to determine the actual type
+    // of the variable by looking at the RHS.
+    // When rhs is a null PairLit, its type is AnyPairTs
+    val lhsTypeInferred =
+      when {
+        lhsType == AnyPairTs() && rhs.type is AnyPairTs -> rhs.type
+        lhsType is PairT && rhs.type is PairT -> inferPairsFromRhs(lhsType, rhs.type as PairT)
+        else -> lhsType
+      }
+
+    DeclVariable(lhsTypeInferred, Ident(ID()), rhs)
+      .valid()
       .flatMap { scope.addVariable(startPosition, it) }
+      // If RHS is empty array, we match any kind of array on the LHS (case of int[] a = [])
+      .validate({
+        it.type == rhs.type
+          || it.type is AnyArrayT && rhs.type == EmptyArrayT()
+          || it.type is PairT && rhs.type == AnyPairTs()
+          //|| it.type is PairT && rhs is ExprRHS && rhs.expr is NullPairLit
+      },
+        { TypeError(startPosition, it.type, rhs.type, "declaration") })
       .map { Decl(it, rhs, scope) }
   }
 
   is ReadStatContext -> assign_lhs().asAst(scope)
-      .validate ({
-        it.fetchType(scope).fold({
-          false
-        },{ it is IntT || it is StringT || it is CharT })
-      }, {
-        TypeError(
-          assign_lhs().startPosition,
-          listOf(IntT, StringT, CharT),
-          it.fetchType(scope).getOrElse { "failed to compute LHS expr type" }.toString(),
-          "read"
-        )
-      }).map { Read(it, scope) }
+    .validate({ it.type is IntT || it.type is StringT || it.type is CharT },
+      { TypeError(assign_lhs().startPosition, listOf(IntT, StringT, CharT), it.type, "read") })
+    .map { Read(it, scope) }
 
   is FreeStatContext -> expr().asAst(scope)
     // FREE may only be called in expressions that evaluate to types PairT or ArrayT

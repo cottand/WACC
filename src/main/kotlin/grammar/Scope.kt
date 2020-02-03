@@ -36,36 +36,43 @@ sealed class Scope {
      */
     internal val variables = HashMap<Ident, Variable>()
 
-    /**
-     * Adds [variable] to the current [Scope]. Used in variable delcaration and function parameter
-     * creation.
-     */
-    fun addVariable(pos: Position, variable: Variable): Parsed<Variable> =
-        if (variables.put(variable.ident, variable) == null)
-            variable.valid()
-        else
-            RedeclarationError(pos, variable.ident).toInvalidParsed()
+  /**
+   * Adds [variable] to the current [Scope]. Used in variable delcaration and function parameter
+   * creation.
+   */
+  fun addVariable(pos: Position, variable: Variable): Parsed<Variable> =
+    if (variables.put(variable.ident, variable) == null)
+      variable.valid()
+    else
+      RedeclarationError(pos, variable.ident).toInvalidParsed()
+
+  val globalFuncs : Map<String, FuncIdent>
+    get() = when(this) {
+      is GlobalScope -> functions
+      is FuncScope -> globalScope.functions
+      is ControlFlowScope -> parent.globalFuncs
+    }
 }
 
 /**
  * Global scope. Unique and per program, parent of all [ControlFlowScope]s outside of [FuncScope]s.
  */
 class GlobalScope : Scope() {
-    override fun getVar(ident: Ident): Option<Variable> = variables[ident].toOption()
-    private val functions = HashMap<Ident, Func>()
+  override fun getVar(ident: Ident): Option<Variable> = variables[ident].toOption()
+  internal val functions = HashMap<String, FuncIdent>()
 
-    fun addFunction(pos: Position, f: Func) =
-        if (functions.put(f.ident, f) == null)
+    fun addFunction(pos: Position, f: FuncIdent) =
+        if (functions.put(f.name.name, f) == null)
             f.valid()
         else
-            RedeclarationError(pos, f.ident).toInvalidParsed()
+            RedeclarationError(pos, f.name).toInvalidParsed()
 }
 
 /**
  * Scope created by [funcIdent]. Does not see [GlobalScope] variables, and is parent of
  * [ControlFlowScope] defined inside the [Func].
  */
-data class FuncScope(val funcIdent: Ident) : Scope() {
+data class FuncScope(val funcIdent: Ident, val globalScope: GlobalScope) : Scope() {
 
     // A [FuncScope] does not have any parent scopes, so if the variable is not here, return an
     // option.
@@ -101,4 +108,6 @@ data class DeclVariable(
 data class ParamVariable(override val type: Type, override val ident: Ident) : Variable() {
     constructor(param: Param) : this(param.type, param.ident)
 }
+
+data class FuncIdent(val retType: Type, val name: Ident, val params: List<Param>);
 

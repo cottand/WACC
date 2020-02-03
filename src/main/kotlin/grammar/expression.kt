@@ -74,7 +74,7 @@ data class ArrayElemExpr internal constructor(
 }
 
 data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
-  override val type: Type = expr.type
+  override val type: Type = unaryOper.retType
 
   override fun toString(): String = "$unaryOper $expr"
 

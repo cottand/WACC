@@ -8,16 +8,16 @@ import org.antlr.v4.runtime.tree.TerminalNode
 
 // <program>
 data class Prog(
-    val funcs: List<Func>,
-    val firstStat: Stat
+  val funcs: List<Func>,
+  val firstStat: Stat
 )
 
 // <func>
 data class Func(
-    val retType: Type,
-    val ident: Ident,
-    val params: List<Param>,
-    val stat: Stat
+  val retType: Type,
+  val ident: Ident,
+  val params: List<Param>,
+  val stat: Stat
 )
 
 // <param>
@@ -26,7 +26,6 @@ data class Param(val type: Type, val ident: Ident)
 // <stat>
 sealed class Stat {
   abstract val scope: Scope
-  val position: Option<Position> = Option.empty()
 }
 
 data class Skip(override val scope: Scope) : Stat()
@@ -53,67 +52,90 @@ data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope
 
 // <assign-lhs>
 sealed class AssLHS {
-  abstract fun fetchType(scope: Scope): Option<Type>
+  abstract val type: Type
 }
 
-data class IdentLHS(val ident: Ident) : AssLHS() {
-  override fun fetchType(scope: Scope): Option<Type> = scope[ident].map { it.type }
+data class IdentLHS(val variable: Variable) : AssLHS() {
+  override val type = variable.type
 }
 
-data class ArrayElemLHS(val arrayElem: ArrayElem) : AssLHS() {
-  override fun fetchType(scope: Scope): Option<Type> = scope[arrayElem.ident].map { it.type }
+data class ArrayElemLHS(val arrayElem: ArrayElem, val variable: Variable) : AssLHS() {
+  override val type : Type
+    get() {
+      val arrT = variable.type as ArrayT
+      return arrT.nthNestedType(arrayElem.indices.size)
+    }
 }
 
-data class PairElemLHS(val pairElem: PairElem) : AssLHS() {
-  override fun fetchType(scope: Scope): Option<Type> = Some(pairElem.expr.type)
+data class PairElemLHS(val pairElem: PairElem, val variable: Variable, val pairs: PairT) :
+  AssLHS() {
+  override val type = when (pairElem) {
+    is Fst -> pairs.fstT
+    is Snd -> pairs.sndT
+  }
 }
 
 // <assign-rhs>
 sealed class AssRHS {
-  abstract fun fetchType(scope: Scope): Option<Type>
+  //abstract fun fetchType(scope: Scope): Option<Type>
+  abstract val type: Type
 }
 
 data class ExprRHS(val expr: Expr) : AssRHS() {
-  override fun fetchType(scope: Scope): Option<Type> = Some(expr.type)
+  override val type = expr.type
 }
 
-data class ArrayLit(val exprs: List<Expr>) : AssRHS() {
-  override fun fetchType(scope: Scope): Option<Type> {
-    if (exprs.isEmpty()) {
-      // TODO should this be type empty array somehow?
-      return None
-    }
-
-    // Make sure expressions all have the same type
-    // We assert since it should always be the case
-    val t = exprs[0].type
-    for (e in exprs) {
-      assert(e.type != t)
-    }
-
-    return Some(t)
-  }
+/**
+ * If the array literal is empty, [contentType] is [EmptyArrayT]
+ * Caller should verify content.
+ */
+data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
+  override val type = arrT
 }
 
 data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
-  override fun fetchType(scope: Scope): Option<Type> = Some(PairT(expr1.type, expr2.type))
+  override val type = PairT(expr1.type, expr2.type)
 }
 
-data class PairElemRHS(val pairElem: PairElem) : AssRHS() {
-  override fun fetchType(scope: Scope): Option<Type> = Some(pairElem.expr.type)
+data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
+  override val type = when (pairElem) {
+    is Fst -> pairs.fstT
+    is Snd -> pairs.sndT
+  }
 }
 
-data class Call(val id: Ident, val args: List<Expr>) : AssRHS() {
-  override fun fetchType(scope: Scope): Option<Type> = scope[id].map { it.type }
+data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
+  override val type = func.retType
+  val name = func.name
 }
 
 // <pair-elem>
 sealed class PairElem {
   abstract val expr: Expr
+  abstract fun fetchType(scope: Scope): Option<Type>
 }
 
-data class Fst(override val expr: Expr) : PairElem()
-data class Snd(override val expr: Expr) : PairElem()
+data class Fst(override val expr: Expr) : PairElem() {
+  override fun fetchType(scope: Scope): Option<Type> {
+    val type = expr.type
+    return if (type is PairT) {
+      Some(type.fstT)
+    } else {
+      None
+    }
+  }
+}
+
+data class Snd(override val expr: Expr) : PairElem() {
+  override fun fetchType(scope: Scope): Option<Type> {
+    val type = expr.type
+    return if (type is PairT) {
+      Some(type.sndT)
+    } else {
+      None
+    }
+  }
+}
 
 // <type>
 sealed class Type
@@ -121,6 +143,15 @@ sealed class Type
 sealed class BaseT : Type()
 open class AnyArrayT : Type() {
   // fun isAlsoArray(other: Type) = other is AnyArrayT
+}
+
+// Empty array e.g. []
+class EmptyArrayT : AnyArrayT() {
+  override fun equals(other: Any?): Boolean = other is EmptyArrayT
+
+  override fun hashCode(): Int {
+    return javaClass.hashCode()
+  }
 }
 
 // TODO Write more documentation comments for types
@@ -162,9 +193,12 @@ data class ArrayT private constructor(val type: Type, val depth: Int = 1) : AnyA
   }
 }
 
-open class AnyPairTs : Type()
+open class AnyPairTs : Type() {
+  val containsAnys = this is PairT && (fstT == AnyArrayT() || sndT == AnyArrayT())
+  override fun equals(other: Any?): Boolean = other is AnyPairTs && other !is PairT
+  override fun hashCode(): Int = 21353
+}
 data class PairT(val fstT: Type, val sndT: Type) : AnyPairTs()
-object NDPairT : AnyPairTs()
 
 // <base-type>
 object IntT : BaseT()
@@ -180,6 +214,6 @@ data class Ident(val name: String) {
 
 // <array-elem>
 data class ArrayElem(
-    val ident: Ident,
-    val indices: List<Expr>
+  val ident: Ident,
+  val indices: List<Expr>
 )

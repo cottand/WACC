@@ -69,6 +69,10 @@ data class TypeError(override val msg: String) : SemanticError() {
       this("$pos, for operation `$op`, expected some type $expectedTs, actual: $actual")
 }
 
+data class NullPairError(val pos: Position) : SemanticError() {
+  override val msg = "$pos, expression of type Pair resolves to `null`"
+}
+
 data class ControlFlowTypeError(override val msg: String) : SyntacticError(msg) {
   constructor(thenType: Type, elseType: Type) :
       this(
@@ -188,6 +192,19 @@ inline fun <reified A, reified B, R> combine(
 ): Parsed<R> =
   if (fst is Valid && snd is Valid)
     map(fst.a, snd.a).valid()
+  else
+    (fst.errors + snd.errors).invalid()
+
+/**
+ * Like a [Validated.map] but for two [Parsed]
+ */
+inline fun <reified A, reified B, R> flatCombine(
+  fst: Parsed<A>,
+  snd: Parsed<B>,
+  map: (A, B) -> Parsed<R>
+): Parsed<R> =
+  if (fst is Valid && snd is Valid)
+    map(fst.a, snd.a)
   else
     (fst.errors + snd.errors).invalid()
 
