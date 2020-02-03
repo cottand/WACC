@@ -178,7 +178,11 @@ internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
       }
     }
     pair_elem() != null ->
-      return pair_elem().expr().asAst(scope).map {
+      return pair_elem().expr().asAst(scope).validate({
+        it !is NullPairLit
+      }, {
+        TypeError(pair_elem().startPosition, listOf(PairT(NDPairT, NDPairT)), "null", "pair-elem")
+      }).map {
         if (pair_elem().FST() != null)
           PairElemRHS(Fst(it))
         else
