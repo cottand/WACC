@@ -115,6 +115,10 @@ data class RedeclarationError(val pos: Position, val ident: Ident) : SemanticErr
   override val msg: String = "$pos, already delcared in scope: `${ident.name}`"
 }
 
+data class DuplicateParamError(val pos: Position, val ident: Ident) : SemanticError() {
+  override val msg: String = "$pos, duplicate param found: `${ident.name}`"
+}
+
 inline val <A> Parsed<A>.errors: Errors
   get() = when (this) {
     is Invalid -> this.e

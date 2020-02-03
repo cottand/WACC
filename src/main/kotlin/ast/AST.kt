@@ -12,17 +12,31 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 
 fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
-  val ident = Ident(this.ID().text)
-  val funcScope = FuncScope(ident)
-  val type = type().asAst()
+    val antlrParams = param_list()?.param() ?: emptyList()
+    val ident = Ident(this.ID().text)
+    val funcScope = FuncScope(ident)
 
-  if (type !is Valid) return type.errors.invalid()
-  val params = param_list().toOption().fold({
-    emptyList<Parsed<Param>>()
-  }, { list ->
-    list.param().map { it.asAst(funcScope) }
-  })
-  val stat = stat().asAst(funcScope)
+    fun List<Parsed<Param>>.addParamsToScope() =
+        mapIndexed { i, p -> i to p }
+            .filter { (_, p) -> p is Valid }
+            .map { (i, p) -> i to (p as Valid).a }
+            .forEach { (i, p) -> funcScope.addVariable(antlrParams[i].startPosition, ParamVariable(p)) }
+
+    val type = type().asAst()
+    // TODO are there any checks on identifiers needed
+    if (type !is Valid) return type.errors.invalid()
+    val counts = HashMap<Param, Int>()
+    val params = antlrParams.asSequence().map { it.asAst() to it }
+        .filterMap { (parsed, ctx) -> if (parsed is Valid) (parsed.a to ctx).toOption() else None }
+        .onEach { (parsed, _) -> counts[parsed] = (counts[parsed] ?: 0) + 1 }
+        .map { (parsed, ctx) ->
+            parsed.valid().validate({ counts[it] == 1 },
+                { DuplicateParamError(ctx.startPosition, it.ident) })
+        }.toList()
+
+
+    params.addParamsToScope()
+    val stat = stat().asAst(funcScope)
 
   return if (params.areAllValid && stat is Valid)
     Func(type.a, ident, params.valids, stat.a)
