@@ -62,7 +62,6 @@ private fun Pair_typeContext.asAst(): Parsed<PairT> {
     (fstType.errors + sndType.errors).invalid()
 }
 
-// TODO When checking Types: If NDPairT, we need to recurse to find the right Pair Type!
 private fun Pair_elem_typeContext.asAst(): Parsed<Type> =
   when (this) {
     is BaseTPairElemContext -> base_type().asAst().valid()
@@ -143,7 +142,7 @@ internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
     array_lit() != null -> {
       val tokExprs = array_lit().expr()
       if (tokExprs.isEmpty()) {
-        return ArrayLit(emptyList(), NDArrayT()).valid()
+        return ArrayLit(emptyList(), EmptyArrayT()).valid()
       }
 
       // Transform all the expressions to ASTs

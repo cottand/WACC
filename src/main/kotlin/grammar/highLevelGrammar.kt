@@ -3,7 +3,6 @@ package ic.org.grammar
 import arrow.core.None
 import arrow.core.Option
 import arrow.core.Some
-import arrow.core.toOption
 import ic.org.Position
 import org.antlr.v4.runtime.tree.TerminalNode
 
@@ -27,7 +26,6 @@ data class Param(val type: Type, val ident: Ident)
 // <stat>
 sealed class Stat {
   abstract val scope: Scope
-  val position: Option<Position> = Option.empty()
 }
 
 data class Skip(override val scope: Scope) : Stat()
@@ -84,7 +82,7 @@ data class ExprRHS(val expr: Expr) : AssRHS() {
 }
 
 /**
- * If the array literal is empty, [contentType] is [NDArrayT]
+ * If the array literal is empty, [contentType] is [EmptyArrayT]
  * Caller should verify content.
  */
 data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
@@ -144,7 +142,7 @@ open class AnyArrayT : Type() {
 }
 
 // Empty array e.g. []
-class NDArrayT : AnyArrayT()
+class EmptyArrayT : AnyArrayT()
 
 // TODO Write more documentation comments for types
 /**
