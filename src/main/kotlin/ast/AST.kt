@@ -26,26 +26,8 @@ fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
     val type = type().asAst()
     // TODO are there any checks on identifiers needed
     if (type !is Valid) return type.errors.invalid()
-//  val params = antlrParams.let {
-//    val set = HashSet<Param>()
-//    val repeats = LinkedList<Param>()
-//    val paramList = antlrParams.map { it.asAst()}
-//    if (paramList.areAllValid){
-//      paramList.valids.forEach {
-//        if (!set.add(it))
-//          repeats.add(it)
-//      }
-//    }
-
-//    if (repeats.size > 0)
-//      repeats.map{DuplicateParamError(startPosition, it.ident).toInvalidParsed()}.toPersistentList()
-//    else
-//      paramList
-//  }
     val counts = HashMap<Param, Int>()
     val params = antlrParams.asSequence().map { it.asAst() to it }
-//        .filter { (parsed, _) -> parsed is Valid }
-//        .map { (parsed, ctx) -> (parsed as Valid).a to ctx }
         .filterMap { (parsed, ctx) -> if (parsed is Valid) (parsed.a to ctx).toOption() else None }
         .onEach { (parsed, _) -> counts[parsed] = (counts[parsed] ?: 0) + 1 }
         .map { (parsed, ctx) ->
