@@ -60,7 +60,11 @@ data class IdentLHS(val variable: Variable) : AssLHS() {
 }
 
 data class ArrayElemLHS(val arrayElem: ArrayElem, val variable: Variable) : AssLHS() {
-  override val type = variable.type
+  override val type : Type
+    get() {
+      val arrT = variable.type as ArrayT
+      return arrT.nthNestedType(arrayElem.indices.size)
+    }
 }
 
 data class PairElemLHS(val pairElem: PairElem, val variable: Variable, val pairs: PairT) :
