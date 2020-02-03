@@ -14,6 +14,7 @@ import kotlinx.collections.immutable.plus
 fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   val ident = Ident(this.ID().text)
   val funcScope = FuncScope(ident, gScope)
+  // TODO we need to infer pair return types possibly
   val type = type().asAst()
 
   if (type !is Valid) return type.errors.invalid()
@@ -66,8 +67,8 @@ private fun Pair_elem_typeContext.asAst(): Parsed<Type> =
   when (this) {
     is BaseTPairElemContext -> base_type().asAst().valid()
     is ArrayPairElemContext -> array_type().asAst()
-    // Pair type not defined yet
-    else -> NDPairT.valid()
+    // Pair type not defined yet, it must be inferred by the caller
+    else -> AnyPairTs().valid()
     //is PairPairElemContext -> NDPairT.valid()
     //else -> NOT_REACHED()
   }
@@ -103,14 +104,14 @@ fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
 internal fun Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> = when (this) {
   is LHSIdentContext -> scope[ID().text].fold({
     UndefinedIdentifier(startPosition, ID().text).toInvalidParsed()
-  }, { IdentLHS(it.ident).valid() })
+  }, { IdentLHS(it).valid() })
 
   is LHSArrayElemContext -> scope[array_elem().ID().text].fold({
     UndefinedIdentifier(startPosition, array_elem().text).toInvalidParsed()
   }, { variable ->
     val exprs = array_elem().expr().map { it.asAst(scope) }
     if (exprs.areAllValid)
-      ArrayElemLHS(ArrayElem(variable.ident, exprs.valids)).valid()
+      ArrayElemLHS(ArrayElem(variable.ident, exprs.valids), variable).valid()
     else
       exprs.errors.invalid()
   })
@@ -118,16 +119,18 @@ internal fun Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> = when (this)
   // TODO revisit pair_elem().text vs ID().text
   is LHSPairElemContext -> pair_elem().expr().asAst(scope)
     .validate(
-      { it is IdentExpr },
+      //{ it is IdentExpr },
+      { it.type is PairT },
       { TypeError(startPosition, AnyPairTs(), it.type, pair_elem().text) })
     .flatMap { pairIdent ->
       scope[pair_elem().expr().text].fold({
         UndefinedIdentifier(startPosition, pair_elem().text).toInvalidParsed()
-      }, {
+      }, { vari ->
+        // vari.type as PairT is a safe cast because it was checked in the validate() clause.
         if (pair_elem().FST() != null)
-          PairElemLHS(Fst(pairIdent))
+          PairElemLHS(Fst(pairIdent), vari, vari.type as PairT)
         else {
-          PairElemLHS(Snd(pairIdent))
+          PairElemLHS(Snd(pairIdent), vari, vari.type as PairT)
         }.valid()
       })
     }
@@ -140,7 +143,7 @@ internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
     array_lit() != null -> {
       val tokExprs = array_lit().expr()
       if (tokExprs.isEmpty()) {
-        return ArrayLit(emptyList()).valid()
+        return ArrayLit(emptyList(), NDArrayT()).valid()
       }
 
       // Transform all the expressions to ASTs
@@ -158,38 +161,35 @@ internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
             .toInvalidParsed()
         }
       }
-
-      return ArrayLit(valid).valid()
+      val arrayT = ArrayT.make(valid.first().type, 1)
+      return ArrayLit(valid, arrayT).valid()
     }
-    NEWPAIR() != null -> {
-      assert(expr().size == 2)
-
-      val e1 = expr(0).asAst(scope)
-      val e2 = expr(1).asAst(scope)
-
-      return if (e1 is Valid && e2 is Valid) {
-        Newpair(e1.a, e2.a).valid()
-      } else {
-        (e1.errors + e2.errors).invalid()
-      }
+    NEWPAIR() != null -> return combine(expr(0).asAst(scope), expr(1).asAst(scope)) { e1, e2 ->
+      Newpair(e1, e2)
     }
     pair_elem() != null ->
-      return pair_elem().expr().asAst(scope).validate({
-        it !is NullPairLit
-      }, {
-        TypeError(pair_elem().startPosition, listOf(PairT(NDPairT, NDPairT)), "null", "pair-elem")
-      }).map {
-        if (pair_elem().FST() != null)
-          PairElemRHS(Fst(it))
-        else
-          PairElemRHS(Snd(it))
-      }
+      // TODO PICKUP WHAT ABOUT NESTED PAIRS AND ARRAYS
+      return pair_elem().expr().asAst(scope)
+        .validate(
+          { it !is NullPairLit }) {
+          NullPairError(pair_elem().expr().startPosition)
+        }
+        .validate({ it.type is PairT }) {
+          TypeError(pair_elem().expr().startPosition, AnyPairTs(), it.type, "pair-elem")
+        }
+        .map {
+          // Safe cast because it was checked in the above validate() clause
+          val pairT = it.type as PairT
+          if (pair_elem().FST() != null)
+            PairElemRHS(Fst(it), pairT)
+          else
+            PairElemRHS(Snd(it), pairT)
+        }
 
     CALL() != null -> {
       // Make ASTs out of all the args
       val args: List<Parsed<Expr>> =
-        arg_list()
-          ?.expr().toOption().getOrElse { emptyList() }
+        arg_list()?.expr().toOption().getOrElse { emptyList() }
           .map { it.asAst(scope) }
       if (!args.areAllValid) {
         return args.errors.invalid()
@@ -198,11 +198,10 @@ internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
       // TODO make sure arg types are good
 
       val id = ID().text
-      return scope[id].fold({
-        Call(Ident(id), args.valids).valid()
-      }, {
-        UndefinedIdentifier(ID().position, id).toInvalidParsed()
-      })
+      return scope.globalFuncs[Ident(id)].toOption()
+        .fold(
+          { UndefinedIdentifier(ID().position, id).toInvalidParsed() },
+          { Call(it, args.valids).valid() })
     }
 
     expr() != null -> {

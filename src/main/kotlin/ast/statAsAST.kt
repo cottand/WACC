@@ -20,37 +20,29 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
       (lhs.errors + rhs.errors).invalid()
   }
 
-  is DeclareContext -> assign_rhs().asAst(scope).flatMap { rhs ->
-    type().asAst()
-      .map { DeclVariable(it, Ident(ID()), rhs) }
+  is DeclareContext -> flatCombine(assign_rhs().asAst(scope), type().asAst()) { rhs, lhsType ->
+    // Speical case: if the type of the LHS is AnyPairTs, we have to determine the actual type
+    // of the variable by looking at the RHS.
+    // When rhs is a null PairLit, its type is AnyPairTs
+    val lhsTypeInferred =
+      if (lhsType == AnyPairTs() && rhs.type is PairT)
+        rhs.type
+      else
+        lhsType
+
+    DeclVariable(lhsTypeInferred, Ident(ID()), rhs)
+      .valid()
       .flatMap { scope.addVariable(startPosition, it) }
-      .validate ({
-        rhs.fetchType(scope).fold({
-          false
-        }, {
-          t -> it.type == t // Types are equal
-          || (t is NDPairT && it.type is AnyPairTs) // If RHS is null and LHS is PairT, we match anything (case of pair(pair, pair) p = null)
-          || (t is NDArrayT && it.type is AnyArrayT) // If RHS is empty array, we match any kind of array on the LHS (case of int[] a = [])
-        })
-      }, {
-        TypeError(type().startPosition, rhs.fetchType(scope).getOrElse { BoolT }, it.type, "variable declaration")
-      })
+      // If RHS is empty array, we match any kind of array on the LHS (case of int[] a = [])
+      .validate({ lhsType == rhs.type || lhsType is AnyArrayT && rhs.type == AnyArrayT() },
+        { TypeError(startPosition, rhs.type, it.type, "declaration") })
       .map { Decl(it, rhs, scope) }
   }
 
   is ReadStatContext -> assign_lhs().asAst(scope)
-      .validate ({
-        it.fetchType(scope).fold({
-          false
-        },{ it is IntT || it is StringT || it is CharT })
-      }, {
-        TypeError(
-          assign_lhs().startPosition,
-          listOf(IntT, StringT, CharT),
-          it.fetchType(scope).getOrElse { "failed to compute LHS expr type" }.toString(),
-          "read"
-        )
-      }).map { Read(it, scope) }
+    .validate({ it.type is IntT || it.type is StringT || it.type is CharT },
+      { TypeError(assign_lhs().startPosition, listOf(IntT, StringT, CharT), it.type, "read") })
+    .map { Read(it, scope) }
 
   is FreeStatContext -> expr().asAst(scope)
     // FREE may only be called in expressions that evaluate to types PairT or ArrayT
