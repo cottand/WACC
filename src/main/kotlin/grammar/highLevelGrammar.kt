@@ -81,8 +81,7 @@ data class ExprRHS(val expr: Expr) : AssRHS() {
 data class ArrayLit(val exprs: List<Expr>) : AssRHS() {
   override fun fetchType(scope: Scope): Option<Type> {
     if (exprs.isEmpty()) {
-      // TODO should this be type empty array somehow?
-      return None
+      return Some(NDArrayT())
     }
 
     // Make sure expressions all have the same type
@@ -101,7 +100,7 @@ data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
 }
 
 data class PairElemRHS(val pairElem: PairElem) : AssRHS() {
-  override fun fetchType(scope: Scope): Option<Type> = Some(pairElem.expr.type)
+  override fun fetchType(scope: Scope): Option<Type> = pairElem.fetchType(scope)
 }
 
 data class Call(val id: Ident, val args: List<Expr>) : AssRHS() {
@@ -111,10 +110,29 @@ data class Call(val id: Ident, val args: List<Expr>) : AssRHS() {
 // <pair-elem>
 sealed class PairElem {
   abstract val expr: Expr
+  abstract fun fetchType(scope: Scope): Option<Type>
 }
 
-data class Fst(override val expr: Expr) : PairElem()
-data class Snd(override val expr: Expr) : PairElem()
+data class Fst(override val expr: Expr) : PairElem() {
+  override fun fetchType(scope: Scope): Option<Type> {
+    val type = expr.type
+    return if (type is PairT) {
+      Some(type.fstT)
+    } else {
+      None
+    }
+  }
+}
+data class Snd(override val expr: Expr) : PairElem() {
+  override fun fetchType(scope: Scope): Option<Type> {
+    val type = expr.type
+    return if (type is PairT) {
+      Some(type.sndT)
+    } else {
+      None
+    }
+  }
+}
 
 // <type>
 sealed class Type
@@ -123,6 +141,9 @@ sealed class BaseT : Type()
 open class AnyArrayT : Type() {
   // fun isAlsoArray(other: Type) = other is AnyArrayT
 }
+
+// Empty array e.g. []
+class NDArrayT : AnyArrayT()
 
 // TODO Write more documentation comments for types
 /**
