@@ -24,14 +24,12 @@ fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   })
   val stat = stat().asAst(funcScope)
 
-  return if (params.areAllValid && stat is Valid) {
-    val validParams = params.map { (it as Valid).a }
-    Func(type.a, ident, validParams, stat.a)
+  return if (params.areAllValid && stat is Valid)
+    Func(type.a, ident, params.valids, stat.a)
       .also { gScope.addFunction(startPosition, it) }
       .valid()
-  } else {
+  else
     (type.errors + params.errors + stat.errors).invalid()
-  }
 }
 
 private fun ParamContext.asAst(scope: Scope): Parsed<Param> {
@@ -46,14 +44,13 @@ internal fun TypeContext.asAst(): Parsed<Type> =
     else -> NOT_REACHED()
   }
 
-private fun Base_typeContext.asAst(): BaseT =
-  when {
-    INT() != null -> IntT
-    BOOL() != null -> BoolT
-    CHAR() != null -> CharT
-    STRING() != null -> StringT
-    else -> NOT_REACHED()
-  }
+private fun Base_typeContext.asAst(): BaseT = when (this) {
+  is IntBaseTContext -> IntT
+  is BoolBaseTContext -> BoolT
+  is CharBaseTContext -> CharT
+  is StringBaseTContext -> StringT
+  else -> NOT_REACHED()
+}
 
 private fun Pair_typeContext.asAst(): Parsed<PairT> {
   val fstType = pair_elem_type(0).asAst()
@@ -66,23 +63,23 @@ private fun Pair_typeContext.asAst(): Parsed<PairT> {
 
 // TODO When checking Types: If NDPairT, we need to recurse to find the right Pair Type!
 private fun Pair_elem_typeContext.asAst(): Parsed<Type> =
-  when {
-    base_type() != null -> base_type().asAst().valid()
-    array_type() != null -> array_type().asAst()
-    PAIR() != null -> NDPairT.valid()
-    else -> NOT_REACHED()
+  when (this) {
+    is BaseTPairElemContext -> base_type().asAst().valid()
+    is ArrayPairElemContext -> array_type().asAst()
+    // Pair type not defined yet
+    else -> NDPairT.valid()
+    //is PairPairElemContext -> NDPairT.valid()
+    //else -> NOT_REACHED()
   }
 
 private fun Array_typeContext.asAst(): Parsed<ArrayT> {
-  fun recurseArrayT(
-      arrayT: Array_typeContext,
-      currentDepth: Int
-  ): Parsed<Pair<Type, Int>> = when {
-    arrayT.array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
-    arrayT.base_type() != null -> arrayT.base_type().asAst().valid().map { it to currentDepth }
-    arrayT.pair_type() != null -> arrayT.pair_type().asAst().map { it to currentDepth }
-    else -> NOT_REACHED()
-  }
+  fun recurseArrayT(arrayT: Array_typeContext, currentDepth: Int): Parsed<Pair<Type, Int>> =
+    when (arrayT) {
+      is ArrayOfArraysContext -> recurseArrayT(arrayT.array_type(), currentDepth + 1)
+      is ArrayOfBaseTContext -> arrayT.base_type().asAst().valid().map { it to currentDepth }
+      is ArrayOfPairsContext -> arrayT.pair_type().asAst().map { it to currentDepth }
+      else -> NOT_REACHED()
+    }
   return recurseArrayT(this, 1).map { (type, depth) -> ArrayT.make(type, depth) }
 }
 
@@ -103,41 +100,40 @@ fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
     (funcs.errors + stat.errors).invalid()
 }
 
-internal fun Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
-  when {
-    ID() != null -> scope[ID().text].fold({
-      UndefinedIdentifier(startPosition, ID().text).toInvalidParsed()
-    }, { IdentLHS(it.ident).valid() })
+internal fun Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> = when (this) {
+  is LHSIdentContext -> scope[ID().text].fold({
+    UndefinedIdentifier(startPosition, ID().text).toInvalidParsed()
+  }, { IdentLHS(it.ident).valid() })
 
-    array_elem() != null -> scope[array_elem().ID().text].fold({
-      UndefinedIdentifier(startPosition, array_elem().text).toInvalidParsed()
-    }, { variable ->
-      val exprs = array_elem().expr().map { it.asAst(scope) }
-      if (exprs.areAllValid)
-        ArrayElemLHS(ArrayElem(variable.ident, exprs.valids)).valid()
-      else
-        exprs.errors.invalid()
-    })
+  is LHSArrayElemContext -> scope[array_elem().ID().text].fold({
+    UndefinedIdentifier(startPosition, array_elem().text).toInvalidParsed()
+  }, { variable ->
+    val exprs = array_elem().expr().map { it.asAst(scope) }
+    if (exprs.areAllValid)
+      ArrayElemLHS(ArrayElem(variable.ident, exprs.valids)).valid()
+    else
+      exprs.errors.invalid()
+  })
 
-    // TODO revisit pair_elem().text vs ID().text
-    pair_elem() != null -> pair_elem().expr().asAst(scope)
-      .validate(
-        { it is IdentExpr },
-        { TypeError(startPosition, AnyPairTs(), it.type, pair_elem().text) })
-      .flatMap { pairIdent ->
-        scope[pair_elem().expr().text].fold({
-          UndefinedIdentifier(startPosition, pair_elem().text).toInvalidParsed()
-        }, {
-          if (pair_elem().FST() != null)
-            PairElemLHS(Fst(pairIdent))
-          else {
-            PairElemLHS(Snd(pairIdent))
-          }.valid()
-        })
-      }
+  // TODO revisit pair_elem().text vs ID().text
+  is LHSPairElemContext -> pair_elem().expr().asAst(scope)
+    .validate(
+      { it is IdentExpr },
+      { TypeError(startPosition, AnyPairTs(), it.type, pair_elem().text) })
+    .flatMap { pairIdent ->
+      scope[pair_elem().expr().text].fold({
+        UndefinedIdentifier(startPosition, pair_elem().text).toInvalidParsed()
+      }, {
+        if (pair_elem().FST() != null)
+          PairElemLHS(Fst(pairIdent))
+        else {
+          PairElemLHS(Snd(pairIdent))
+        }.valid()
+      })
+    }
 
-    else -> NOT_REACHED()
-  }
+  else -> NOT_REACHED()
+}
 
 internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
   when {
