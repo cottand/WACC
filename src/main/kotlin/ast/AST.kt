@@ -17,7 +17,6 @@ fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   // TODO we need to infer pair return types possibly
   val type = type().asAst()
 
-  if (type !is Valid) return type.errors.invalid()
   val params = param_list().toOption().fold({
     emptyList<Parsed<Param>>()
   }, { list ->
@@ -26,20 +25,20 @@ fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   val stat = stat().asAst(funcScope)
 
   return if (params.areAllValid && stat is Valid)
-    Func(type.a, ident, params.valids, stat.a)
+    Func(type, ident, params.valids, stat.a)
       .also { gScope.addFunction(startPosition, it) }
       .valid()
   else
-    (type.errors + params.errors + stat.errors).invalid()
+    (params.errors + stat.errors).invalid()
 }
 
 private fun ParamContext.asAst(scope: Scope): Parsed<Param> {
   TODO("not implemented")
 }
 
-internal fun TypeContext.asAst(): Parsed<Type> =
+internal fun TypeContext.asAst(): Type =
   when {
-    base_type() != null -> base_type().asAst().valid()
+    base_type() != null -> base_type().asAst()
     pair_type() != null -> pair_type().asAst()
     array_type() != null -> array_type().asAst()
     else -> NOT_REACHED()
@@ -53,34 +52,32 @@ private fun Base_typeContext.asAst(): BaseT = when (this) {
   else -> NOT_REACHED()
 }
 
-private fun Pair_typeContext.asAst(): Parsed<PairT> {
+private fun Pair_typeContext.asAst(): AnyPairTs {
   val fstType = pair_elem_type(0).asAst()
   val sndType = pair_elem_type(1).asAst()
-  return if (fstType is Valid && sndType is Valid)
-    PairT(fstType.a, sndType.a).valid()
-  else
-    (fstType.errors + sndType.errors).invalid()
+  return PairT(fstType, sndType)
 }
 
-private fun Pair_elem_typeContext.asAst(): Parsed<Type> =
+private fun Pair_elem_typeContext.asAst(): Type =
   when (this) {
-    is BaseTPairElemContext -> base_type().asAst().valid()
+    is BaseTPairElemContext -> base_type().asAst()
     is ArrayPairElemContext -> array_type().asAst()
     // Pair type not defined yet, it must be inferred by the caller
-    else -> AnyPairTs().valid()
+    else -> AnyPairTs()
     //is PairPairElemContext -> NDPairT.valid()
     //else -> NOT_REACHED()
   }
 
-private fun Array_typeContext.asAst(): Parsed<ArrayT> {
-  fun recurseArrayT(arrayT: Array_typeContext, currentDepth: Int): Parsed<Pair<Type, Int>> =
+private fun Array_typeContext.asAst(): ArrayT {
+  fun recurseArrayT(arrayT: Array_typeContext, currentDepth: Int): Pair<Type, Int> =
     when (arrayT) {
       is ArrayOfArraysContext -> recurseArrayT(arrayT.array_type(), currentDepth + 1)
-      is ArrayOfBaseTContext -> arrayT.base_type().asAst().valid().map { it to currentDepth }
-      is ArrayOfPairsContext -> arrayT.pair_type().asAst().map { it to currentDepth }
+      is ArrayOfBaseTContext -> arrayT.base_type().asAst() to currentDepth
+      is ArrayOfPairsContext -> arrayT.pair_type().asAst() to currentDepth
       else -> NOT_REACHED()
     }
-  return recurseArrayT(this, 1).map { (type, depth) -> ArrayT.make(type, depth) }
+  val (type, depth) = recurseArrayT(this, 1)
+  return ArrayT.make(type, depth)
 }
 
 /**
