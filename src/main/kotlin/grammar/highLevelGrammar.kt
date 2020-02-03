@@ -137,79 +137,10 @@ data class Snd(override val expr: Expr) : PairElem() {
   }
 }
 
-// <type>
-sealed class Type
-
-sealed class BaseT : Type()
-open class AnyArrayT : Type() {
-  // fun isAlsoArray(other: Type) = other is AnyArrayT
-}
-
-// Empty array e.g. []
-class EmptyArrayT : AnyArrayT() {
-  override fun equals(other: Any?): Boolean = other is EmptyArrayT
-
-  override fun hashCode(): Int {
-    return javaClass.hashCode()
-  }
-}
-
-// TODO Write more documentation comments for types
-/**
- * [depth] = 1 for 1-dimensional Array
- */
-data class ArrayT private constructor(val type: Type, val depth: Int = 1) : AnyArrayT() {
-  init {
-    require(depth > 0)
-  }
-
-  companion object {
-    /**
-     * Creates an [ArrayT] of base type [type] with depth [depth]
-     */
-    fun make(type: Type, depth: Int): ArrayT {
-      val deepest = ArrayT(type, 1)
-      tailrec fun helper(remainingDepth: Int, prev: ArrayT): ArrayT = when (remainingDepth) {
-        depth -> prev
-        else -> helper(remainingDepth - 1, ArrayT(prev, remainingDepth))
-      }
-      return helper(depth, deepest)
-    }
-  }
-
-  val nestedType: Type
-    get() = when (type) {
-      is ArrayT -> type.nestedType
-      else -> type
-    }
-
-  fun nthNestedType(ndepth: Int): Type {
-    require(ndepth in 0..this.depth)
-    return when {
-      depth == 1 -> type
-      type is ArrayT -> type.nthNestedType(depth - 1)
-      else -> throw IllegalArgumentException("Bad depth: $ndepth, not in $depth for type $type")
-    }
-  }
-}
-
-open class AnyPairTs : Type() {
-  val containsAnys = this is PairT && (fstT == AnyArrayT() || sndT == AnyArrayT())
-  override fun equals(other: Any?): Boolean = other is AnyPairTs && other !is PairT
-  override fun hashCode(): Int = 21353
-}
-data class PairT(val fstT: Type, val sndT: Type) : AnyPairTs()
-
-// <base-type>
-object IntT : BaseT()
-
-object BoolT : BaseT()
-object CharT : BaseT()
-object StringT : BaseT()
-
-// <ident>
 data class Ident(val name: String) {
   constructor(node: TerminalNode) : this(node.text)
+
+  override fun toString() = name
 }
 
 // <array-elem>

@@ -30,7 +30,7 @@ sealed class Node {
       maybeType.fold({
         ControlFlowTypeError(expectedType).toInvalidParsed()
       }, { actualType ->
-        if (actualType != expectedType)
+        if (!actualType.matches(expectedType))
           IllegalFunctionReturnTypeError(ident, expectedType, actualType).toInvalidParsed()
         else None.valid()
       })
@@ -64,7 +64,7 @@ sealed class Node {
      * do not.
      */
     fun checkTypeDiscrepancies(t1: Type, t2: Type): Parsed<Option<Type>> =
-      if (t1 == t2) t1.toOption().valid()
+      if (t1.matches(t2)) t1.toOption().valid()
       else ControlFlowTypeError(t1, t2).toInvalidParsed()
   }
 }

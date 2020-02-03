@@ -15,18 +15,10 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
     val rhs = assign_rhs().asAst(scope)
 
     flatCombine(lhs, rhs) { lhs, rhs ->
-      //if (lhs.type == rhs.type)
-        Assign(lhs, rhs, scope).valid()
-      //else
-      //  TypeError(startPosition, lhs.type, rhs.type, "assignment").toInvalidParsed()
-    }
-      .validate({(lhs, rhs, _) ->
-        lhs.type == rhs.type
-          || lhs.type is AnyArrayT && rhs.type == EmptyArrayT()
-          || lhs.type is PairT && rhs.type == AnyPairTs()
-        //|| it.type is PairT && rhs is ExprRHS && rhs.expr is NullPairLit
-      },
-        { TypeError(startPosition, it.lhs.type, it.rhs.type, "declaration") })
+      Assign(lhs, rhs, scope).valid()
+    }.validate({ (lhs, rhs, _) ->
+      lhs.type.matches(rhs.type)
+    }, { TypeError(startPosition, it.lhs.type, it.rhs.type, "assignment") })
   }
 
   is DeclareContext -> assign_rhs().asAst(scope).flatMap { rhs ->
@@ -52,11 +44,9 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
       .valid()
       .flatMap { scope.addVariable(startPosition, it) }
       // If RHS is empty array, we match any kind of array on the LHS (case of int[] a = [])
-      .validate({
-        it.type == rhs.type
-          || it.type is AnyArrayT && rhs.type == EmptyArrayT()
-          || it.type is PairT && rhs.type == AnyPairTs()
-          //|| it.type is PairT && rhs is ExprRHS && rhs.expr is NullPairLit
+      .validate({ lhs ->
+        lhs.type.matches(rhs.type)
+        //|| lhs.type is PairT && rhs is ExprRHS && rhs.expr is NullPairLit
       },
         { TypeError(startPosition, it.type, rhs.type, "declaration") })
       .map { Decl(it, rhs, scope) }
