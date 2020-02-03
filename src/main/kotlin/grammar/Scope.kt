@@ -45,6 +45,13 @@ sealed class Scope {
       variable.valid()
     else
       RedeclarationError(pos, variable.ident).toInvalidParsed()
+
+  val globalFuncs : Map<Ident, Func>
+    get() = when(this) {
+      is GlobalScope -> functions
+      is FuncScope -> globalScope.functions
+      is ControlFlowScope -> parent.globalFuncs
+    }
 }
 
 /**
@@ -52,7 +59,7 @@ sealed class Scope {
  */
 class GlobalScope : Scope() {
   override fun getVar(ident: Ident): Option<Variable> = variables[ident].toOption()
-  private val functions = HashMap<Ident, Func>()
+  internal val functions = HashMap<Ident, Func>()
 
   fun addFunction(pos: Position, f: Func) =
     if (functions.put(f.ident, f) == null)
@@ -65,7 +72,7 @@ class GlobalScope : Scope() {
  * Scope created by [funcIdent]. Does not see [GlobalScope] variables, and is parent of
  * [ControlFlowScope] defined inside the [Func].
  */
-data class FuncScope(val funcIdent: Ident) : Scope() {
+data class FuncScope(val funcIdent: Ident, val globalScope: GlobalScope) : Scope() {
 
   // A [FuncScope] does not have any parent scopes, so if the variable is not here, return an
   // option.

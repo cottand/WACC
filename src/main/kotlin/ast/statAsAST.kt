@@ -24,6 +24,15 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
     type().asAst()
       .map { DeclVariable(it, Ident(ID()), rhs) }
       .flatMap { scope.addVariable(startPosition, it) }
+      .validate ({
+        rhs.fetchType(scope).fold({
+          false
+        }, {
+          t -> it.type == t
+        })
+      }, {
+        TypeError(type().startPosition, rhs.fetchType(scope).getOrElse { BoolT }, it.type, "variable declaration")
+      })
       .map { Decl(it, rhs, scope) }
   }
 

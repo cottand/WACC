@@ -13,7 +13,7 @@ import kotlinx.collections.immutable.plus
 
 fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   val ident = Ident(this.ID().text)
-  val funcScope = FuncScope(ident)
+  val funcScope = FuncScope(ident, gScope)
   val type = type().asAst()
 
   if (type !is Valid) return type.errors.invalid()
