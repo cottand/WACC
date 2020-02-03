@@ -44,14 +44,13 @@ internal fun TypeContext.asAst(): Parsed<Type> =
     else -> NOT_REACHED()
   }
 
-private fun Base_typeContext.asAst(): BaseT =
-  when {
-    INT() != null -> IntT
-    BOOL() != null -> BoolT
-    CHAR() != null -> CharT
-    STRING() != null -> StringT
-    else -> NOT_REACHED()
-  }
+private fun Base_typeContext.asAst(): BaseT = when (this) {
+  is IntBaseTContext -> IntT
+  is BoolBaseTContext -> BoolT
+  is CharBaseTContext -> CharT
+  is StringBaseTContext -> StringT
+  else -> NOT_REACHED()
+}
 
 private fun Pair_typeContext.asAst(): Parsed<PairT> {
   val fstType = pair_elem_type(0).asAst()
@@ -101,41 +100,40 @@ fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
     (funcs.errors + stat.errors).invalid()
 }
 
-internal fun Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> =
-  when {
-    ID() != null -> scope[ID().text].fold({
-      UndefinedIdentifier(startPosition, ID().text).toInvalidParsed()
-    }, { IdentLHS(it.ident).valid() })
+internal fun Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> = when (this) {
+  is LHSIdentContext -> scope[ID().text].fold({
+    UndefinedIdentifier(startPosition, ID().text).toInvalidParsed()
+  }, { IdentLHS(it.ident).valid() })
 
-    array_elem() != null -> scope[array_elem().ID().text].fold({
-      UndefinedIdentifier(startPosition, array_elem().text).toInvalidParsed()
-    }, { variable ->
-      val exprs = array_elem().expr().map { it.asAst(scope) }
-      if (exprs.areAllValid)
-        ArrayElemLHS(ArrayElem(variable.ident, exprs.valids)).valid()
-      else
-        exprs.errors.invalid()
-    })
+  is LHSArrayElemContext -> scope[array_elem().ID().text].fold({
+    UndefinedIdentifier(startPosition, array_elem().text).toInvalidParsed()
+  }, { variable ->
+    val exprs = array_elem().expr().map { it.asAst(scope) }
+    if (exprs.areAllValid)
+      ArrayElemLHS(ArrayElem(variable.ident, exprs.valids)).valid()
+    else
+      exprs.errors.invalid()
+  })
 
-    // TODO revisit pair_elem().text vs ID().text
-    pair_elem() != null -> pair_elem().expr().asAst(scope)
-      .validate(
-        { it is IdentExpr },
-        { TypeError(startPosition, AnyPairTs(), it.type, pair_elem().text) })
-      .flatMap { pairIdent ->
-        scope[pair_elem().expr().text].fold({
-          UndefinedIdentifier(startPosition, pair_elem().text).toInvalidParsed()
-        }, {
-          if (pair_elem().FST() != null)
-            PairElemLHS(Fst(pairIdent))
-          else {
-            PairElemLHS(Snd(pairIdent))
-          }.valid()
-        })
-      }
+  // TODO revisit pair_elem().text vs ID().text
+  is LHSPairElemContext -> pair_elem().expr().asAst(scope)
+    .validate(
+      { it is IdentExpr },
+      { TypeError(startPosition, AnyPairTs(), it.type, pair_elem().text) })
+    .flatMap { pairIdent ->
+      scope[pair_elem().expr().text].fold({
+        UndefinedIdentifier(startPosition, pair_elem().text).toInvalidParsed()
+      }, {
+        if (pair_elem().FST() != null)
+          PairElemLHS(Fst(pairIdent))
+        else {
+          PairElemLHS(Snd(pairIdent))
+        }.valid()
+      })
+    }
 
-    else -> NOT_REACHED()
-  }
+  else -> NOT_REACHED()
+}
 
 internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
   when {

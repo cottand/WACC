@@ -49,8 +49,13 @@ expr WS* MUL WS* expr #BinOp
 ;
 
 // Assignments
-assign_lhs: ID | array_elem | pair_elem;
-assign_rhs: expr
+assign_lhs:
+ID #LHSIdent
+| array_elem #LHSArrayElem
+| pair_elem #LHSPairElem
+;
+assign_rhs:
+expr
 | array_lit
 | NEWPAIR WS* LBRACKET WS* expr WS* COMMA WS* expr WS* RBRACKET
 | pair_elem
@@ -64,7 +69,12 @@ arg_list: expr WS* (COMMA WS* expr)*;
 
 // Types
 type: base_type | array_type | pair_type;
-base_type: INT | BOOL | CHAR | STRING;
+base_type:
+INT #IntBaseT
+| BOOL #BoolBaseT
+| CHAR #CharBaseT
+| STRING #StringBaseT
+;
 
 array_type:
  base_type WS* LSQBRACKET WS* RSQBRACKET #ArrayOfBaseT
