@@ -34,7 +34,7 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
       .valid()
       .flatMap { scope.addVariable(startPosition, it) }
       // If RHS is empty array, we match any kind of array on the LHS (case of int[] a = [])
-      .validate({ lhsType == rhs.type || lhsType is AnyArrayT && rhs.type == AnyArrayT() },
+      .validate({ lhsType == rhs.type || lhsType is AnyArrayT && rhs.type == NDArrayT() },
         { TypeError(startPosition, rhs.type, it.type, "declaration") })
       .map { Decl(it, rhs, scope) }
   }
