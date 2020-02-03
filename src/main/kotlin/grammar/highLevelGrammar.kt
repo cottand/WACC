@@ -195,6 +195,8 @@ data class ArrayT private constructor(val type: Type, val depth: Int = 1) : AnyA
 
 open class AnyPairTs : Type() {
   val containsAnys = this is PairT && (fstT == AnyArrayT() || sndT == AnyArrayT())
+  override fun equals(other: Any?): Boolean = other is AnyPairTs && other !is PairT
+  override fun hashCode(): Int = 21353
 }
 data class PairT(val fstT: Type, val sndT: Type) : AnyPairTs()
 

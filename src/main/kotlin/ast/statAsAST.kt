@@ -25,8 +25,8 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
   is DeclareContext -> assign_rhs().asAst(scope).flatMap { rhs ->
 
     fun inferPairsFromRhs(lhs: PairT, rhs: PairT): PairT {
-      val lhsFst = if (lhs.fstT == AnyArrayT()) rhs.fstT else lhs.fstT
-      val lhsSnd = if (lhs.sndT == AnyArrayT()) rhs.sndT else lhs.sndT
+      val lhsFst = if (lhs.fstT == AnyPairTs()) rhs.fstT else lhs.fstT
+      val lhsSnd = if (lhs.sndT == AnyPairTs()) rhs.sndT else lhs.sndT
       return PairT(lhsFst, lhsSnd)
     }
 
@@ -48,7 +48,8 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
       .validate({
         it.type == rhs.type
           || it.type is AnyArrayT && rhs.type == EmptyArrayT()
-          || it.type is PairT && rhs is ExprRHS && rhs.expr is NullPairLit
+          || it.type is PairT && rhs.type == AnyPairTs()
+          //|| it.type is PairT && rhs is ExprRHS && rhs.expr is NullPairLit
       },
         { TypeError(startPosition, it.type, rhs.type, "declaration") })
       .map { Decl(it, rhs, scope) }
