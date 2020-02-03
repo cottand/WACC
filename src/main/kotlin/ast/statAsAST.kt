@@ -14,10 +14,12 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
     val lhs = assign_lhs().asAst(scope)
     val rhs = assign_rhs().asAst(scope)
 
-    if (lhs is Valid && rhs is Valid)
-      Assign(lhs.a, rhs.a, scope).valid()
-    else
-      (lhs.errors + rhs.errors).invalid()
+    flatCombine(lhs, rhs) { lhs, rhs ->
+      if (lhs.type == rhs.type)
+        Assign(lhs, rhs, scope).valid()
+      else
+        TypeError(startPosition, lhs.type, rhs.type, "assignment").toInvalidParsed()
+    }
   }
 
   is DeclareContext -> flatCombine(assign_rhs().asAst(scope), type().asAst()) { rhs, lhsType ->
