@@ -20,22 +20,35 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
       (lhs.errors + rhs.errors).invalid()
   }
 
-  is DeclareContext -> flatCombine(assign_rhs().asAst(scope), type().asAst()) { rhs, lhsType ->
+  is DeclareContext -> assign_rhs().asAst(scope).flatMap { rhs ->
+
+    fun inferPairsFromRhs(lhs: PairT, rhs: PairT): PairT {
+      val lhsFst = if (lhs.fstT == AnyArrayT()) rhs.fstT else lhs.fstT
+      val lhsSnd = if (lhs.sndT == AnyArrayT()) rhs.sndT else lhs.sndT
+      return PairT(lhsFst, lhsSnd)
+    }
+
+    val lhsType = type().asAst()
     // Speical case: if the type of the LHS is AnyPairTs, we have to determine the actual type
     // of the variable by looking at the RHS.
     // When rhs is a null PairLit, its type is AnyPairTs
     val lhsTypeInferred =
-      if (lhsType == AnyPairTs() && rhs.type is PairT)
-        rhs.type
-      else
-        lhsType
+      when {
+        lhsType == AnyPairTs() && rhs.type is AnyPairTs -> rhs.type
+        lhsType is PairT && rhs.type is PairT -> inferPairsFromRhs(lhsType, rhs.type as PairT)
+        else -> lhsType
+      }
 
     DeclVariable(lhsTypeInferred, Ident(ID()), rhs)
       .valid()
       .flatMap { scope.addVariable(startPosition, it) }
       // If RHS is empty array, we match any kind of array on the LHS (case of int[] a = [])
-      .validate({ lhsType == rhs.type || lhsType is AnyArrayT && rhs.type == EmptyArrayT() },
-        { TypeError(startPosition, rhs.type, it.type, "declaration") })
+      .validate({
+        it.type == rhs.type
+          || it.type is AnyArrayT && rhs.type == EmptyArrayT()
+          || it.type is PairT && rhs is ExprRHS && rhs.expr is NullPairLit
+      },
+        { TypeError(startPosition, it.type, rhs.type, "declaration") })
       .map { Decl(it, rhs, scope) }
   }
 

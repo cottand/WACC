@@ -142,7 +142,13 @@ open class AnyArrayT : Type() {
 }
 
 // Empty array e.g. []
-class EmptyArrayT : AnyArrayT()
+class EmptyArrayT : AnyArrayT() {
+  override fun equals(other: Any?): Boolean = other is EmptyArrayT
+
+  override fun hashCode(): Int {
+    return javaClass.hashCode()
+  }
+}
 
 // TODO Write more documentation comments for types
 /**
@@ -183,7 +189,9 @@ data class ArrayT private constructor(val type: Type, val depth: Int = 1) : AnyA
   }
 }
 
-open class AnyPairTs : Type()
+open class AnyPairTs : Type() {
+  val containsAnys = this is PairT && (fstT == AnyArrayT() || sndT == AnyArrayT())
+}
 data class PairT(val fstT: Type, val sndT: Type) : AnyPairTs()
 
 // <base-type>
