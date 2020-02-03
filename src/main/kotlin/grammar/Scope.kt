@@ -12,53 +12,53 @@ import ic.org.RedeclarationError
  * [Variable]s of this [Scope]
  */
 sealed class Scope {
-  /**
-   * Returns the [Variable] associated with [ident]. If [ident] exists twice in this scope and/or
-   * one if the parent scopes, the lowest level [Variable] is returned.
-   *
-   * So if several [Variable]s with the same [Ident] exist in this scope and of this scope's
-   * parent's, this scope's will be returned.
-   */
-  abstract fun getVar(ident: Ident): Option<Variable>
+    /**
+     * Returns the [Variable] associated with [ident]. If [ident] exists twice in this scope and/or
+     * one if the parent scopes, the lowest level [Variable] is returned.
+     *
+     * So if several [Variable]s with the same [Ident] exist in this scope and of this scope's
+     * parent's, this scope's will be returned.
+     */
+    abstract fun getVar(ident: Ident): Option<Variable>
 
-  fun getVar(identName: String) = getVar(Ident(identName))
+    fun getVar(identName: String) = getVar(Ident(identName))
 
-  // Some syntactic sugar
-  operator fun get(ident: Ident) = getVar(ident)
+    // Some syntactic sugar
+    operator fun get(ident: Ident) = getVar(ident)
 
-  /**
-   * Get the [Variable] corresponding to this [identName] if found.
-   */
-  operator fun get(identName: String) = getVar(identName)
+    /**
+     * Get the [Variable] corresponding to this [identName] if found.
+     */
+    operator fun get(identName: String) = getVar(identName)
 
-  /**
-   * Stateful list that holds all the [Variable]s defined in this scope only (not its parents').
-   */
-  internal val variables = HashMap<Ident, Variable>()
+    /**
+     * Stateful list that holds all the [Variable]s defined in this scope only (not its parents').
+     */
+    internal val variables = HashMap<Ident, Variable>()
 
-  /**
-   * Adds [variable] to the current [Scope]. Used in variable delcaration and function parameter
-   * creation.
-   */
-  fun addVariable(pos: Position, variable: Variable): Parsed<Variable> =
-    if (variables.put(variable.ident, variable) == null)
-      variable.valid()
-    else
-      RedeclarationError(pos, variable.ident).toInvalidParsed()
+    /**
+     * Adds [variable] to the current [Scope]. Used in variable delcaration and function parameter
+     * creation.
+     */
+    fun addVariable(pos: Position, variable: Variable): Parsed<Variable> =
+        if (variables.put(variable.ident, variable) == null)
+            variable.valid()
+        else
+            RedeclarationError(pos, variable.ident).toInvalidParsed()
 }
 
 /**
  * Global scope. Unique and per program, parent of all [ControlFlowScope]s outside of [FuncScope]s.
  */
 class GlobalScope : Scope() {
-  override fun getVar(ident: Ident): Option<Variable> = variables[ident].toOption()
-  private val functions = HashMap<Ident, Func>()
+    override fun getVar(ident: Ident): Option<Variable> = variables[ident].toOption()
+    private val functions = HashMap<Ident, Func>()
 
-  fun addFunction(pos: Position, f: Func) =
-    if (functions.put(f.ident, f) == null)
-      f.valid()
-    else
-      RedeclarationError(pos, f.ident).toInvalidParsed()
+    fun addFunction(pos: Position, f: Func) =
+        if (functions.put(f.ident, f) == null)
+            f.valid()
+        else
+            RedeclarationError(pos, f.ident).toInvalidParsed()
 }
 
 /**
@@ -67,9 +67,9 @@ class GlobalScope : Scope() {
  */
 data class FuncScope(val funcIdent: Ident) : Scope() {
 
-  // A [FuncScope] does not have any parent scopes, so if the variable is not here, return an
-  // option.
-  override fun getVar(ident: Ident): Option<Variable> = variables[ident].toOption()
+    // A [FuncScope] does not have any parent scopes, so if the variable is not here, return an
+    // option.
+    override fun getVar(ident: Ident): Option<Variable> = variables[ident].toOption()
 }
 
 /**
@@ -80,16 +80,16 @@ data class FuncScope(val funcIdent: Ident) : Scope() {
  */
 data class ControlFlowScope(val parent: Scope) : Scope() {
 
-  // Return whatever ident is found in this scope's varMap, and look in its parent's otherwise.
-  override fun getVar(ident: Ident): Option<Variable> =
-    variables[ident].toOption() or parent.getVar(ident)
+    // Return whatever ident is found in this scope's varMap, and look in its parent's otherwise.
+    override fun getVar(ident: Ident): Option<Variable> =
+        variables[ident].toOption() or parent.getVar(ident)
 }
 
 // TODO Change all scope accesses to fit with these new definitions of Variable:
 sealed class Variable {
-  abstract val type: Type
-  abstract val ident: Ident
-  // abstract val value: Nothing // TODO revisit at backend
+    abstract val type: Type
+    abstract val ident: Ident
+    // abstract val value: Nothing // TODO revisit at backend
 }
 
 data class DeclVariable(
@@ -98,7 +98,7 @@ data class DeclVariable(
     val rhs: AssRHS
 ) : Variable()
 
-data class ParamVariable(
-    override val type: Type,
-    override val ident: Ident
-) : Variable()
+data class ParamVariable(override val type: Type, override val ident: Ident) : Variable() {
+    constructor(param: Param) : this(param.type, param.ident)
+}
+
