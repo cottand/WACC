@@ -79,7 +79,7 @@ class TestPrograms {
     else
       assertTrue(res.exitCode in listOf(0, 200)) {
         "Unexpected failure, expected a succesful syntax check (and that did not happen).\n" +
-          "  Errors:\n ${res.message}"
+            "  Errors:\n ${res.message}"
       }
   }
 
@@ -129,6 +129,6 @@ class TestPrograms {
   fun syntacticallyCheckPrograms() = waccFiles
     .filterNot { testSemanticsOnly }
     .map {
-    DynamicTest.dynamicTest(it.file.canonicalPath) { testSyntax(it) }
-  }
+      DynamicTest.dynamicTest(it.file.canonicalPath) { testSyntax(it) }
+    }
 }
