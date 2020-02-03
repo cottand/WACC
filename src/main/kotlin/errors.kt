@@ -12,6 +12,7 @@ import ic.org.grammar.Type
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.plus
 
 /**
  * Useful extension functions and sealed classes to deal with errors at compile time.
@@ -56,10 +57,14 @@ data class TypeError(override val msg: String) : SemanticError() {
     this("$pos, for operation `$op`, expected some type $expectedTs, actual: $actual")
 
   constructor(pos: Position, expectedTs: List<Type>, actualTs: Pair<Type, Type>, op: String) :
-    this("$pos, for operation `$op`, " +
-    "expected some type $expectedTs, actual: ${actualTs.first} and ${actualTs.second}")
+    this(
+      "$pos, for operation `$op`, " +
+        "expected some type $expectedTs, actual: ${actualTs.first} and ${actualTs.second}"
+    )
+
   constructor(pos: Position, expectedT: Type, actual: Type, op: String) :
     this("$pos, for operation `$op`, expected type $expectedT, actual: $actual")
+
   constructor(pos: Position, expectedTs: List<Type>, actual: String, op: String) :
     this("$pos, for operation `$op`, expected some type $expectedTs, actual: $actual")
 }
@@ -169,6 +174,19 @@ fun <A> Parsed<A>.validate(predicate: Boolean, error: CompilationError): Parsed<
       error.toInvalidParsed()
   }
 
-data class Position(val l: Int, val col: Int) {
+/**
+ * Like a [Validated.map] but for two [Parsed]
+ */
+inline fun <reified A, reified B, R> combine(
+  fst: Parsed<A>,
+  snd: Parsed<B>,
+  map: (A, B) -> R
+): Parsed<R> =
+  if (fst is Valid && snd is Valid)
+    map(fst.a, snd.a).valid()
+  else
+    (fst.errors + snd.errors).invalid()
+
+class Position(val l: Int, val col: Int) {
   override fun toString(): String = "At $l:$col"
 }
