@@ -66,12 +66,20 @@ arg_list: expr WS* (COMMA WS* expr)*;
 type: base_type | array_type | pair_type;
 base_type: INT | BOOL | CHAR | STRING;
 
-array_type: (base_type | pair_type) WS* LSQBRACKET WS* RSQBRACKET | array_type WS* LSQBRACKET WS* RSQBRACKET;
+array_type:
+ base_type WS* LSQBRACKET WS* RSQBRACKET #ArrayOfBaseT
+| pair_type WS* LSQBRACKET WS* RSQBRACKET #ArrayOfPairs
+| array_type WS* LSQBRACKET WS* RSQBRACKET #ArrayOfArrays
+;
 array_elem: ID WS* (LSQBRACKET WS* expr WS* RSQBRACKET)+;
 
 pair_type: PAIR WS* LBRACKET WS* pair_elem_type WS* COMMA WS* pair_elem_type WS* RBRACKET;
 
-pair_elem_type: base_type | array_type | PAIR;
+pair_elem_type:
+ base_type #BaseTPairElem
+ | array_type  #ArrayPairElem
+ | PAIR #PairPairElem
+ ;
 pair_elem: FST WS+ expr | SND WS+ expr;
 
 // Literals

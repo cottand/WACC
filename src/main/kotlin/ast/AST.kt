@@ -24,14 +24,12 @@ fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
   })
   val stat = stat().asAst(funcScope)
 
-  return if (params.areAllValid && stat is Valid) {
-    val validParams = params.map { (it as Valid).a }
-    Func(type.a, ident, validParams, stat.a)
+  return if (params.areAllValid && stat is Valid)
+    Func(type.a, ident, params.valids, stat.a)
       .also { gScope.addFunction(startPosition, it) }
       .valid()
-  } else {
+  else
     (type.errors + params.errors + stat.errors).invalid()
-  }
 }
 
 private fun ParamContext.asAst(scope: Scope): Parsed<Param> {
@@ -66,23 +64,23 @@ private fun Pair_typeContext.asAst(): Parsed<PairT> {
 
 // TODO When checking Types: If NDPairT, we need to recurse to find the right Pair Type!
 private fun Pair_elem_typeContext.asAst(): Parsed<Type> =
-  when {
-    base_type() != null -> base_type().asAst().valid()
-    array_type() != null -> array_type().asAst()
-    PAIR() != null -> NDPairT.valid()
-    else -> NOT_REACHED()
+  when (this) {
+    is BaseTPairElemContext -> base_type().asAst().valid()
+    is ArrayPairElemContext -> array_type().asAst()
+    // Pair type not defined yet
+    else -> NDPairT.valid()
+    //is PairPairElemContext -> NDPairT.valid()
+    //else -> NOT_REACHED()
   }
 
 private fun Array_typeContext.asAst(): Parsed<ArrayT> {
-  fun recurseArrayT(
-      arrayT: Array_typeContext,
-      currentDepth: Int
-  ): Parsed<Pair<Type, Int>> = when {
-    arrayT.array_type() != null -> recurseArrayT(array_type(), currentDepth + 1)
-    arrayT.base_type() != null -> arrayT.base_type().asAst().valid().map { it to currentDepth }
-    arrayT.pair_type() != null -> arrayT.pair_type().asAst().map { it to currentDepth }
-    else -> NOT_REACHED()
-  }
+  fun recurseArrayT(arrayT: Array_typeContext, currentDepth: Int): Parsed<Pair<Type, Int>> =
+    when (arrayT) {
+      is ArrayOfArraysContext -> recurseArrayT(arrayT.array_type(), currentDepth + 1)
+      is ArrayOfBaseTContext -> arrayT.base_type().asAst().valid().map { it to currentDepth }
+      is ArrayOfPairsContext -> arrayT.pair_type().asAst().map { it to currentDepth }
+      else -> NOT_REACHED()
+    }
   return recurseArrayT(this, 1).map { (type, depth) -> ArrayT.make(type, depth) }
 }
 
