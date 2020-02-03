@@ -3,6 +3,7 @@ package ic.org.grammar
 import arrow.core.None
 import arrow.core.Option
 import arrow.core.Some
+import arrow.core.toOption
 import ic.org.Position
 import org.antlr.v4.runtime.tree.TerminalNode
 
@@ -88,10 +89,10 @@ data class ArrayLit(val exprs: List<Expr>) : AssRHS() {
     // We assert since it should always be the case
     val t = exprs[0].type
     for (e in exprs) {
-      assert(e.type != t)
+      assert(e.type == t)
     }
 
-    return Some(t)
+    return Some(ArrayT.make(t, 1))
   }
 }
 
@@ -104,7 +105,7 @@ data class PairElemRHS(val pairElem: PairElem) : AssRHS() {
 }
 
 data class Call(val id: Ident, val args: List<Expr>) : AssRHS() {
-  override fun fetchType(scope: Scope): Option<Type> = scope[id].map { it.type }
+  override fun fetchType(scope: Scope): Option<Type> = scope.globalFuncs[id]?.retType.toOption()
 }
 
 // <pair-elem>
