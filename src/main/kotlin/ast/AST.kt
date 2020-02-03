@@ -11,29 +11,30 @@ import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 
-fun FuncContext.asAst(gScope: GlobalScope): Parsed<Func> {
+fun FuncContext.paramsAsAst(): List<Parsed<Param>> {
   val antlrParams = param_list()?.param() ?: emptyList()
-  val ident = Ident(this.ID().text)
-  val funcScope = FuncScope(ident, gScope)
-  // TODO we need to infer pair return types possibly
-  fun List<Param>.addParamsToScope() =
-    forEachIndexed { i, p ->
-      funcScope.addVariable(antlrParams[i].startPosition, ParamVariable(p))
-    }
-
-  val type = type().asAst()
-  // TODO are there any checks on identifiers needed
   val counts = HashMap<Param, Int>()
-  val params = antlrParams.asSequence().map { it.asAst() to it }
+  return antlrParams.map { it.asAst() to it }
     .onEach { (parsed, _) -> counts[parsed] = (counts[parsed] ?: 0) + 1 }
     .map { (parsed, ctx) ->
       parsed.valid().validate({ counts[it] == 1 },
         { DuplicateParamError(ctx.startPosition, it.ident) })
-    }.toList()
+    }
+}
 
-  params.valids.addParamsToScope()
+fun FuncContext.asAst(gScope: GlobalScope, params: List<Parsed<Param>>): Parsed<Func> {
+  val ident = Ident(this.ID().text)
+  val funcScope = FuncScope(ident, gScope)
+  // TODO we need to infer pair return types possibly
+  val antlrParams = param_list()?.param() ?: emptyList()
 
-  gScope.addFunction(startPosition, FuncIdent(type, ident, params.valids))
+  val type = type().asAst()
+  // TODO are there any checks on identifiers needed
+
+  params.valids.forEachIndexed { i, p ->
+    funcScope.addVariable(antlrParams[i].startPosition, ParamVariable(p))
+  }
+
   val stat = stat().asAst(funcScope)
   return if (params.areAllValid && stat is Valid)
     Func(type, ident, params.valids, stat.a).valid()
@@ -93,7 +94,17 @@ private fun Array_typeContext.asAst(): ArrayT {
  * by default, from which all scopes (except [FuncScope]s] inherit from.
  */
 fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
-  val funcs = func().map { it.asAst(gScope) }
+
+  val funcs = func().map {
+    val t = it.type().asAst()
+    val ident = Ident(it.ID().text)
+    val params = it.paramsAsAst()
+    val funcId = FuncIdent(t, ident, params.valids)
+    gScope.addFunction(startPosition, funcId)
+    it to params
+  }.map { (ctx, ps) ->
+    ctx.asAst(gScope, ps)
+  }
   val antlrStat = stat()
   // TODO rewrite syntactic error message with this.startPosition
     ?: return persistentListOf(SyntacticError("Malformed program at $text")).invalid()
