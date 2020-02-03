@@ -28,7 +28,9 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
         rhs.fetchType(scope).fold({
           false
         }, {
-          t -> it.type == t
+          t -> it.type == t // Types are equal
+          || (t is NDPairT && it.type is AnyPairTs) // If RHS is null and LHS is PairT, we match anything (case of pair(pair, pair) p = null)
+          || (t is NDArrayT && it.type is AnyArrayT) // If RHS is empty array, we match any kind of array on the LHS (case of int[] a = [])
         })
       }, {
         TypeError(type().startPosition, rhs.fetchType(scope).getOrElse { BoolT }, it.type, "variable declaration")
