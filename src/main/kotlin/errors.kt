@@ -54,19 +54,19 @@ data class UndefinedIdentifier(override val msg: String) : SemanticError() {
 
 data class TypeError(override val msg: String) : SemanticError() {
   constructor(pos: Position, expectedTs: List<Type>, actual: Type, op: String) :
-      this("$pos, for operation `$op`, expected some type $expectedTs, actual: $actual")
+    this("$pos, for operation `$op`, expected some type $expectedTs, actual: $actual")
 
   constructor(pos: Position, expectedTs: List<Type>, actualTs: Pair<Type, Type>, op: String) :
-      this(
-        "$pos, for operation `$op`, " +
-            "expected some type $expectedTs, actual: ${actualTs.first} and ${actualTs.second}"
-      )
+    this(
+      "$pos, for operation `$op`, " +
+        "expected some type $expectedTs, actual: ${actualTs.first} and ${actualTs.second}"
+    )
 
   constructor(pos: Position, expectedT: Type, actual: Type, op: String) :
-      this("$pos, for operation `$op`, expected type $expectedT, actual: $actual")
+    this("$pos, for operation `$op`, expected type $expectedT, actual: $actual")
 
   constructor(pos: Position, expectedTs: List<Type>, actual: String, op: String) :
-      this("$pos, for operation `$op`, expected some type $expectedTs, actual: $actual")
+    this("$pos, for operation `$op`, expected some type $expectedTs, actual: $actual")
 }
 
 data class NullPairError(val pos: Position) : SemanticError() {
@@ -74,17 +74,17 @@ data class NullPairError(val pos: Position) : SemanticError() {
 }
 
 data class ControlFlowTypeError(override val msg: String) : SyntacticError(msg) {
-  constructor(thenType: Type, elseType: Type) :
-      this(
-        "differing returning types in if-else branching.\n" +
-            "    Got `$thenType` in the 'then' branch and `$elseType` in the 'else' branch"
-      )
+  constructor(pos: Position, thenType: Type, elseType: Type) :
+    this(
+      "$pos, differing returning types in if-else branching.\n" +
+        "    Got `$thenType` in the 'then' branch and `$elseType` in the 'else' branch"
+    )
 
   constructor(pos: Position, stat: String) :
-      this("$pos, unreachable statement `$stat`")
+    this("$pos, unreachable statement `$stat`")
 
-  constructor(type: Type) :
-      this("missing return statement on branch. Expecting `$type`")
+  constructor(pos: Position, type: Type) :
+    this("$pos, missing return statement on branch. Expecting `$type`")
 
   override fun toString() = msg
   fun asTypeError(pos: Position) = TypeError("$pos, $this")
@@ -92,27 +92,27 @@ data class ControlFlowTypeError(override val msg: String) : SyntacticError(msg) 
 
 data class UndefinedOp(override val msg: String) : SemanticError() {
   constructor(pos: Position, op: String, vararg ts: Type) :
-      this("$pos, undefined operation `$op` for types $ts")
+    this("$pos, undefined operation `$op` for types $ts")
 }
 
 data class IllegalArrayAccess(override val msg: String) : SemanticError() {
   constructor(pos: Position, expr: String, badT: Type) :
-      this("$pos, illegal type in `$expr` for array acces. Expected an Int, actual: $badT")
+    this("$pos, illegal type in `$expr` for array acces. Expected an Int, actual: $badT")
 }
 
 data class InvalidReturn(override val msg: String) : SemanticError() {
   constructor(pos: Position) :
-      this("$pos, `return` statement is not allowed in given scope (use `exit` maybe?)")
+    this("$pos, `return` statement is not allowed in given scope (use `exit` maybe?)")
 }
 
 data class IntegerOverflowError(override val msg: String) : SyntacticError(msg) {
   constructor(pos: Position, i: Number) :
-      this("$pos, invalid integer `$i`. Not in ${IntLit.range}")
+    this("$pos, invalid integer `$i`. Not in ${IntLit.range}")
 }
 
 data class IllegalFunctionReturnTypeError(override val msg: String) : SemanticError() {
-  constructor(ident: Ident, expected: Type, actual: Type) :
-      this("At function `${ident.name}`, expected return type `$expected` but found `$actual`")
+  constructor(pos: Position, ident: Ident, expected: Type, actual: Type) :
+    this("$pos, `${ident.name}`, expected return type `$expected` but found `$actual`")
 }
 
 data class RedeclarationError(val pos: Position, val ident: Ident) : SemanticError() {
@@ -147,7 +147,7 @@ inline val <A> List<Parsed<A>>.areAllValid: Boolean
  */
 fun List<CompilationError>.asLines(filename: String) =
   "In file $filename:\n" +
-      fold("") { str, err -> "$str  ${err.msg}\n" } + '\n'
+    fold("") { str, err -> "$str  ${err.msg}\n" } + '\n'
 
 /**
  * Flatmap on [Parsed]. Applies [transform] to [this] if [this] is [Valid], and

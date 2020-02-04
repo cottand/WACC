@@ -26,15 +26,15 @@ sealed class Node {
   abstract val returnType: Parsed<Option<Type>>
   abstract val pos: Position
 
-  fun checkReturnType(expectedType: Type, ident: Ident): Parsed<None> =
+  fun checkReturnType(expected: Type, ident: Ident): Parsed<None> =
     returnType.flatMap { maybeType ->
-      maybeType.fold({
-        ControlFlowTypeError(expectedType).toInvalidParsed()
-      }, { actualType ->
-        if (!actualType.matches(expectedType))
-          IllegalFunctionReturnTypeError(ident, expectedType, actualType).toInvalidParsed()
-        else None.valid()
-      })
+      maybeType.fold(
+        { ControlFlowTypeError(pos, expected).toInvalidParsed() },
+        { actual ->
+          if (!actual.matches(expected))
+            IllegalFunctionReturnTypeError(pos, ident, expected, actual).toInvalidParsed()
+          else None.valid()
+        })
     }
 
   /**
@@ -48,15 +48,15 @@ sealed class Node {
      *
      * If [nextStatement] returns nothing, we return a [ControlFlowTypeError]
      */
-    fun checkBodyWithNextStatementType(bodyType: Type, nextStatement: Node): Parsed<Option<Type>> {
+    fun checkBodyWithNextStatementType(pos: Position, bodyType: Type, nextStatement: Node): Parsed<Option<Type>> {
       val nextReturn = nextStatement.returnType
       return if (nextReturn !is Valid)
         nextReturn.errors.invalid()
       else
         nextReturn.a.fold({
-          ControlFlowTypeError(bodyType).toInvalidParsed()
+          ControlFlowTypeError(pos, bodyType).toInvalidParsed()
         }, { nextType ->
-          checkTypeDiscrepancies(bodyType, nextType)
+          checkTypeDiscrepancies(pos, bodyType, nextType)
         })
     }
 
@@ -64,9 +64,9 @@ sealed class Node {
      * Checks whether [t1] and [t2] return the same type, and returns an invalid [Parsed] if they
      * do not.
      */
-    fun checkTypeDiscrepancies(t1: Type, t2: Type): Parsed<Option<Type>> =
+    fun checkTypeDiscrepancies(pos: Position, t1: Type, t2: Type): Parsed<Option<Type>> =
       if (t1.matches(t2)) t1.toOption().valid()
-      else ControlFlowTypeError(t1, t2).toInvalidParsed()
+      else ControlFlowTypeError(pos, t1, t2).toInvalidParsed()
   }
 }
 
@@ -89,15 +89,15 @@ class IfElseNode(val thenBody: Node, val elseBody: Node, val next: Node, overrid
       // Both branches reutrn
       thenReturn.a is Some && elseReturn.a is Some -> {
         val (thenType, elseType) = (thenReturn.a as Some).t to (elseReturn.a as Some).t
-        checkTypeDiscrepancies(thenType, elseType)
+        checkTypeDiscrepancies(pos, thenType, elseType)
       }
       // The Else branch returns something, but not the Then branch
       thenReturn.a is None && elseReturn.a is Some ->
-        checkBodyWithNextStatementType((elseReturn.a as Some<Type>).t, next)
+        checkBodyWithNextStatementType(pos, (elseReturn.a as Some<Type>).t, next)
 
       // The Then branch returns something, but not the Else branch
       thenReturn.a is Some && elseReturn.a is None ->
-        checkBodyWithNextStatementType((thenReturn.a as Some<Type>).t, next)
+        checkBodyWithNextStatementType(pos, (thenReturn.a as Some<Type>).t, next)
 
       // No branch returns, so this code block returns whatever the code that follows returns.
       else -> next.returnType
@@ -141,7 +141,7 @@ class TerminalIfElseNode(val thenBody: Node, val elseBody: Node, override val po
       // An IfElse at the end of a flow were both branches return
       thenReturn.a is Some && elseReturn.a is Some -> {
         val (thenType, elseType) = (thenReturn.a as Some).t to (elseReturn.a as Some).t
-        checkTypeDiscrepancies(thenType, elseType)
+        checkTypeDiscrepancies(pos, thenType, elseType)
       }
 
       // An IfElse at the end of a flow without both branches returning

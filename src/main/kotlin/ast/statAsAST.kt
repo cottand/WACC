@@ -8,21 +8,15 @@ import ic.org.*
 import ic.org.grammar.*
 import kotlinx.collections.immutable.plus
 
-internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
-  is SkipContext -> Skip(scope, startPosition).valid()
+internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
+  is SkipContext -> Skip(scp, startPosition).valid()
 
-  is AssignContext -> {
-    val lhs = assign_lhs().asAst(scope)
-    val rhs = assign_rhs().asAst(scope)
+  is AssignContext -> flatCombine(assign_lhs().asAst(scp), assign_rhs().asAst(scp)) { lhs, rhs ->
+    Assign(lhs, rhs, scp, startPosition).valid()
+  }.validate({ (lhs, rhs, _) -> lhs.type.matches(rhs.type) },
+    { TypeError(startPosition, it.lhs.type, it.rhs.type, "assignment") })
 
-    flatCombine(lhs, rhs) { lhs, rhs ->
-      Assign(lhs, rhs, scope, startPosition).valid()
-    }.validate({ (lhs, rhs, _) ->
-      lhs.type.matches(rhs.type)
-    }, { TypeError(startPosition, it.lhs.type, it.rhs.type, "assignment") })
-  }
-
-  is DeclareContext -> assign_rhs().asAst(scope).flatMap { rhs ->
+  is DeclareContext -> assign_rhs().asAst(scp).flatMap { rhs ->
 
     fun inferPairsFromRhs(lhs: PairT, rhs: PairT): PairT {
       val lhsFst = if (lhs.fstT == AnyPairTs()) rhs.fstT else lhs.fstT
@@ -43,50 +37,50 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
 
     DeclVariable(lhsTypeInferred, Ident(ID()), rhs)
       .valid()
-      .flatMap { scope.addVariable(startPosition, it) }
+      .flatMap { scp.addVariable(startPosition, it) }
       // If RHS is empty array, we match any kind of array on the LHS (case of int[] a = [])
       .validate({ lhs ->
         lhs.type.matches(rhs.type)
         // || lhs.type is PairT && rhs is ExprRHS && rhs.expr is NullPairLit
       },
         { TypeError(startPosition, it.type, rhs.type, "declaration") })
-      .map { Decl(it, rhs, scope, startPosition) }
+      .map { Decl(it, rhs, scp, startPosition) }
   }
 
-  is ReadStatContext -> assign_lhs().asAst(scope)
+  is ReadStatContext -> assign_lhs().asAst(scp)
     .validate({ it.type is IntT || it.type is StringT || it.type is CharT },
       { TypeError(assign_lhs().startPosition, listOf(IntT, StringT, CharT), it.type, "read") })
-    .map { Read(it, scope, startPosition) }
+    .map { Read(it, scp, startPosition) }
 
-  is FreeStatContext -> expr().asAst(scope)
+  is FreeStatContext -> expr().asAst(scp)
     // FREE may only be called in expressions that evaluate to types PairT or ArrayT
     .validate({ it.type is AnyPairTs || it.type is AnyArrayT },
       { TypeError(startPosition, listOf(AnyArrayT(), AnyPairTs()), it.type, "Free") })
-    .map { Free(it, scope, startPosition) }
+    .map { Free(it, scp, startPosition) }
 
-  is ReturnStatContext -> expr().asAst(scope)
-    .validate(scope !is GlobalScope, InvalidReturn(startPosition))
-    .map { Return(it, scope, startPosition) }
+  is ReturnStatContext -> expr().asAst(scp)
+    .validate(scp !is GlobalScope, InvalidReturn(startPosition))
+    .map { Return(it, scp, startPosition) }
 
-  is ExitStatContext -> expr().asAst(scope)
+  is ExitStatContext -> expr().asAst(scp)
     .validate(
       { it.type is IntT },
       { TypeError(expr().startPosition, IntT, it.type, "exit") })
-    .map { Exit(it, scope, startPosition) }
+    .map { Exit(it, scp, startPosition) }
 
-  is PrintlnStatContext -> expr().asAst(scope).map { Print(it, scope, startPosition) }
+  is PrintlnStatContext -> expr().asAst(scp).map { Print(it, scp, startPosition) }
 
-  is PrintStatContext -> expr().asAst(scope).map { Println(it, scope, startPosition) }
+  is PrintStatContext -> expr().asAst(scp).map { Println(it, scp, startPosition) }
 
-  is IfElseContext -> asAst(scope)
+  is IfElseContext -> asAst(scp)
 
-  is WhileDoContext -> asAst(scope)
+  is WhileDoContext -> asAst(scp)
 
-  is NewScopeContext -> ControlFlowScope(scope).let { newScope ->
+  is NewScopeContext -> ControlFlowScope(scp).let { newScope ->
     stat().asAst(newScope).map { BegEnd(it, newScope, startPosition) }
   }
 
-  is SemiColonContext -> asAst(scope)
+  is SemiColonContext -> asAst(scp)
   else -> NOT_REACHED()
 }
 
