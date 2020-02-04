@@ -13,7 +13,7 @@ group = "ic.wacc"
 version = "1.0"
 
 application {
-  mainClassName = "ic.org.Main"
+  mainClassName = "ic.org.MainKt"
 }
 repositories {
   jcenter()

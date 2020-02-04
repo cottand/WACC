@@ -10,15 +10,15 @@ import org.antlr.v4.runtime.tree.TerminalNode
  * the whole program in a first pass before doing semantic chcks.
  */
 class DummyListener : ParseTreeListener {
-    override fun enterEveryRule(ctx: ParserRuleContext?) {
-    }
+  override fun enterEveryRule(ctx: ParserRuleContext?) {
+  }
 
-    override fun exitEveryRule(ctx: ParserRuleContext?) {
-    }
+  override fun exitEveryRule(ctx: ParserRuleContext?) {
+  }
 
-    override fun visitErrorNode(node: ErrorNode?) {
-    }
+  override fun visitErrorNode(node: ErrorNode?) {
+  }
 
-    override fun visitTerminal(node: TerminalNode?) {
-    }
+  override fun visitTerminal(node: TerminalNode?) {
+  }
 }
