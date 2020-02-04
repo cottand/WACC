@@ -59,11 +59,12 @@ data class IdentLHS(val variable: Variable) : AssLHS() {
   override val type = variable.type
 }
 
-data class ArrayElemLHS(val arrayElem: ArrayElem, val variable: Variable) : AssLHS() {
-  override val type : Type
+data class ArrayElemLHS(val indices: List<Expr>, val variable: Variable) : AssLHS() {
+  val ident = variable.ident
+  override val type: Type
     get() {
       val arrT = variable.type as ArrayT
-      return arrT.nthNestedType(arrayElem.indices.size)
+      return arrT.nthNestedType(indices.size)
     }
 }
 
@@ -73,6 +74,7 @@ data class PairElemLHS(val pairElem: PairElem, val variable: Variable, val pairs
     is Fst -> pairs.fstT
     is Snd -> pairs.sndT
   }
+
 }
 
 // <assign-rhs>
@@ -113,9 +115,13 @@ data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
 sealed class PairElem {
   abstract val expr: Expr
   abstract fun fetchType(scope: Scope): Option<Type>
+  companion object {
+    fun fst(expr: Expr) = Fst(expr)
+    fun snd(expr: Expr) = Snd(expr)
+  }
 }
 
-data class Fst(override val expr: Expr) : PairElem() {
+data class Fst internal constructor(override val expr: Expr) : PairElem() {
   override fun fetchType(scope: Scope): Option<Type> {
     val type = expr.type
     return if (type is PairT) {
@@ -126,7 +132,7 @@ data class Fst(override val expr: Expr) : PairElem() {
   }
 }
 
-data class Snd(override val expr: Expr) : PairElem() {
+data class Snd internal constructor(override val expr: Expr) : PairElem() {
   override fun fetchType(scope: Scope): Option<Type> {
     val type = expr.type
     return if (type is PairT) {
@@ -137,14 +143,9 @@ data class Snd(override val expr: Expr) : PairElem() {
   }
 }
 
-data class Ident(val name: String) {
+@Suppress("EXPERIMENTAL_FEATURE_WARNING")
+inline class Ident(val name: String) {
   constructor(node: TerminalNode) : this(node.text)
 
   override fun toString() = name
 }
-
-// <array-elem>
-data class ArrayElem(
-  val ident: Ident,
-  val indices: List<Expr>
-)

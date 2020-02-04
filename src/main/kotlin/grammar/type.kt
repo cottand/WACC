@@ -19,19 +19,16 @@ open class AnyArrayT : Type() {
 class EmptyArrayT : AnyArrayT() {
   override fun equals(other: Any?): Boolean = other is EmptyArrayT
 
-  override fun hashCode(): Int {
-    return javaClass.hashCode()
-  }
+  override fun hashCode() = 237371
 }
 
 // TODO Write more documentation comments for types
 /**
  * [depth] = 1 for 1-dimensional Array
  */
-data class ArrayT private constructor(val type: Type, val depth: Int = 1) : AnyArrayT() {
-  init {
-    require(depth > 0)
-  }
+data class ArrayT private constructor(val type: Type) : AnyArrayT() {
+
+  val depth: Int = if (type is ArrayT) type.depth + 1 else 1
 
   override fun matches(other: Type) =
     other is EmptyArrayT ||
@@ -44,11 +41,11 @@ data class ArrayT private constructor(val type: Type, val depth: Int = 1) : AnyA
     /**
      * Creates an [ArrayT] of base type [type] with depth [depth]
      */
-    fun make(type: Type, depth: Int): ArrayT {
-      val deepest = ArrayT(type, 1)
+    fun make(type: Type, depth: Int = 1): ArrayT {
+      val deepest = ArrayT(type)
       tailrec fun helper(remainingDepth: Int, prev: ArrayT): ArrayT = when (remainingDepth) {
-        depth -> prev
-        else -> helper(remainingDepth - 1, ArrayT(prev, remainingDepth))
+        1 -> prev
+        else -> helper(remainingDepth - 1, ArrayT(prev))
       }
       return helper(depth, deepest)
     }
@@ -71,7 +68,6 @@ data class ArrayT private constructor(val type: Type, val depth: Int = 1) : AnyA
 }
 
 open class AnyPairTs : Type() {
-  val containsAnys = this is PairT && (fstT == AnyArrayT() || sndT == AnyArrayT())
   override fun equals(other: Any?): Boolean = other is AnyPairTs && other !is PairT
   override fun hashCode(): Int = 21353
   override fun toString() = "AnyPair"
@@ -102,5 +98,3 @@ object CharT : BaseT() {
 object StringT : BaseT() {
   override fun toString() = "String"
 }
-
-// <ident>

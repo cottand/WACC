@@ -62,7 +62,10 @@ tasks {
   }
 
   withType<KotlinCompile>().configureEach {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions {
+      freeCompilerArgs = listOf("-Xinline-classes")
+      jvmTarget = "1.8"
+    }
     dependsOn(generateGrammarSource)
   }
 }

@@ -1,11 +1,8 @@
 package ic.org.grammar
 
-import arrow.core.extensions.list.foldable.find
 import arrow.core.extensions.list.foldable.forAll
-import arrow.core.getOrElse
 import arrow.core.valid
 import ic.org.*
-import java.lang.IllegalArgumentException
 
 // <expr>
 sealed class Expr {
@@ -45,9 +42,9 @@ data class IdentExpr(val vari: Variable) : Expr() {
 }
 
 data class ArrayElemExpr internal constructor(
-    val variable: Variable,
-    val exprs: List<Expr>,
-    override val type: Type
+  val variable: Variable,
+  val exprs: List<Expr>,
+  override val type: Type
 ) : Expr() {
   companion object {
     /**
@@ -57,12 +54,12 @@ data class ArrayElemExpr internal constructor(
       return when {
         // Array access indexes must evaluate to ints
         !exprs.forAll { it.type == IntT } -> {
-          val badExpr =
-            exprs.find { it.type != IntT }.getOrElse { throw IllegalArgumentException() }
+          val badExpr = exprs.find { it.type != IntT }!!
           IllegalArrayAccess(pos, badExpr.toString(), badExpr.type).toInvalidParsed()
         }
-        arrType !is ArrayT -> TODO("Illegal type exception")
-        exprs.size > arrType.depth -> TODO("Illegal type exception")
+        arrType !is ArrayT -> NOT_REACHED()
+        exprs.size > arrType.depth ->
+          TypeError(pos, AnyArrayT(), arrType, "Array access").toInvalidParsed()
         else -> ArrayElemExpr(
           variable,
           exprs,
@@ -94,9 +91,9 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
 }
 
 data class BinaryOperExpr internal constructor(
-    val expr1: Expr,
-    val binaryOper: BinaryOper,
-    val expr2: Expr
+  val expr1: Expr,
+  val binaryOper: BinaryOper,
+  val expr2: Expr
 ) : Expr() {
   override val type = binaryOper.retType
 

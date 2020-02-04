@@ -187,7 +187,6 @@ fun Stat.asGraph(expectedType: Type): Node {
         is Return, is Exit ->
           // Checked at [asAst()] generation
           throw IllegalStateException("Stat chain should never come after an exit!(")
-        is While -> TODO()
         else -> nextStat.asGraphHelper()
       }
 
@@ -200,7 +199,6 @@ fun Stat.asGraph(expectedType: Type): Node {
       elseBody = `else`.asGraphHelper()
     )
 
-    is While -> TODO()
     is BegEnd -> TerminalBegEndNode(stat.asGraphHelper())
     else -> LeafExit
   }
