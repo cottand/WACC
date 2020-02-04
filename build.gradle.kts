@@ -5,6 +5,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   kotlin("jvm") version "1.3.61"
+  // Gradle Shadow plugin for building a fat jar
+  id("com.github.johnrengelman.shadow") version "5.2.0"
   antlr
   application
 }
@@ -29,7 +31,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.3")
   implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3")
 
-  // The Kotlin functional programming library, Arrow
+  // Kotlin functional programming library, Arrow
   implementation("io.arrow-kt:arrow-optics:$arrowVer")
   implementation("io.arrow-kt:arrow-syntax:$arrowVer")
 

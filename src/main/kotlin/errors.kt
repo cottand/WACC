@@ -70,7 +70,7 @@ data class TypeError(override val msg: String) : SemanticError() {
 }
 
 data class NullPairError(val pos: Position) : SemanticError() {
-  override val msg = "$pos, expression of type Pair resolves to `null`"
+  override val msg = "$pos, tried to reference expression of type Pair that resolves to `null`"
 }
 
 data class ControlFlowTypeError(override val msg: String) : SyntacticError(msg) {

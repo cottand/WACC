@@ -55,11 +55,12 @@ ID #LHSIdent
 | pair_elem #LHSPairElem
 ;
 assign_rhs:
-expr
-| array_lit
-| NEWPAIR WS* LBRACKET WS* expr WS* COMMA WS* expr WS* RBRACKET
-| pair_elem
-| CALL WS+ ID WS* LBRACKET WS* (arg_list)? WS* RBRACKET;
+expr #RHSExpr
+| array_lit #RHSArrayLit
+| NEWPAIR WS* LBRACKET WS* expr WS* COMMA WS* expr WS* RBRACKET #RHSNewpair
+| pair_elem #RHSPairElem
+| CALL WS+ ID WS* LBRACKET WS* (arg_list)? WS* RBRACKET #RHSFuncCall
+;
 
 // Param & args
 param_list: param WS* (COMMA WS* param)*;
