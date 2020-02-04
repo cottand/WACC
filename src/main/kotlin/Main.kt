@@ -13,13 +13,16 @@ import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.io.File
+import kotlin.system.exitProcess
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
 
 @ExperimentalTime
 fun main(args: Array<String>) {
-  WACCCompiler(args[0]).compile()
+  val (_, exitCode, msg) = WACCCompiler(args[0]).compile()
+  println(msg)
+  exitProcess(exitCode)
 }
 
 @ExperimentalTime
@@ -28,7 +31,7 @@ data class CompileResult(val success: Boolean, val exitCode: Int, val message: S
     fun success(duration: Duration) = CompileResult(
       success = true,
       exitCode = 0,
-      message = "Compiled in ${duration.inSeconds}.${duration.inMilliseconds % 1000}"
+      message = "Compiled in ${duration.inMilliseconds.toLong()}ms"
     )
   }
 }
