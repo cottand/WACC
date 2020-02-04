@@ -7,13 +7,13 @@ JFLAGS	:= -sourcepath $(SOURCE_DIR) -d $(OUTPUT_DIR) -cp lib/antlr-4.7-complete.
 
 
 all:
-	$(GRW) build
+	$(GRW) shadowJar
 
 clean:
 	$(GRW) clean
 
 test:
-	$(GRW) test
+	$(GRW) cehck
 
 .PHONY: all clean
 
