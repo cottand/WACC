@@ -37,7 +37,7 @@ class TestPrograms {
   private val testOutputKeywords = false
   private val testingKeyword = "TEST"
   private val ignoreKeyword = "IGNORE"
-  private val testSemanticsOnly = false
+  private val testSemanticsOnly = true
 
   private val waccFiles =
     File(waccExamplesPath).walkBottomUp()
@@ -106,6 +106,7 @@ class TestPrograms {
       assumingThat(testOutputKeywords) {
         assertTrue(result.message.containsAll(program.expectedKeyWords))
       }
+      println("Test successful (exit code ${res.exitCode}). Compiler output:\n${res.message}")
     }
   }
 
