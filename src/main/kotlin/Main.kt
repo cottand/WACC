@@ -20,6 +20,11 @@ import kotlin.time.MonoClock
 
 @ExperimentalTime
 fun main(args: Array<String>) {
+  if (args.size != 1) {
+    println("Unexpecte nummber of arguments: ${args.size}." +
+      "Expected a single argument, the file to be compiled.")
+    exitProcess(-1)
+  }
   val (_, exitCode, msg) = WACCCompiler(args[0]).compile()
   println(msg)
   exitProcess(exitCode)
