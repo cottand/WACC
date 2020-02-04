@@ -12,7 +12,7 @@ internal fun ExprContext.asAst(scope: Scope): Parsed<Expr> = when (this) {
   // Parse Int literal but check it is a valid size
   is IntLitExprContext -> when (val i = int_lit().text.toLong()) {
     in IntLit.range -> IntLit(i.toInt()).valid()
-    else -> IntegerOverflowError(startPosition, i).toInvalidParsed().print()
+    else -> IntegerOverflowError(startPosition, i).toInvalidParsed()
   }
 
   is BoolLitExprContext -> BoolLit(BOOL_LIT().text!!.toBoolean()).valid()

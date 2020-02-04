@@ -37,7 +37,7 @@ internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
             .toInvalidParsed()
         }
       }
-      val arrayT = ArrayT.make(valid.first().type).print()
+      val arrayT = ArrayT.make(valid.first().type)
       return ArrayLit(valid, arrayT).valid()
     }
     NEWPAIR() != null -> return combine(

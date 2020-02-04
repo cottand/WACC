@@ -202,5 +202,5 @@ fun Stat.asGraph(expectedType: Type): Node {
     is BegEnd -> TerminalBegEndNode(stat.asGraphHelper())
     else -> LeafExit
   }
-  return asGraphHelper().print()
+  return asGraphHelper()
 }

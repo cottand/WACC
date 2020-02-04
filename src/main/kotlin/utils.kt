@@ -59,9 +59,3 @@ inline val ParserRuleContext.startPosition
 inline val <reified E, reified V> List<Validated<E, V>>.valids
   get() = this.filterIsInstance<Valid<V>>().map { it.a }
 
-fun <A> List<A>.forAny(predicate: (A) -> Boolean): Boolean {
-  for (a in this) {
-    if (predicate(a)) return true
-  }
-  return false
-}

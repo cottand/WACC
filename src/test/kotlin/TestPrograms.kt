@@ -53,8 +53,8 @@ class TestPrograms {
    * expected output
    */
   private fun testSyntax(program: WACCProgram) {
-    program.file.readText().print()
-    program.file.canonicalPath.print()
+    program.file.readText()
+    program.file.canonicalPath
     val filename = program.file.absolutePath
     println(filename)
     val res: CompileResult =
