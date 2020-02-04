@@ -208,6 +208,12 @@ inline fun <reified A, reified B, R> flatCombine(
   else
     (fst.errors + snd.errors).invalid()
 
+inline fun <reified A, reified B, R> Parsed<A>.combineWith(other: Parsed<B>, map: (A, B) -> R) =
+  combine(this, other, map)
+
+inline fun <reified A, reified B, R> Parsed<A>.flatCombineWith(other: Parsed<B>, map: (A, B) -> Parsed<R>) =
+  flatCombine(this, other, map)
+
 class Position(val l: Int, val col: Int) {
   override fun toString(): String = "At $l:$col"
 }
