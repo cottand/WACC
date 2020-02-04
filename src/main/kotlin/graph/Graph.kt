@@ -3,7 +3,6 @@ package ic.org.graph
 import arrow.core.*
 import ic.org.*
 import ic.org.grammar.*
-import ic.org.graph.LeafExit.returnType
 import kotlinx.collections.immutable.plus
 
 /**
@@ -25,6 +24,7 @@ import kotlinx.collections.immutable.plus
  */
 sealed class Node {
   abstract val returnType: Parsed<Option<Type>>
+  abstract val pos: Position
 
   fun checkReturnType(expectedType: Type, ident: Ident): Parsed<None> =
     returnType.flatMap { maybeType ->
@@ -73,7 +73,7 @@ sealed class Node {
 /**
  * Node that represents an [If] followed by more code, [next].
  */
-class IfElseNode(val thenBody: Node, val elseBody: Node, val next: Node) : Node() {
+class IfElseNode(val thenBody: Node, val elseBody: Node, val next: Node, override val pos: Position) : Node() {
 
   /**
    * This is the most complex case. An [If] followed by code may return in both its branches,
@@ -109,7 +109,7 @@ class IfElseNode(val thenBody: Node, val elseBody: Node, val next: Node) : Node(
 /**
  * Represents a new Scope followed by a statement [next]
  */
-class BegEndNode(val scopeBody: Node, val next: Node) : Node() {
+class BegEndNode(val scopeBody: Node, val next: Node, override val pos: Position) : Node() {
   override val returnType by lazy {
     scopeBody.returnType.flatMap {
       it.fold({
@@ -122,7 +122,7 @@ class BegEndNode(val scopeBody: Node, val next: Node) : Node() {
   }
 }
 
-class TerminalBegEndNode(private val scopeBody: Node) : Node() {
+class TerminalBegEndNode(private val scopeBody: Node, override val pos: Position) : Node() {
   override val returnType by lazy { scopeBody.returnType }
 }
 
@@ -130,7 +130,7 @@ class TerminalBegEndNode(private val scopeBody: Node) : Node() {
  * Represents an [If] that is `not` follows by more code. Therefore, we may not fall back on that
  * if one of the branches does not return.
  */
-class TerminalIfElseNode(val thenBody: Node, val elseBody: Node) : Node() {
+class TerminalIfElseNode(val thenBody: Node, val elseBody: Node, override val pos: Position) : Node() {
   override val returnType: Parsed<Option<Type>> by lazy {
     val thenReturn = thenBody.returnType
     val elseReturn = elseBody.returnType
@@ -153,7 +153,7 @@ class TerminalIfElseNode(val thenBody: Node, val elseBody: Node) : Node() {
 /**
  * Represents an [Exit] or a [Return] statements. Ie, Leaves of the Graph.
  */
-class LeafReturn(val type: Type) : Node() {
+class LeafReturn(val type: Type, override val pos: Position) : Node() {
   /**
    * The type of a [LeafReturn] is [Return.expr]'s type, or the expected type if this is an
    * [Exit] statement. See [Stat.asGraph]
@@ -165,7 +165,7 @@ class LeafReturn(val type: Type) : Node() {
  * Represents a branch that does not return. Upon hitting this branch, [returnType] would
  * backtrack into, for example, [IfElseNode.next]
  */
-object LeafExit : Node() {
+data class LeafExit(override val pos: Position) : Node() {
   /**
    * A non-returning branch returns nothing, ie, a [None], also a [Option.empty]
    */
@@ -179,11 +179,13 @@ fun Stat.asGraph(expectedType: Type): Node {
         is If -> IfElseNode(
           thenBody = thisStat.then.asGraphHelper(),
           elseBody = thisStat.`else`.asGraphHelper(),
-          next = nextStat.asGraphHelper()
+          next = nextStat.asGraphHelper(),
+          pos = pos
         )
         is BegEnd -> BegEndNode(
           scopeBody = thisStat.stat.asGraphHelper(),
-          next = nextStat.asGraphHelper()
+          next = nextStat.asGraphHelper(),
+          pos = pos
         )
         is Return, is Exit ->
           // Checked at [asAst()] generation
@@ -191,17 +193,18 @@ fun Stat.asGraph(expectedType: Type): Node {
         else -> nextStat.asGraphHelper()
       }
 
-    is Return -> LeafReturn(expr.type)
+    is Return -> LeafReturn(expr.type, pos)
     // We tolerate an exit statement where a Return would be expected
-    is Exit -> LeafReturn(expectedType)
+    is Exit -> LeafReturn(expectedType, pos)
 
     is If -> TerminalIfElseNode(
       thenBody = then.asGraphHelper(),
-      elseBody = `else`.asGraphHelper()
+      elseBody = `else`.asGraphHelper(),
+      pos = pos
     )
 
-    is BegEnd -> TerminalBegEndNode(stat.asGraphHelper())
-    else -> LeafExit
+    is BegEnd -> TerminalBegEndNode(stat.asGraphHelper(), pos)
+    else -> LeafExit(pos)
   }
   return asGraphHelper()
 }

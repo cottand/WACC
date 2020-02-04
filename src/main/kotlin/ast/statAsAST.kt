@@ -9,14 +9,14 @@ import ic.org.grammar.*
 import kotlinx.collections.immutable.plus
 
 internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
-  is SkipContext -> Skip(scope).valid()
+  is SkipContext -> Skip(scope, startPosition).valid()
 
   is AssignContext -> {
     val lhs = assign_lhs().asAst(scope)
     val rhs = assign_rhs().asAst(scope)
 
     flatCombine(lhs, rhs) { lhs, rhs ->
-      Assign(lhs, rhs, scope).valid()
+      Assign(lhs, rhs, scope, startPosition).valid()
     }.validate({ (lhs, rhs, _) ->
       lhs.type.matches(rhs.type)
     }, { TypeError(startPosition, it.lhs.type, it.rhs.type, "assignment") })
@@ -50,40 +50,40 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
         // || lhs.type is PairT && rhs is ExprRHS && rhs.expr is NullPairLit
       },
         { TypeError(startPosition, it.type, rhs.type, "declaration") })
-      .map { Decl(it, rhs, scope) }
+      .map { Decl(it, rhs, scope, startPosition) }
   }
 
   is ReadStatContext -> assign_lhs().asAst(scope)
     .validate({ it.type is IntT || it.type is StringT || it.type is CharT },
       { TypeError(assign_lhs().startPosition, listOf(IntT, StringT, CharT), it.type, "read") })
-    .map { Read(it, scope) }
+    .map { Read(it, scope, startPosition) }
 
   is FreeStatContext -> expr().asAst(scope)
     // FREE may only be called in expressions that evaluate to types PairT or ArrayT
     .validate({ it.type is AnyPairTs || it.type is AnyArrayT },
       { TypeError(startPosition, listOf(AnyArrayT(), AnyPairTs()), it.type, "Free") })
-    .map { Free(it, scope) }
+    .map { Free(it, scope, startPosition) }
 
   is ReturnStatContext -> expr().asAst(scope)
     .validate(scope !is GlobalScope, InvalidReturn(startPosition))
-    .map { Return(it, scope) }
+    .map { Return(it, scope, startPosition) }
 
   is ExitStatContext -> expr().asAst(scope)
     .validate(
       { it.type is IntT },
       { TypeError(expr().startPosition, IntT, it.type, "exit") })
-    .map { Exit(it, scope) }
+    .map { Exit(it, scope, startPosition) }
 
-  is PrintlnStatContext -> expr().asAst(scope).map { Print(it, scope) }
+  is PrintlnStatContext -> expr().asAst(scope).map { Print(it, scope, startPosition) }
 
-  is PrintStatContext -> expr().asAst(scope).map { Println(it, scope) }
+  is PrintStatContext -> expr().asAst(scope).map { Println(it, scope, startPosition) }
 
   is IfElseContext -> asAst(scope)
 
   is WhileDoContext -> asAst(scope)
 
   is NewScopeContext -> ControlFlowScope(scope).let { newScope ->
-    stat().asAst(newScope).map { BegEnd(it, newScope) }
+    stat().asAst(newScope).map { BegEnd(it, newScope, startPosition) }
   }
 
   is SemiColonContext -> asAst(scope)
@@ -98,7 +98,7 @@ fun WhileDoContext.asAst(scope: Scope): Parsed<While> {
       { TypeError(startPosition, BoolT, it.type, "While condition") })
   val s = stat().asAst(newScope)
   return if (cond is Valid && s is Valid)
-    While(cond.a, s.a, newScope).valid()
+    While(cond.a, s.a, newScope, startPosition).valid()
   else
     (cond.errors + s.errors).invalid()
 }
@@ -114,7 +114,7 @@ fun IfElseContext.asAst(scope: Scope): Parsed<If> {
   val then = stat(0).asAst(thenScope)
   val `else` = stat(1).asAst(elseScope)
   return if (cond is Valid && then is Valid && `else` is Valid)
-    If(cond.a, then.a, `else`.a, scope).valid()
+    If(cond.a, then.a, `else`.a, scope, startPosition).valid()
   else
     (cond.errors + then.errors + `else`.errors).invalid()
 }
@@ -127,7 +127,7 @@ fun SemiColonContext.asAst(scope: Scope): Parsed<StatChain> {
   val stat2 = stat()[1].asAst(scope)
 
   val statChain = if (stat1 is Valid && stat2 is Valid)
-    StatChain(stat1.a, stat2.a, scope).valid()
+    StatChain(stat1.a, stat2.a, scope, startPosition).valid()
   else
     (stat1.errors + stat2.errors).invalid()
 

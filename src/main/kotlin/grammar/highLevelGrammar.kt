@@ -1,8 +1,6 @@
 package ic.org.grammar
 
-import arrow.core.None
-import arrow.core.Option
-import arrow.core.Some
+import ic.org.Position
 import org.antlr.v4.runtime.tree.TerminalNode
 
 // <program>
@@ -25,26 +23,29 @@ data class Param(val type: Type, val ident: Ident)
 // <stat>
 sealed class Stat {
   abstract val scope: Scope
+  abstract val pos: Position
 }
 
-data class Skip(override val scope: Scope) : Stat()
-data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Scope) :
+data class Skip(override val scope: Scope, override val pos: Position) : Stat()
+data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Scope, override val pos: Position) :
   Stat() {
   val type = variable.type
   val ident = variable.ident
 }
 
-data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope) : Stat()
-data class Read(val lhs: AssLHS, override val scope: Scope) : Stat()
-data class Free(val expr: Expr, override val scope: Scope) : Stat()
-data class Return(val expr: Expr, override val scope: Scope) : Stat()
-data class Exit(val expr: Expr, override val scope: Scope) : Stat()
-data class Print(val expr: Expr, override val scope: Scope) : Stat()
-data class Println(val expr: Expr, override val scope: Scope) : Stat()
-data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val scope: Scope) : Stat()
-data class While(val cond: Expr, val stat: Stat, override val scope: Scope) : Stat()
-data class BegEnd(val stat: Stat, override val scope: Scope) : Stat()
-data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope) : Stat() {
+data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat()
+data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat()
+data class Free(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat()
+data class Return(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat()
+data class Exit(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat()
+data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat()
+data class Println(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat()
+data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val scope: Scope, override val pos: Position) :
+  Stat()
+
+data class While(val cond: Expr, val stat: Stat, override val scope: Scope, override val pos: Position) : Stat()
+data class BegEnd(val stat: Stat, override val scope: Scope, override val pos: Position) : Stat()
+data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope, override val pos: Position) : Stat() {
   val thisStat = stat1
   val nextStat = stat2
 }
@@ -76,9 +77,7 @@ data class PairElemLHS(val pairElem: PairElem, val variable: Variable, val pairs
   }
 }
 
-// <assign-rhs>
 sealed class AssRHS {
-  // abstract fun fetchType(scope: Scope): Option<Type>
   abstract val type: Type
 }
 
@@ -87,7 +86,7 @@ data class ExprRHS(val expr: Expr) : AssRHS() {
 }
 
 /**
- * If the array literal is empty, [contentType] is [EmptyArrayT]
+ * If the array literal is empty, [arrT] is [EmptyArrayT]
  * Caller should verify content.
  */
 data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
@@ -113,7 +112,6 @@ data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
 // <pair-elem>
 sealed class PairElem {
   abstract val expr: Expr
-  abstract fun fetchType(scope: Scope): Option<Type>
 
   companion object {
     fun fst(expr: Expr) = Fst(expr)
@@ -121,27 +119,9 @@ sealed class PairElem {
   }
 }
 
-data class Fst internal constructor(override val expr: Expr) : PairElem() {
-  override fun fetchType(scope: Scope): Option<Type> {
-    val type = expr.type
-    return if (type is PairT) {
-      Some(type.fstT)
-    } else {
-      None
-    }
-  }
-}
+data class Fst internal constructor(override val expr: Expr) : PairElem()
 
-data class Snd internal constructor(override val expr: Expr) : PairElem() {
-  override fun fetchType(scope: Scope): Option<Type> {
-    val type = expr.type
-    return if (type is PairT) {
-      Some(type.sndT)
-    } else {
-      None
-    }
-  }
-}
+data class Snd internal constructor(override val expr: Expr) : PairElem()
 
 @Suppress("EXPERIMENTAL_FEATURE_WARNING")
 inline class Ident(val name: String) {

@@ -6,7 +6,6 @@ import arrow.core.invalid
 import arrow.core.valid
 import ic.org.*
 import ic.org.grammar.*
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 
 /**
@@ -27,10 +26,7 @@ fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
     .map { (ctx, fId, alreadyDefinedErrors: Parsed<FuncIdent>) ->
       ctx.asAst(gScope, fId.params).combineWith(alreadyDefinedErrors) { ast, _ -> ast }
     }
-  val antlrStat = stat()
-  // TODO rewrite syntactic error message with this.startPosition
-    ?: return persistentListOf(SyntacticError("Malformed program at $text")).invalid()
-  val stat = antlrStat.asAst(gScope)
+  val stat = stat().asAst(gScope)
 
   return if (funcs.areAllValid && stat is Valid)
     Prog(funcs.valids, stat.a).valid()
@@ -43,7 +39,9 @@ fun FuncContext.paramsAsAst(): List<Parsed<Param>> {
   val counts = HashMap<Param, Int>()
   return antlrParams
     .map { it.asAst() to it }
+    // Count how many parameters with this name exist for this function
     .onEach { (parsed, _) -> counts[parsed] = (counts[parsed] ?: 0) + 1 }
+    // Validate that there is only a signle occurence of each
     .map { (parsed, ctx) ->
       parsed.valid().validate({ counts[it] == 1 },
         { DuplicateParamError(ctx.startPosition, it.ident) })
