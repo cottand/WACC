@@ -1,12 +1,12 @@
 package ic.org.ast
 
 import antlr.WACCParser.Assign_rhsContext
-import arrow.core.getOrElse
-import arrow.core.invalid
-import arrow.core.toOption
-import arrow.core.valid
+import arrow.core.*
+import arrow.core.extensions.list.monadFilter.filterMap
+import arrow.core.extensions.list.zip.zipWith
 import ic.org.*
 import ic.org.grammar.*
+import kotlinx.collections.immutable.toPersistentList
 
 internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
   when {
@@ -85,12 +85,31 @@ internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
       }
 
       // TODO make sure arg types are good
+      // TODO check startPosition etc
 
       val id = ID().text
       return scope.globalFuncs[id].toOption()
         .fold(
           { UndefinedIdentifier(ID().position, id).toInvalidParsed() },
-          { Call(it, args.valids).valid() })
+          { func ->
+            Call(func, args.valids).valid()
+          })
+        .validate(
+          { it.func.params.size == it.args.size },
+          { UnexpectedNumberOfParamsError(startPosition, it.name, it.func.params.size, it.args.size) })
+        .flatMap { call ->
+          val argParamZip = call.args.zipWith(call.func.params) { a, p -> a to p }
+          val mismatches = argParamZip.filterMap { (a, p) ->
+            if (!p.type.matches(a.type))
+              TypeError(startPosition, p.type, a.type, "parameter passing").some()
+            else None
+          }.toPersistentList()
+
+          if (mismatches.isNotEmpty())
+            mismatches.invalid()
+          else
+            call.valid()
+        }
     }
 
     expr() != null -> {
