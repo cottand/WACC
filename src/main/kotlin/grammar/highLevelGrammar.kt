@@ -62,6 +62,7 @@ data class ArrayElemLHS(val indices: List<Expr>, val variable: Variable) : AssLH
   val ident = variable.ident
   override val type: Type
     get() {
+      // Safe cast because caller validated that only arrays are accessed
       val arrT = variable.type as ArrayT
       return arrT.nthNestedType(indices.size)
     }

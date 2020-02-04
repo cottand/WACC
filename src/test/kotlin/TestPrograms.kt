@@ -37,7 +37,7 @@ class TestPrograms {
   private val testOutputKeywords = false
   private val testingKeyword = "TEST"
   private val ignoreKeyword = "IGNORE"
-  private val testSemanticsOnly = true
+  private val testSemanticsOnly = false
 
   private val waccFiles =
     File(waccExamplesPath).walkBottomUp()

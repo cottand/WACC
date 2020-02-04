@@ -54,6 +54,8 @@ internal fun Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> = when (this)
     else
       exprs.errors.invalid()
   })
+    .validate({ it.variable.type is AnyArrayT },
+      { TypeError(array_elem().ID().position, AnyArrayT(), it.variable.type, "array element access") })
 
   // TODO revisit pair_elem().text vs ID().text
   is LHSPairElemContext -> pair_elem().expr().asAst(scope)
