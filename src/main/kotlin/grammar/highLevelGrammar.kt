@@ -5,8 +5,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 
 // <program>
 data class Prog(
-  val funcs: List<Func>,
-  val firstStat: Stat
+  val funcs: List<Func>
 )
 
 // <func>
