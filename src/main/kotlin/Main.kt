@@ -21,7 +21,7 @@ import kotlin.time.MonoClock
 @ExperimentalTime
 fun main(args: Array<String>) {
   if (args.size != 1) {
-    println("Unexpecte nummber of arguments: ${args.size}\n" +
+    println("Unexpected number of arguments: ${args.size}\n" +
       "Expected a single argument, the file to be compiled.")
     exitProcess(-1)
   }
