@@ -5,7 +5,6 @@ import arrow.core.invalid
 import arrow.core.valid
 import ic.org.*
 import ic.org.grammar.*
-import ic.org.grammar.ArrayT.Companion
 
 internal fun TypeContext.asAst(): Type =
   when {

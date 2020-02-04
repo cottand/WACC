@@ -3,7 +3,6 @@
 import ic.org.CompileResult
 import ic.org.WACCCompiler
 import ic.org.containsAll
-import ic.org.print
 import java.io.File
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime

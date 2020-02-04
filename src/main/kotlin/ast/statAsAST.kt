@@ -1,8 +1,9 @@
 package ic.org.ast
 
 import antlr.WACCParser.*
-import arrow.core.*
 import arrow.core.Validated.Valid
+import arrow.core.invalid
+import arrow.core.valid
 import ic.org.*
 import ic.org.grammar.*
 import kotlinx.collections.immutable.plus
@@ -46,7 +47,7 @@ internal fun StatContext.asAst(scope: Scope): Parsed<Stat> = when (this) {
       // If RHS is empty array, we match any kind of array on the LHS (case of int[] a = [])
       .validate({ lhs ->
         lhs.type.matches(rhs.type)
-        //|| lhs.type is PairT && rhs is ExprRHS && rhs.expr is NullPairLit
+        // || lhs.type is PairT && rhs is ExprRHS && rhs.expr is NullPairLit
       },
         { TypeError(startPosition, it.type, rhs.type, "declaration") })
       .map { Decl(it, rhs, scope) }

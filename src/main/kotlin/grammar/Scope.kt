@@ -1,6 +1,9 @@
 package ic.org.grammar
 
-import arrow.core.*
+import arrow.core.Option
+import arrow.core.or
+import arrow.core.toOption
+import arrow.core.valid
 import ic.org.Parsed
 import ic.org.Position
 import ic.org.RedeclarationError
@@ -36,30 +39,30 @@ sealed class Scope {
      */
     internal val variables = HashMap<Ident, Variable>()
 
-  /**
-   * Adds [variable] to the current [Scope]. Used in variable delcaration and function parameter
-   * creation.
-   */
-  fun addVariable(pos: Position, variable: Variable): Parsed<Variable> =
-    if (variables.put(variable.ident, variable) == null)
-      variable.valid()
-    else
-      RedeclarationError(pos, variable.ident).toInvalidParsed()
+    /**
+     * Adds [variable] to the current [Scope]. Used in variable delcaration and function parameter
+     * creation.
+     */
+    fun addVariable(pos: Position, variable: Variable): Parsed<Variable> =
+        if (variables.put(variable.ident, variable) == null)
+            variable.valid()
+        else
+            RedeclarationError(pos, variable.ident).toInvalidParsed()
 
-  val globalFuncs : Map<String, FuncIdent>
-    get() = when(this) {
-      is GlobalScope -> functions
-      is FuncScope -> globalScope.functions
-      is ControlFlowScope -> parent.globalFuncs
-    }
+    val globalFuncs: Map<String, FuncIdent>
+        get() = when (this) {
+            is GlobalScope -> functions
+            is FuncScope -> globalScope.functions
+            is ControlFlowScope -> parent.globalFuncs
+        }
 }
 
 /**
  * Global scope. Unique and per program, parent of all [ControlFlowScope]s outside of [FuncScope]s.
  */
 class GlobalScope : Scope() {
-  override fun getVar(ident: Ident): Option<Variable> = variables[ident].toOption()
-  internal val functions = HashMap<String, FuncIdent>()
+    override fun getVar(ident: Ident): Option<Variable> = variables[ident].toOption()
+    internal val functions = HashMap<String, FuncIdent>()
 
     fun addFunction(pos: Position, f: FuncIdent) =
         if (functions.put(f.name.name, f) == null)
@@ -109,5 +112,4 @@ data class ParamVariable(override val type: Type, override val ident: Ident) : V
     constructor(param: Param) : this(param.type, param.ident)
 }
 
-data class FuncIdent(val retType: Type, val name: Ident, val params: List<Param>);
-
+data class FuncIdent(val retType: Type, val name: Ident, val params: List<Param>)

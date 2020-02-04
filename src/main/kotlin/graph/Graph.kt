@@ -3,6 +3,7 @@ package ic.org.graph
 import arrow.core.*
 import ic.org.*
 import ic.org.grammar.*
+import ic.org.graph.LeafExit.returnType
 import kotlinx.collections.immutable.plus
 
 /**
@@ -106,7 +107,7 @@ class IfElseNode(val thenBody: Node, val elseBody: Node, val next: Node) : Node(
 }
 
 /**
- * Represents a new Scope followed by a statement [enxt]
+ * Represents a new Scope followed by a statement [next]
  */
 class BegEndNode(val scopeBody: Node, val next: Node) : Node() {
   override val returnType by lazy {
@@ -114,7 +115,7 @@ class BegEndNode(val scopeBody: Node, val next: Node) : Node() {
       it.fold({
         next.returnType
       }, {
-        // A new Scope should not contain Return statements if it is followd by a statement.
+        // A new Scope should not contain Return statements if it is followed by a statement.
         ControlFlowTypeError("Unreachable statement").toInvalidParsed()
       })
     }

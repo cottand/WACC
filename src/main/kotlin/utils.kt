@@ -4,7 +4,6 @@ import arrow.core.Either
 import arrow.core.Validated
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
-import java.lang.IllegalStateException
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import org.antlr.v4.runtime.ParserRuleContext
@@ -26,13 +25,13 @@ fun <A, B> List<Either<A, B>>.containsRights() = !this.forAll { it.isLeft() }
  * Like [Collection.map] but with [PersistentList]
  */
 inline fun <reified A, reified B> PersistentList<A>.mapp(transform: (A) -> B) =
-  this.map(transform).toPersistentList()
+    this.map(transform).toPersistentList()
 
 /**
  * Returns whether [this] contains every word in [words]
  */
 fun String.containsAll(words: List<String>, ignoreCase: Boolean = true) =
-  words.forAll { this.contains(it, ignoreCase) }
+    words.forAll { this.contains(it, ignoreCase) }
 
 /**
  * Prints [this], while returning [this]. Useful for [println] debugging.
@@ -47,15 +46,14 @@ fun NOT_REACHED(): Nothing = throw IllegalStateException("Case should never be r
  * [org.antlr.v4.runtime.Token]
  */
 inline val TerminalNode.position
-  get() = Position(symbol.line, symbol.charPositionInLine + 1)
+    get() = Position(symbol.line, symbol.charPositionInLine + 1)
 
 /**
  * Returns this [ParserRuleContext]'s start position in the program by looking at its
  * [org.antlr.v4.runtime.Token]
  */
 inline val ParserRuleContext.startPosition
-  get() = Position(start.line, start.charPositionInLine + 1)
+    get() = Position(start.line, start.charPositionInLine + 1)
 
 inline val <reified E, reified V> List<Validated<E, V>>.valids
-  get() = this.filterIsInstance<Valid<V>>().map { it.a }
-
+    get() = this.filterIsInstance<Valid<V>>().map { it.a }

@@ -7,7 +7,6 @@ import arrow.core.toOption
 import arrow.core.valid
 import ic.org.*
 import ic.org.grammar.*
-import ic.org.grammar.ArrayT.Companion
 
 internal fun Assign_rhsContext.asAst(scope: Scope): Parsed<AssRHS> {
   when {

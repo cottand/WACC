@@ -13,21 +13,21 @@ import org.antlr.v4.runtime.Recognizer
  */
 class CollectingErrorListener : BaseErrorListener() {
 
-  private val errors =
-    LinkedList<SyntacticError>()
+    private val errors =
+        LinkedList<SyntacticError>()
 
-  val errorsSoFar
-    get() = errors.toPersistentList()
+    val errorsSoFar
+        get() = errors.toPersistentList()
 
-  override fun syntaxError(
-      recognizer: Recognizer<*, *>?,
-      offendingSymbol: Any?,
-      line: Int,
-      charPositionInLine: Int,
-      msg: String,
-      e: RecognitionException?
-  ) {
-    val error = SyntacticError("At $line:$charPositionInLine, $msg")
-    errors.push(error)
-  }
+    override fun syntaxError(
+        recognizer: Recognizer<*, *>?,
+        offendingSymbol: Any?,
+        line: Int,
+        charPositionInLine: Int,
+        msg: String,
+        e: RecognitionException?
+    ) {
+        val error = SyntacticError("At $line:$charPositionInLine, $msg")
+        errors.push(error)
+    }
 }

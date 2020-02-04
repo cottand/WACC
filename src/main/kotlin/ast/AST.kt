@@ -9,8 +9,6 @@ import ic.org.grammar.*
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 
-
-
 /**
  * Entry level of recursive AST conversion. Takes a [Scope], [gScope] or creates a [GlobalScope]
  * by default, from which all scopes (except [FuncScope]s] inherit from.
@@ -37,7 +35,6 @@ fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
   else
     (funcs.errors + stat.errors).invalid()
 }
-
 
 fun FuncContext.paramsAsAst(): List<Parsed<Param>> {
   val antlrParams = param_list()?.param() ?: emptyList()
@@ -79,6 +76,6 @@ internal fun Pair_elem_typeContext.asAst(): Type =
     is ArrayPairElemContext -> array_type().asAst()
     // Pair type not defined yet, it must be inferred by the caller
     else -> AnyPairTs()
-    //is PairPairElemContext -> NDPairT.valid()
-    //else -> NOT_REACHED()
+    // is PairPairElemContext -> NDPairT.valid()
+    // else -> NOT_REACHED()
   }
