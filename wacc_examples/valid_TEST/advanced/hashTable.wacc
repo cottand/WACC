@@ -214,7 +214,7 @@ begin
 	end
 	
 	# Print out the question, and then read an integer. After that print the integer back and return it.
-	int askForInt(char[] message) is
+	int askForInt(string message) is
 		print message ;
 		int x = 0 ;
 		read x ;

@@ -1,4 +1,4 @@
-# bad integer assignments
+# bad integer assignments - malformed int literal
 
 # Output:
 # #syntax_error#
@@ -9,6 +9,5 @@
 # Program:
 
 begin
-  int x = 22 0 ;
   int y = 1A4
-end
+end 
