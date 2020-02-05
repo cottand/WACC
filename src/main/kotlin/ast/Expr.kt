@@ -11,6 +11,7 @@ sealed class Expr {
 
 data class IntLit(val value: Int) : Expr() {
   override val type = IntT
+  override fun toString(): String = value.toString()
 
   companion object {
     /**
@@ -23,22 +24,27 @@ data class IntLit(val value: Int) : Expr() {
 
 data class BoolLit(val value: Boolean) : Expr() {
   override val type = BoolT
+  override fun toString(): String = value.toString()
 }
 
 data class CharLit(val value: Char) : Expr() {
   override val type = CharT
+  override fun toString(): String = "$value"
 }
 
 data class StrLit(val value: String) : Expr() {
   override val type = StringT
+  override fun toString(): String = value
 }
 
 object NullPairLit : Expr() {
   override val type = AnyPairTs() // TODO double check
+  override fun toString(): String = "null"
 }
 
 data class IdentExpr(val vari: Variable) : Expr() {
   override val type = vari.type
+  override fun toString(): String = vari.ident.name
 }
 
 data class ArrayElemExpr internal constructor(
@@ -46,6 +52,8 @@ data class ArrayElemExpr internal constructor(
   val exprs: List<Expr>,
   override val type: Type
 ) : Expr() {
+  override fun toString(): String = variable.ident.name + exprs.indices.joinToString(separator = "") { "[]" }
+
   companion object {
     /**
      * Builds a type safe [ArrayElemExpr] from [variable]    */
@@ -97,7 +105,7 @@ data class BinaryOperExpr internal constructor(
 ) : Expr() {
   override val type = binaryOper.retType
 
-  override fun toString(): String = "$expr1 $binaryOper $expr2"
+  override fun toString(): String = "($expr1 $binaryOper $expr2)"
 
   companion object {
     /**
@@ -106,11 +114,13 @@ data class BinaryOperExpr internal constructor(
      * Makes sure [e1] and [e2] are the [Type]s that [binOp] expects and returns a [Parsed]
      * accordingly.
      */
-    fun build(e1: Expr, binOp: BinaryOper, e2: Expr, pos: Position): Parsed<BinaryOperExpr> =
-      if (binOp.validArgs(e1.type, e2.type))
-        BinaryOperExpr(e1, binOp, e2).valid()
+    fun build(e1: Expr, binOp: BinaryOper, e2: Expr, pos: Position): Parsed<BinaryOperExpr> {
+      val expr = BinaryOperExpr(e1, binOp, e2)
+      return if (binOp.validArgs(e1.type, e2.type))
+        expr.valid()
       else
-        TypeError(pos, binOp.inTypes, e1.type to e2.type, binOp.toString()).toInvalidParsed()
+        TypeError(pos, binOp.inTypes, e1.type to e2.type, binOp.toString(), expr).toInvalidParsed()
+    }
   }
 }
 
@@ -133,6 +143,7 @@ object NotUO : UnaryOper() { // !
   override val resCheck: (Type) -> Boolean = { it is BoolT }
   override val argType: Type = BoolT
   override val retType: Type = BoolT
+  override fun toString(): String = "!"
 }
 
 // int:
@@ -166,22 +177,25 @@ object LenUO : UnaryOper() { // len
   override val resCheck: (Type) -> Boolean = { it is IntT }
   override val argType: Type = AnyArrayT()
   override val retType: Type = IntT
+  override fun toString(): String = "len"
 }
 
 // char -> int:
-object OrdUO : UnaryOper() { // ord
+object OrdUO : UnaryOper() {
   override val validArg: (Type) -> Boolean = { it is CharT }
   override val resCheck: (Type) -> Boolean = { it is IntT }
   override val argType: Type = CharT
   override val retType: Type = IntT
+  override fun toString(): String = "ord"
 }
 
 // int -> char:
-object ChrUO : UnaryOper() { // chr
+object ChrUO : UnaryOper() {
   override val validArg: (Type) -> Boolean = { it is IntT }
   override val resCheck: (Type) -> Boolean = { it is CharT }
   override val argType: Type = IntT
   override val retType: Type = CharT
+  override fun toString(): String = "chr"
 }
 
 // <binary-oper>
@@ -205,7 +219,6 @@ sealed class IntBinOp : BinaryOper() {
 sealed class CompBinOp : BinaryOper() {
   override val validArgs: (Type, Type) -> Boolean = { i1, i2 ->
     check<IntT>(i1, i2) || check<CharT>(i1, i2)
-    // TODO is (int, char) ok????
   }
   override val validReturn: (Type) -> Boolean = { it is BoolT }
   override val inTypes = listOf(IntT, CharT)
@@ -220,32 +233,51 @@ sealed class BoolBinOp : BinaryOper() {
   override val retType = BoolT
 }
 
-object TimesBO : IntBinOp() { // *
+object TimesBO : IntBinOp() {
   override fun toString(): String = "*"
 }
 
-object DivisionBO : IntBinOp() // /
-object ModBO : IntBinOp() // %
-object PlusBO : IntBinOp() // +
+object DivisionBO : IntBinOp() {
+  override fun toString(): String = "/"
+}
+
+object ModBO : IntBinOp() {
+  override fun toString(): String = "%"
+}
+
+object PlusBO : IntBinOp() {
+  override fun toString(): String = "+"
+}
+
 object MinusBO : IntBinOp() {
   override fun toString(): String = "-"
-} // -
+}
 
 // (int, int) -> bool:
-object GtBO : CompBinOp() // >
+object GtBO : CompBinOp() {
+  override fun toString(): String = ">"
+}
 
-object GeqBO : CompBinOp() // >=
-object LtBO : CompBinOp() // <
-object LeqBO : CompBinOp() // <=
+object GeqBO : CompBinOp() {
+  override fun toString(): String = ">="
+}
+
+object LtBO : CompBinOp() {
+  override fun toString(): String = "<"
+}
+
+object LeqBO : CompBinOp() {
+  override fun toString(): String = ">="
+}
 
 sealed class EqualityBinOp : BinaryOper() {
   override val validArgs: (Type, Type) -> Boolean = { b1, b2 ->
-    EqBO.check<BoolT>(b1, b2) ||
-      EqBO.check<IntT>(b1, b2) ||
-      EqBO.check<CharT>(b1, b2) ||
-      EqBO.check<StringT>(b1, b2) ||
-      EqBO.check<AnyPairTs>(b1, b2)
-    // TODO? || check<ArrayT>(b1, b2)
+    check<BoolT>(b1, b2) ||
+      check<IntT>(b1, b2) ||
+      check<CharT>(b1, b2) ||
+      check<StringT>(b1, b2) ||
+      check<AnyPairTs>(b1, b2) ||
+      check<ArrayT>(b1, b2)
   }
   override val validReturn: (Type) -> Boolean = { it is BoolT }
   override val inTypes = listOf(
@@ -253,15 +285,24 @@ sealed class EqualityBinOp : BinaryOper() {
     BoolT,
     CharT,
     StringT,
-    AnyArrayT()
-  ) // TODO add?
+    AnyArrayT(),
+    AnyPairTs()
+  )
   override val retType = BoolT
 }
 
-object EqBO : EqualityBinOp() // ==
+object EqBO : EqualityBinOp() {
+  override fun toString(): String = "=="
+}
 
-object NeqBO : EqualityBinOp() // !=
+object NeqBO : EqualityBinOp() {
+  override fun toString(): String = "!="
+}
 
-object AndBO : BoolBinOp() // &&
+object AndBO : BoolBinOp() {
+  override fun toString(): String = "&&"
+}
 
-object OrBO : BoolBinOp() // ||
+object OrBO : BoolBinOp() {
+  override fun toString(): String = "||"
+}

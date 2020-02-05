@@ -52,7 +52,7 @@ fun RHSArrayLitContext.asAst(scp: Scope): Parsed<ArrayLit> {
   val t = valid[0].type
   for (e in valid) {
     if (e.type != t) {
-      return TypeError(tokExprs[0].startPosition, t, e.type, "array building").toInvalidParsed()
+      return TypeError(tokExprs[0].startPosition, t, "array building", e).toInvalidParsed()
     }
   }
   val arrayT = ArrayT.make(valid.first().type)

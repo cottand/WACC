@@ -59,9 +59,13 @@ sealed class PairElem {
   }
 }
 
-data class Fst internal constructor(override val expr: Expr) : PairElem()
+data class Fst internal constructor(override val expr: Expr) : PairElem() {
+  override fun toString() = "fst $expr"
+}
 
-data class Snd internal constructor(override val expr: Expr) : PairElem()
+data class Snd internal constructor(override val expr: Expr) : PairElem() {
+  override fun toString() = "snd $expr"
+}
 
 @Suppress("EXPERIMENTAL_FEATURE_WARNING")
 inline class Ident(val name: String) {

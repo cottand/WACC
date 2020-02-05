@@ -33,6 +33,7 @@ sealed class AssRHS {
 
 data class ExprRHS(val expr: Expr) : AssRHS() {
   override val type = expr.type
+  override fun toString() = expr.toString()
 }
 
 /**
@@ -41,10 +42,13 @@ data class ExprRHS(val expr: Expr) : AssRHS() {
  */
 data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
   override val type = arrT
+  override fun toString() =
+    exprs.joinToString(separator = ", ", prefix = "[", postfix = "]") { it.toString() }
 }
 
 data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
   override val type = PairT(expr1.type, expr2.type)
+  override fun toString() = "newpair($expr1, $expr2)"
 }
 
 data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
@@ -52,9 +56,11 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
     is Fst -> pairs.fstT
     is Snd -> pairs.sndT
   }
+  override fun toString() = pairElem.toString()
 }
 
 data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
   override val type = func.retType
   val name = func.name
+  override fun toString() = "call ${func.name.name} (..)"
 }

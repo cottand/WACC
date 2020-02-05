@@ -1,7 +1,13 @@
 package ic.org.ast
 
-// <type>
+/**
+ * Class representing one of WACC's types.
+ */
 sealed class Type {
+  /**
+   * Determines whether a variable of type `this `would accept a variable of type [other].
+   * For example, [AnyArrayT] matches with [ArrayT].
+   */
   abstract fun matches(other: Type): Boolean
 }
 
@@ -11,12 +17,12 @@ sealed class BaseT : Type() {
 
 open class AnyArrayT : Type() {
   override fun matches(other: Type) = other is EmptyArrayT
+  override fun toString(): String = "AnyArray"
 }
 
 // Empty array e.g. []
 class EmptyArrayT : AnyArrayT() {
   override fun equals(other: Any?): Boolean = other is EmptyArrayT
-
   override fun hashCode() = 237371
 }
 

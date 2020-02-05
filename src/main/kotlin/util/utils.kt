@@ -20,14 +20,6 @@ fun <A, B> List<Either<A, B>>.containsLefts() = !this.forAll { it.isRight() }
 fun <A, B> List<Either<A, B>>.containsRights() = !this.forAll { it.isLeft() }
 
 /**
- * Maps [this] applying [transform] to every element, producing a [PersistentList]
- *
- * Like [Collection.map] but with [PersistentList]
- */
-inline fun <reified A, reified B> PersistentList<A>.mapp(transform: (A) -> B) =
-  this.map(transform).toPersistentList()
-
-/**
  * Returns whether [this] contains every word in [words]
  */
 fun String.containsAll(words: List<String>, ignoreCase: Boolean = true) =

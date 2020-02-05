@@ -1,5 +1,13 @@
 package ic.org.ast.build
 
+/**
+ * We check the semantics of a WACC program by building an AST that enforces a valid representation. While building
+ * this AST, if something invalid is encoutered (like `int x = true`) we return a list of errors (defined in the
+ * package util) instead.
+ *
+ * Thus, we use a Validated in order to return either a succesful value or a list of errors, and the caller dels with
+ * that accordingly, thanks to higher order functions like `validate` (see util package).
+ */
 import antlr.WACCParser.*
 import arrow.core.Validated.Valid
 import arrow.core.invalid
@@ -10,7 +18,13 @@ import kotlinx.collections.immutable.plus
 
 /**
  * Entry level of recursive AST conversion. Takes a [Scope], [gScope] or creates a [GlobalScope]
- * by default, from which all scopes (except [FuncScope]s] inherit from.
+ * by default, from which all scopes (except [FuncScope]s) inherit from.
+ *
+ * Validates every function's _header_ first (in order to enable mutual recursion), then the actual functions, then the
+ * body of the program.
+ *
+ * Symbol tables of every body are represented as [Scope]s.
+ * Every other construct of the program has a representation defined in the package [ast].
  */
 fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
   val funcs = func()
@@ -53,7 +67,7 @@ fun FuncContext.paramsAsAst(): List<Parsed<Param>> {
 }
 
 /**
- * Extends Antlr [FuncContext] by converting it to our representation of a function [Func].
+ * Extends antlr's [FuncContext] by converting it to our representation of a function [Func].
  * Takes a [GlobalScope] [gScope] as well as list of [Param]s. Creates a [FuncScope] which is a child of the [GlobalScope]
  * Adds each parameter ot the [FuncScope]
  */
@@ -71,8 +85,7 @@ fun FuncContext.asAst(gScope: GlobalScope, params: List<Param>): Parsed<Func> {
   return stat().asAst(funcScope).map { body -> Func(type, ident, params, body) }
 }
 
-private fun ParamContext.asAst(): Param =
-  Param(type().asAst(), Ident(ID().text))
+private fun ParamContext.asAst(): Param = Param(type().asAst(), Ident(ID().text))
 
 internal fun Pair_elem_typeContext.asAst(): Type =
   when (this) {
