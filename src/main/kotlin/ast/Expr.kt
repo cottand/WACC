@@ -1,8 +1,8 @@
-package ic.org.grammar
+package ic.org.ast
 
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.valid
-import ic.org.*
+import ic.org.util.*
 
 // <expr>
 sealed class Expr {
@@ -128,7 +128,7 @@ sealed class UnaryOper {
 }
 
 // bool:
-object NotUO : UnaryOper() { // ! 
+object NotUO : UnaryOper() { // !
   override val validArg: (Type) -> Boolean = { it is BoolT }
   override val resCheck: (Type) -> Boolean = { it is BoolT }
   override val argType: Type = BoolT
@@ -248,7 +248,13 @@ sealed class EqualityBinOp : BinaryOper() {
     // TODO? || check<ArrayT>(b1, b2)
   }
   override val validReturn: (Type) -> Boolean = { it is BoolT }
-  override val inTypes = listOf(IntT, BoolT, CharT, StringT, AnyArrayT()) // TODO add?
+  override val inTypes = listOf(
+    IntT,
+    BoolT,
+    CharT,
+    StringT,
+    AnyArrayT()
+  ) // TODO add?
   override val retType = BoolT
 }
 

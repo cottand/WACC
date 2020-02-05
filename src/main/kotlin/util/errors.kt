@@ -1,4 +1,4 @@
-package ic.org
+package ic.org.util
 
 import arrow.core.Validated
 import arrow.core.Validated.Invalid
@@ -6,9 +6,9 @@ import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.grammar.Ident
-import ic.org.grammar.IntLit
-import ic.org.grammar.Type
+import ic.org.ast.Ident
+import ic.org.ast.IntLit
+import ic.org.ast.Type
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
@@ -87,7 +87,8 @@ data class ControlFlowTypeError(override val msg: String) : SyntacticError(msg) 
     this("$pos, missing return statement on branch. Expecting `$type`")
 
   override fun toString() = msg
-  fun asTypeError(pos: Position) = TypeError("$pos, $this")
+  fun asTypeError(pos: Position) =
+    TypeError("$pos, $this")
 }
 
 data class UndefinedOp(override val msg: String) : SemanticError() {

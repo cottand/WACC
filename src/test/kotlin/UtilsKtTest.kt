@@ -1,7 +1,7 @@
 import arrow.core.left
 import arrow.core.right
-import ic.org.containsLefts
-import ic.org.containsRights
+import ic.org.util.containsLefts
+import ic.org.util.containsRights
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

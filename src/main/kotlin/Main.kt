@@ -4,11 +4,12 @@ import antlr.WACCLexer
 import antlr.WACCParser
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.ast.asAst
-import ic.org.grammar.Prog
+import ic.org.ast.build.asAst
+import ic.org.ast.Prog
 import ic.org.graph.asGraph
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
+import ic.org.util.*
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker

@@ -1,4 +1,4 @@
-package ic.org.grammar
+package ic.org.ast
 
 // <type>
 sealed class Type {

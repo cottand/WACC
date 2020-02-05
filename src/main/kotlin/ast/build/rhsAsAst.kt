@@ -1,11 +1,12 @@
-package ic.org.ast
+package ic.org.ast.build
 
 import antlr.WACCParser.*
 import arrow.core.*
 import arrow.core.extensions.list.monadFilter.filterMap
 import arrow.core.extensions.list.zip.zipWith
-import ic.org.*
+import ic.org.ast.*
 import ic.org.grammar.*
+import ic.org.util.*
 import kotlinx.collections.immutable.toPersistentList
 
 internal fun Assign_rhsContext.asAst(scp: Scope): Parsed<AssRHS> {
@@ -77,7 +78,14 @@ fun RHSFuncCallContext.asAst(scp: Scope): Parsed<Call> {
     // Validate the number of arguments passed
     .validate(
       { it.func.params.size == it.args.size },
-      { UnexpectedNumberOfParamsError(startPosition, it.name, it.func.params.size, it.args.size) })
+      {
+        UnexpectedNumberOfParamsError(
+          startPosition,
+          it.name,
+          it.func.params.size,
+          it.args.size
+        )
+      })
     // Make sure that for every type of the arguments passed, it matches the function's. We do this by zipping the two
     // lists, then comparing each element pair-waise.
     .flatMap { call ->

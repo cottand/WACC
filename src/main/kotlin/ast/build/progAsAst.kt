@@ -1,11 +1,12 @@
-package ic.org.ast
+package ic.org.ast.build
 
 import antlr.WACCParser.*
 import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.*
+import ic.org.ast.*
 import ic.org.grammar.*
+import ic.org.util.*
 import kotlinx.collections.immutable.plus
 
 /**

@@ -1,4 +1,4 @@
-package ic.org
+package ic.org.util
 
 import arrow.core.Either
 import arrow.core.Validated
@@ -55,5 +55,8 @@ inline val TerminalNode.position
 inline val ParserRuleContext.startPosition
   get() = Position(start.line, start.charPositionInLine + 1)
 
+/**
+ * Returns every element in this [List] of [Validated] that happens to be [Valid].
+ */
 inline val <reified E, reified V> List<Validated<E, V>>.valids
   get() = this.filterIsInstance<Valid<V>>().map { it.a }

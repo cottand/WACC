@@ -1,6 +1,6 @@
 package ic.org.listeners
 
-import ic.org.SyntacticError
+import ic.org.util.SyntacticError
 import java.util.LinkedList
 import kotlinx.collections.immutable.toPersistentList
 import org.antlr.v4.runtime.BaseErrorListener

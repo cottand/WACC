@@ -1,17 +1,21 @@
-package ic.org.ast
+package ic.org.ast.build
 
 import antlr.WACCParser.*
 import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.*
+import ic.org.ast.*
 import ic.org.grammar.*
+import ic.org.util.*
 import kotlinx.collections.immutable.plus
 
 internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
   is SkipContext -> Skip(scp, startPosition).valid()
 
-  is AssignContext -> flatCombine(assign_lhs().asAst(scp), assign_rhs().asAst(scp)) { lhs, rhs ->
+  is AssignContext -> flatCombine(
+    assign_lhs().asAst(scp),
+    assign_rhs().asAst(scp)
+  ) { lhs, rhs ->
     Assign(lhs, rhs, scp, startPosition).valid()
   }.validate({ (lhs, rhs, _) -> lhs.type.matches(rhs.type) },
     { TypeError(startPosition, it.lhs.type, it.rhs.type, "assignment") })
@@ -49,13 +53,28 @@ internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
 
   is ReadStatContext -> assign_lhs().asAst(scp)
     .validate({ it.type is IntT || it.type is StringT || it.type is CharT },
-      { TypeError(assign_lhs().startPosition, listOf(IntT, StringT, CharT), it.type, "read") })
+      {
+        TypeError(
+          assign_lhs().startPosition, listOf(
+            IntT,
+            StringT,
+            CharT
+          ), it.type, "read"
+        )
+      })
     .map { Read(it, scp, startPosition) }
 
   is FreeStatContext -> expr().asAst(scp)
     // FREE may only be called in expressions that evaluate to types PairT or ArrayT
     .validate({ it.type is AnyPairTs || it.type is AnyArrayT },
-      { TypeError(startPosition, listOf(AnyArrayT(), AnyPairTs()), it.type, "Free") })
+      {
+        TypeError(
+          startPosition, listOf(
+            AnyArrayT(),
+            AnyPairTs()
+          ), it.type, "Free"
+        )
+      })
     .map { Free(it, scp, startPosition) }
 
   is ReturnStatContext -> expr().asAst(scp)
