@@ -4,7 +4,6 @@ import antlr.WACCParser.*
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.ast.*
-import ic.org.grammar.*
 import ic.org.util.*
 
 internal fun TypeContext.asAst(): Type =
