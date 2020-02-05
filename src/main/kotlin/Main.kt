@@ -4,8 +4,8 @@ import antlr.WACCLexer
 import antlr.WACCParser
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.ast.build.asAst
 import ic.org.ast.Prog
+import ic.org.ast.build.asAst
 import ic.org.graph.asGraph
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
@@ -22,8 +22,10 @@ import kotlin.time.MonoClock
 @ExperimentalTime
 fun main(args: Array<String>) {
   if (args.size != 1) {
-    println("Unexpected number of arguments: ${args.size}\n" +
-      "Expected a single argument, the file to be compiled.")
+    println(
+      "Unexpected number of arguments: ${args.size}\n" +
+        "Expected a single argument, the file to be compiled."
+    )
     exitProcess(-1)
   }
   val (_, exitCode, msg) = WACCCompiler(args[0]).compile()

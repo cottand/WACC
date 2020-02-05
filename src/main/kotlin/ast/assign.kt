@@ -56,6 +56,7 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
     is Fst -> pairs.fstT
     is Snd -> pairs.sndT
   }
+
   override fun toString() = pairElem.toString()
 }
 

@@ -31,12 +31,11 @@ internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
     // Speical case: if the type of the LHS is AnyPairTs, we have to determine the actual type
     // of the variable by looking at the RHS.
     // When rhs is a null PairLit, its type is AnyPairTs
-    val lhsTypeInferred =
-      when {
-        lhsType == AnyPairTs() && rhs.type is AnyPairTs -> rhs.type
-        lhsType is PairT && rhs.type is PairT -> inferPairsFromRhs(lhsType, rhs.type as PairT)
-        else -> lhsType
-      }
+    val lhsTypeInferred = when {
+      lhsType == AnyPairTs() && rhs.type is AnyPairTs -> rhs.type
+      lhsType is PairT && rhs.type is PairT -> inferPairsFromRhs(lhsType, rhs.type as PairT)
+      else -> lhsType
+    }
 
     DeclVariable(lhsTypeInferred, Ident(ID()), rhs)
       .valid()

@@ -65,21 +65,26 @@ data class TypeError(override val msg: String) : SemanticError() {
         "    in expression: $expr"
     )
 
-
   constructor(pos: Position, expectedTs: List<Type>, actual: Type, op: String, expr: Expr) :
-    this("$pos, for operation `$op`, expected some type $expectedTs, actual: $actual\n" +
-    "    in expression: $expr")
+    this(
+      "$pos, for operation `$op`, expected some type $expectedTs, actual: $actual\n" +
+        "    in expression: $expr"
+    )
 
   constructor(pos: Position, expectedT: Type, actual: Type, op: String) :
     this("$pos, for operation `$op`, expected type $expectedT, actual: $actual")
 
   constructor(pos: Position, expectedT: Type, actual: Type, op: String, rhs: AssRHS) :
-    this("$pos, for operation `$op`, expected type $expectedT, actual: $actual\n" +
-      "    in: $rhs")
+    this(
+      "$pos, for operation `$op`, expected type $expectedT, actual: $actual\n" +
+        "    in: $rhs"
+    )
 
   constructor(pos: Position, expectedT: Type, op: String, expr: Expr) :
-    this("$pos, for operation `$op`, expected type $expectedT, actual: ${expr.type}\n" +
-      "    in expression:$expr")
+    this(
+      "$pos, for operation `$op`, expected type $expectedT, actual: ${expr.type}\n" +
+        "    in expression:$expr"
+    )
 }
 
 data class NullPairError(val pos: Position) : SemanticError() {

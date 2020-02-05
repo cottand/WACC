@@ -14,9 +14,9 @@ import java.util.Collections
  * code of the compiler, contained in [expectedReturn])
  */
 data class WACCProgram(
-    val file: File,
-    val expectedReturn: Int,
-    val expectedKeyWords: List<String>
+  val file: File,
+  val expectedReturn: Int,
+  val expectedKeyWords: List<String>
 )
 
 /**

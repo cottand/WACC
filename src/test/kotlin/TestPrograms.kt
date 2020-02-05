@@ -3,9 +3,6 @@
 import ic.org.CompileResult
 import ic.org.WACCCompiler
 import ic.org.util.containsAll
-import java.io.File
-import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeFalse
@@ -13,6 +10,9 @@ import org.junit.jupiter.api.Assumptions.assumingThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.fail
+import java.io.File
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
 
 /**
  * This test class will scan the wacc_examples directory, and attempt to compile all files, one
@@ -78,7 +78,7 @@ class TestPrograms {
     else
       assertTrue(res.exitCode in listOf(0, 200)) {
         "Unexpected failure, expected a succesful syntax check (and that did not happen).\n" +
-            "  Errors:\n ${res.message}"
+          "  Errors:\n ${res.message}"
       }
   }
 
