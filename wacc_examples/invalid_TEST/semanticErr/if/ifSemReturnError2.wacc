@@ -1,0 +1,23 @@
+# if statement return types don't match function return type
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  int f() is
+    if true
+    then
+      return true
+    else 
+      return false
+    fi;
+    return 0
+  end
+  int x = call f() ;
+  println x 
+end

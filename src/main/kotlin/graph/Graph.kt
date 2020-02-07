@@ -43,7 +43,7 @@ sealed class Node {
   companion object {
     /**
      * Checks whether a code block [nextStatement] returns the same as [bodyType].
-     * If yes, then we return a succesful [Parsed] of the returning [Type], and otherwise we let
+     * If yes, then we return a successful [Parsed] of the returning [Type], and otherwise we let
      * [checkTypeDiscrepancies] return an invalid [Parsed]
      *
      * If [nextStatement] returns nothing, we return a [ControlFlowTypeError]
@@ -66,7 +66,7 @@ sealed class Node {
      */
     fun checkTypeDiscrepancies(pos: Position, t1: Type, t2: Type): Parsed<Option<Type>> =
       if (t1.matches(t2)) t1.toOption().valid()
-      else ControlFlowTypeError(pos, t1, t2).toInvalidParsed()
+      else IfElseNextTypeMismatchError(pos, t1, t2).toInvalidParsed()
   }
 }
 
@@ -86,10 +86,12 @@ class IfElseNode(val thenBody: Node, val elseBody: Node, val next: Node, overrid
       thenReturn !is Valid || elseReturn !is Valid ->
         (thenReturn.errors + elseReturn.errors).invalid()
 
-      // Both branches reutrn
+      // Both branches return
       thenReturn.a is Some && elseReturn.a is Some -> {
         val (thenType, elseType) = (thenReturn.a as Some).t to (elseReturn.a as Some).t
         checkTypeDiscrepancies(pos, thenType, elseType)
+        // Only need to check against 'then' since we've check for discrepancy between types of then and else
+        checkBodyWithNextStatementType(pos, thenType, next)
       }
       // The Else branch returns something, but not the Then branch
       thenReturn.a is None && elseReturn.a is Some ->

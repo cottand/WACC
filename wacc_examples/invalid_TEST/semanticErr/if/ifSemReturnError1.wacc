@@ -1,0 +1,23 @@
+# if statement return different type to end of function return
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  int f() is
+    if true
+    then
+      return 1
+    else 
+      return 2
+    fi;
+    return true
+  end
+  int x = call f() ;
+  println x 
+end

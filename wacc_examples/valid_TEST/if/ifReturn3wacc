@@ -1,0 +1,20 @@
+# if returning on 'then' branch and end of function
+
+# Output:
+# correct
+
+# Program:
+
+begin
+  int f() is
+    if true
+    then
+      return 1
+    else 
+      println 2
+    fi;
+    return 0
+  end
+  int x = call f() ;
+  println x 
+end

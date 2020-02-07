@@ -1,0 +1,19 @@
+# if returning on both 'then' and 'else' branches
+
+# Output:
+# correct
+
+# Program:
+
+begin
+  int f() is
+    if true
+    then
+      return 1
+    else 
+      return 2
+    fi
+  end
+  int x = call f() ;
+  println x 
+end

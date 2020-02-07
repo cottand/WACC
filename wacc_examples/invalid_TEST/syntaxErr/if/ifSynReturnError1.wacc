@@ -1,0 +1,22 @@
+# if only 'else' branch returns a value
+
+# Output:
+# #syntactic_error#
+
+# Exit:
+# 100
+
+# Program:
+
+begin
+  int f() is
+    if true
+    then
+      println 1
+    else 
+      return 2
+    fi
+  end
+  int x = call f() ;
+  println x 
+end

@@ -73,13 +73,15 @@ data class NullPairError(val pos: Position) : SemanticError() {
   override val msg = "$pos, tried to reference expression of type Pair that resolves to `null`"
 }
 
-data class ControlFlowTypeError(override val msg: String) : SyntacticError(msg) {
-  constructor(pos: Position, thenType: Type, elseType: Type) :
-    this(
-      "$pos, differing returning types in if-else branching.\n" +
-        "    Got `$thenType` in the 'then' branch and `$elseType` in the 'else' branch"
-    )
+data class IfElseNextTypeMismatchError(override val msg: String) : SemanticError() {
+  constructor(pos: Position, t1: Type, t2: Type) :
+      this(
+        "$pos, differing returning types in if-else-next branching.\n" +
+            "    Got `$t1` in a one path and `$t2` in another"
+      )
+}
 
+data class ControlFlowTypeError(override val msg: String) : SyntacticError(msg) {
   constructor(pos: Position, stat: String) :
     this("$pos, unreachable statement `$stat`")
 
