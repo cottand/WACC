@@ -1,11 +1,11 @@
 package ic.org.listeners
 
-import ic.org.SyntacticError
-import java.util.LinkedList
+import ic.org.util.SyntacticError
 import kotlinx.collections.immutable.toPersistentList
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
+import java.util.LinkedList
 
 /**
  * An ErrorListener that will collect all syntactic errors as ANTLR

@@ -1,4 +1,6 @@
-package ic.org
+@file:Suppress("LeakingThis")
+
+package ic.org.util
 
 import arrow.core.Validated
 import arrow.core.Validated.Invalid
@@ -6,9 +8,7 @@ import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.grammar.Ident
-import ic.org.grammar.IntLit
-import ic.org.grammar.Type
+import ic.org.ast.*
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
@@ -26,7 +26,7 @@ private const val syntacticErrorCode = 100
 private const val semanticErrorCode = 200
 
 /**
- * Represents an error at compile time. Produced by either the [CollectingErrorListener] as a
+ * Represents an error at compile time. Produced by either the CollectingErrorListener as a
  * [SyntacticError], or by [Prog.asAst()] or one of its recursive calls as a [SemanticError].
  *
  * - [msg]: the message that will be printed for the user when reporting the error
@@ -35,7 +35,9 @@ private const val semanticErrorCode = 200
  *   [syntacticErrorCode] or [semanticErrorCode].
  */
 sealed class CompilationError {
-  abstract val msg: String
+  private val type = if (this is SyntacticError) "Syntactic" else "Semantic"
+  val message = "$type error, $msg"
+  internal abstract val msg: String
   abstract val code: Int
   fun toInvalidParsed() = persistentListOf(this).invalid()
 }
@@ -56,17 +58,33 @@ data class TypeError(override val msg: String) : SemanticError() {
   constructor(pos: Position, expectedTs: List<Type>, actual: Type, op: String) :
     this("$pos, for operation `$op`, expected some type $expectedTs, actual: $actual")
 
-  constructor(pos: Position, expectedTs: List<Type>, actualTs: Pair<Type, Type>, op: String) :
+  constructor(pos: Position, expectedTs: List<Type>, actualTs: Pair<Type, Type>, op: String, expr: Expr) :
     this(
       "$pos, for operation `$op`, " +
-        "expected some type $expectedTs, actual: ${actualTs.first} and ${actualTs.second}"
+        "expected two of type(s) $expectedTs, actuals: ${actualTs.first} and ${actualTs.second}\n" +
+        "    in expression: $expr"
+    )
+
+  constructor(pos: Position, expectedTs: List<Type>, actual: Type, op: String, expr: Expr) :
+    this(
+      "$pos, for operation `$op`, expected some type $expectedTs, actual: $actual\n" +
+        "    in expression: $expr"
     )
 
   constructor(pos: Position, expectedT: Type, actual: Type, op: String) :
     this("$pos, for operation `$op`, expected type $expectedT, actual: $actual")
 
-  constructor(pos: Position, expectedTs: List<Type>, actual: String, op: String) :
-    this("$pos, for operation `$op`, expected some type $expectedTs, actual: $actual")
+  constructor(pos: Position, expectedT: Type, actual: Type, op: String, rhs: AssRHS) :
+    this(
+      "$pos, for operation `$op`, expected type $expectedT, actual: $actual\n" +
+        "    in: $rhs"
+    )
+
+  constructor(pos: Position, expectedT: Type, op: String, expr: Expr) :
+    this(
+      "$pos, for operation `$op`, expected type $expectedT, actual: ${expr.type}\n" +
+        "    in expression:$expr"
+    )
 }
 
 data class NullPairError(val pos: Position) : SemanticError() {
@@ -89,12 +107,6 @@ data class ControlFlowTypeError(override val msg: String) : SyntacticError(msg) 
     this("$pos, missing return statement on branch. Expecting `$type`")
 
   override fun toString() = msg
-  fun asTypeError(pos: Position) = TypeError("$pos, $this")
-}
-
-data class UndefinedOp(override val msg: String) : SemanticError() {
-  constructor(pos: Position, op: String, vararg ts: Type) :
-    this("$pos, undefined operation `$op` for types $ts")
 }
 
 data class IllegalArrayAccess(override val msg: String) : SemanticError() {
@@ -131,12 +143,18 @@ data class UnexpectedNumberOfParamsError(val pos: Position, val ident: Ident, va
     "$pos, unexpected number of parameters in funciton call: `${ident.name}`, expected: $expected, actual: $actual"
 }
 
+/**
+ * A [Parsed]'s [Errors] if it is [Invalid], or an empty [PersistentList] otherwise.
+ */
 inline val <A> Parsed<A>.errors: Errors
   get() = when (this) {
     is Invalid -> this.e
     else -> persistentListOf()
   }
 
+/**
+ * All [Parsed]s' [Errors] if it is [Invalid], or an empty [PersistentList] otherwise.
+ */
 inline val <A> List<Parsed<A>>.errors: Errors
   get() = this.flatMap { it.errors }.toPersistentList()
 
@@ -192,6 +210,9 @@ fun <A> Parsed<A>.validate(predicate: Boolean, error: CompilationError): Parsed<
 
 /**
  * Like a [Validated.map] but for two [Parsed]
+ *
+ * Combines [fst] and [snd] by mapping both to some [R] by applying [map] if both are [Valid].
+ * Otherwise, it returns the errors of both [fst] and [snd] concatenated
  */
 inline fun <reified A, reified B, R> combine(
   fst: Parsed<A>,
@@ -204,7 +225,10 @@ inline fun <reified A, reified B, R> combine(
     (fst.errors + snd.errors).invalid()
 
 /**
- * Like a [Validated.map] but for two [Parsed]
+ * Like a [Validated.flatMap] but for two [Parsed].
+ *
+ * Combines [fst] and [snd] by mapping both to some [R] by applying [map] if both are [Valid].
+ * Otherwise, it returns the errors of both [fst] and [snd] concatenated
  */
 inline fun <reified A, reified B, R> flatCombine(
   fst: Parsed<A>,
@@ -216,12 +240,12 @@ inline fun <reified A, reified B, R> flatCombine(
   else
     (fst.errors + snd.errors).invalid()
 
+/**
+ * [combine] but with the first argument as a receiver instead of a parameter.
+ */
 inline fun <reified A, reified B, R> Parsed<A>.combineWith(other: Parsed<B>, map: (A, B) -> R) =
   combine(this, other, map)
 
-inline fun <reified A, reified B, R> Parsed<A>.flatCombineWith(other: Parsed<B>, map: (A, B) -> Parsed<R>) =
-  flatCombine(this, other, map)
-
-class Position(val l: Int, val col: Int) {
-  override fun toString(): String = "At $l:$col"
+class Position(private val l: Int, private val col: Int) {
+  override fun toString(): String = "at $l:$col"
 }

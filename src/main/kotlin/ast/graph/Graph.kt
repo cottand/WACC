@@ -1,19 +1,19 @@
 package ic.org.graph
 
 import arrow.core.*
-import ic.org.*
-import ic.org.grammar.*
+import ic.org.ast.*
+import ic.org.util.*
 import kotlinx.collections.immutable.plus
 
 /**
  * A WACC program control flow (inside a scope) may be represented as a Graph. [Node]
- * represents a single node in that graph, which may have different shapes depending on the
+ * represents a single node in that ast.graph, which may have different shapes depending on the
  * branching of the program.
  *
  * A [Node]'s outgoing edges are represented as pointers to the next
  * nodes.
  *
- * A leaf in the graph would correspond to a [Return] or an [Exit]. We represent those as
+ * A leaf in the ast.graph would correspond to a [Return] or an [Exit]. We represent those as
  * [LeafReturn]s
  *
  * A branch may not return. In that case, we need to backtrack to the nearest '`;`' and check the

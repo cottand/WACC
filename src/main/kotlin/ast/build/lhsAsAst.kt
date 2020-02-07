@@ -1,10 +1,10 @@
-package ic.org.ast
+package ic.org.ast.build
 
 import antlr.WACCParser.*
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.*
-import ic.org.grammar.*
+import ic.org.ast.*
+import ic.org.util.*
 
 internal fun TypeContext.asAst(): Type =
   when {
@@ -55,7 +55,14 @@ internal fun Assign_lhsContext.asAst(scope: Scope): Parsed<AssLHS> = when (this)
       exprs.errors.invalid()
   })
     .validate({ it.variable.type is AnyArrayT },
-      { TypeError(array_elem().ID().position, AnyArrayT(), it.variable.type, "array element access") })
+      {
+        TypeError(
+          array_elem().ID().position,
+          AnyArrayT(),
+          it.variable.type,
+          "array element access"
+        )
+      })
 
   is LHSPairElemContext -> pair_elem().expr().asAst(scope)
     .validate(

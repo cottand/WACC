@@ -1,11 +1,9 @@
-package ic.org
+package ic.org.util
 
 import arrow.core.Either
 import arrow.core.Validated
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.toPersistentList
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 
@@ -18,14 +16,6 @@ fun <A, B> List<Either<A, B>>.containsLefts() = !this.forAll { it.isRight() }
  * Returns whether a [List] of [Either] contains any [Either.Right]s
  */
 fun <A, B> List<Either<A, B>>.containsRights() = !this.forAll { it.isLeft() }
-
-/**
- * Maps [this] applying [transform] to every element, producing a [PersistentList]
- *
- * Like [Collection.map] but with [PersistentList]
- */
-inline fun <reified A, reified B> PersistentList<A>.mapp(transform: (A) -> B) =
-  this.map(transform).toPersistentList()
 
 /**
  * Returns whether [this] contains every word in [words]
@@ -55,5 +45,8 @@ inline val TerminalNode.position
 inline val ParserRuleContext.startPosition
   get() = Position(start.line, start.charPositionInLine + 1)
 
+/**
+ * Returns every element in this [List] of [Validated] that happens to be [Valid].
+ */
 inline val <reified E, reified V> List<Validated<E, V>>.valids
   get() = this.filterIsInstance<Valid<V>>().map { it.a }

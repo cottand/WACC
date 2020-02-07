@@ -13,7 +13,7 @@ clean:
 	$(GRW) clean
 
 test:
-	$(GRW) cehck
+	$(GRW) check
 
 .PHONY: all clean
 

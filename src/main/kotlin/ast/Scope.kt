@@ -1,12 +1,12 @@
-package ic.org.grammar
+package ic.org.ast
 
 import arrow.core.Option
 import arrow.core.or
 import arrow.core.toOption
 import arrow.core.valid
-import ic.org.Parsed
-import ic.org.Position
-import ic.org.RedeclarationError
+import ic.org.util.Parsed
+import ic.org.util.Position
+import ic.org.util.RedeclarationError
 
 /**
  * Represents a WACC Scope.

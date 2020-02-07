@@ -1,8 +1,9 @@
 import arrow.core.left
 import arrow.core.right
-import ic.org.containsLefts
-import ic.org.containsRights
-import org.junit.jupiter.api.Assertions.*
+import ic.org.util.containsLefts
+import ic.org.util.containsRights
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 internal class UtilsKtTest {
