@@ -65,8 +65,8 @@ sealed class Node {
      * do not.
      */
     fun checkTypeDiscrepancies(pos: Position, t1: Type, t2: Type): Parsed<Option<Type>> =
-      if (t1.matches(t2)) t1.toOption().valid()
-      else IfElseNextTypeMismatchError(pos, t1, t2).toInvalidParsed()
+      t1.toOption().valid().validate({ t1.matches(t2) })
+      { IfElseNextTypeMismatchError(pos, t1, t2) }
   }
 }
 

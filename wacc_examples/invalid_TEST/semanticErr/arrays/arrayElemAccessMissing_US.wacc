@@ -1,0 +1,13 @@
+# array lhs assign identifier missing
+
+# Output:
+# #semantic_error#
+
+# Exit:
+# 200
+
+# Program:
+
+begin
+  println a[1]
+end
