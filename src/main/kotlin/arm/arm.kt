@@ -21,8 +21,22 @@ abstract class ARMInstr() : Printable {
 /**
  * ARM instruction with a condition field (i.e. MOVEQ, BLT ..)
  */
-abstract class ARMCondInstr(open val cond: Option<CondFlag>) : ARMInstr() {
-  val condStr = cond.fold({ "" }, { it.code })
+abstract class ARMCondInstr() : ARMInstr() {
+  abstract val cond: Option<CondFlag>
+
+  /**
+   * Returns opcode with condition flags
+   */
+  open fun opcode(op: String) = op + cond.fold({ "" }, { it.code })
+}
+
+/**
+ * ARM instruction with a condition field (i.e. MOVEQ, BLT ..) and an S field to set flags
+ */
+abstract class ARMCondSInstr() : ARMCondInstr() {
+  abstract val s: Boolean
+
+  override fun opcode(op: String) = super.opcode(op) + if (s) "S" else ""
 }
 
 /**
