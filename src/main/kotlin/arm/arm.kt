@@ -9,6 +9,9 @@ interface Printable {
   val code: String
 }
 
+/**
+ * ARM instruction, can be translated to ARM assembly code and has an optional cond field
+ */
 abstract class ARMInstr(open val cond: Option<CondFlag>) : Printable {
   val condStr = cond.fold({ "" }, { it.code })
 
@@ -18,6 +21,13 @@ abstract class ARMInstr(open val cond: Option<CondFlag>) : Printable {
   override fun toString() = code
 }
 
-data class Reg(var id : Int) : Printable {
+/**
+ * Register, represented by an ID
+ */
+data class Reg(val id : Int) : Printable {
   override val code = "r$id"
+}
+
+data class Label(val name: String) : Printable {
+  override val code = ".$name"
 }

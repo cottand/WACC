@@ -1,4 +1,5 @@
 package ic.org.arm
+
 import arrow.core.Option
 
 data class MOVInstr(override val cond: Option<CondFlag>, val rd: Reg, val op2: Operand2) : ARMInstr(cond) {
