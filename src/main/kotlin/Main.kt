@@ -55,7 +55,7 @@ data class CompileResult(val success: Boolean, val exitCode: Int, val msg: Strin
 }
 
 @ExperimentalTime
-class WACCCompiler(private val filename: String, private val checkOnly: Boolean = false) {
+class WACCCompiler(private val filename: String) {
 
   /**
    * Compiler front-end entrypoint
@@ -79,7 +79,7 @@ class WACCCompiler(private val filename: String, private val checkOnly: Boolean 
 
   private fun Prog.toAssembly(): String = TODO()
 
-  fun compile(): CompileResult {
+  fun compile(checkOnly: Boolean = false): CompileResult {
     val start = MonoClock.markNow()
     // Make a CompileResultout of the outcome
     return check().fold({ errors ->

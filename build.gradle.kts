@@ -25,6 +25,7 @@ repositories {
 
 val arrowVer = "0.10.4"
 val antlrVer = "4.7"
+val ktorVer = "1.3.1"
 dependencies {
 
   // Kotlin standard library
@@ -37,10 +38,15 @@ dependencies {
   implementation("io.arrow-kt:arrow-optics:$arrowVer")
   implementation("io.arrow-kt:arrow-syntax:$arrowVer")
 
-  // Serialization
-  implementation("io.ktor:ktor-client-core:1.3.0")
-  implementation("io.ktor:ktor-client-cio:1.3.0")
+  // Ktor http client to query the reference compiler
+  testImplementation("io.ktor:ktor-client-core:$ktorVer")
+  testImplementation("io.ktor:ktor-client-apache:$ktorVer")
+  testImplementation("io.ktor:ktor-client-cio:$ktorVer")
+  testImplementation("io.ktor:ktor-client-serialization-jvm:$ktorVer")
+  testImplementation("io.ktor:ktor-gson:$ktorVer")
+  testImplementation("io.ktor:ktor-client-gson:$ktorVer")
 
+  // TODO can it be removed
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.14.0")
 
   antlr("org.antlr:antlr4:$antlrVer")
