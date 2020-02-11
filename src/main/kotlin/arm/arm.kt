@@ -1,24 +1,20 @@
 package ic.org.arm
-
 import arrow.core.Option
 
-abstract class ARMInstr {
-  /**
-   * Returns the ARM assembly code for the instruction
-   */
-  abstract fun code() : String
+interface Printable {
+  val code: String
+}
 
+abstract class ARMInstr : Printable {
   /**
    * Used to express conditional instructions
    */
   abstract var cond : Option<CondFlag>
 
   /**
-   * Aliases to ARMInstr::code()
+   * Aliases to [Printable.code]
    */
-  override fun toString(): String {
-    return code()
-  }
+  override fun toString() = code
 }
 
 data class Reg(var id : Int)
@@ -42,3 +38,24 @@ object LTCond : CondFlag() // Signed less than
 object GTCond : CondFlag() // Signed greater than
 object LECond : CondFlag() // Signed less than or equal
 object ALCond : CondFlag() // Always
+
+/**
+ * 10-bit constant formed by left-shifting an 8-bit value by 2 bits
+ */
+data class Immed_8_4(val v: Byte)
+
+/**
+ * 8-bit constant
+ */
+data class Immed_8(val v: Byte)
+
+/**
+ * 5-bit constant
+ */
+data class Immed_5(val v: Byte)
+
+/**
+ * 32-bit constant formed by right-rotating an 8-bit value by an even number of bits
+ */
+data class Immed_8r(val v: Byte, val r: Byte)
+
