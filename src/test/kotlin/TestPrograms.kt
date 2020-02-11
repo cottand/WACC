@@ -65,7 +65,7 @@ class TestPrograms {
         // later against the expected result.
         if (e is NotImplementedError) {
           // TODO Check the Duration casting
-          CompileResult.success(Duration.ZERO)
+          CompileResult.checkSuccess(Duration.ZERO)
         } else {
           // If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
           // for some other reason. So fail the test case.
@@ -78,7 +78,7 @@ class TestPrograms {
     else
       assertTrue(res.exitCode in listOf(0, 200)) {
         "Unexpected failure, expected a succesful syntax check (and that did not happen).\n" +
-          "  Errors:\n ${res.message}"
+          "  Errors:\n ${res.msg}"
       }
   }
 
@@ -101,12 +101,12 @@ class TestPrograms {
       }
     res.let { result ->
       assertEquals(program.expectedReturn, result.exitCode) {
-        "Bad exit code while comipiling\n $filename,\n compiler output: \n${result.message}"
+        "Bad exit code while comipiling\n $filename,\n compiler output: \n${result.msg}"
       }
       assumingThat(testOutputKeywords) {
-        assertTrue(result.message.containsAll(program.expectedKeyWords))
+        assertTrue(result.msg.containsAll(program.expectedKeyWords))
       }
-      println("Test successful (exit code ${res.exitCode}). Compiler output:\n${res.message}")
+      println("Test successful (exit code ${res.exitCode}). Compiler output:\n${res.msg}")
     }
   }
 

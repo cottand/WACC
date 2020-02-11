@@ -5,6 +5,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   kotlin("jvm") version "1.3.61"
+  // Serialization
+  kotlin("plugin.serialization") version "1.3.61"
   // Gradle Shadow plugin for building a fat jar
   id("com.github.johnrengelman.shadow") version "5.2.0"
   antlr
@@ -34,6 +36,12 @@ dependencies {
   // Kotlin functional programming library, Arrow
   implementation("io.arrow-kt:arrow-optics:$arrowVer")
   implementation("io.arrow-kt:arrow-syntax:$arrowVer")
+
+  // Serialization
+  implementation("io.ktor:ktor-client-core:1.3.0")
+  implementation("io.ktor:ktor-client-cio:1.3.0")
+
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.14.0")
 
   antlr("org.antlr:antlr4:$antlrVer")
 
