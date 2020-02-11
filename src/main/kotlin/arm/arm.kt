@@ -1,10 +1,17 @@
 package ic.org.arm
 
-sealed class ARMInstr {
+import arrow.core.Option
+
+abstract class ARMInstr {
   /**
    * Returns the ARM assembly code for the instruction
    */
   abstract fun code() : String
+
+  /**
+   * Used to express conditional instructions
+   */
+  abstract var cond : Option<CondFlag>
 
   /**
    * Aliases to ARMInstr::code()
@@ -13,6 +20,8 @@ sealed class ARMInstr {
     return code()
   }
 }
+
+data class Reg(var id : Int)
 
 sealed class CondFlag
 
