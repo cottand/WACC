@@ -1,6 +1,10 @@
 package ic.org.arm
 import arrow.core.Option
+import ic.org.ast.Print
 
+/**
+ * Something that can be printed as ARM code
+ */
 interface Printable {
   val code: String
 }
@@ -17,7 +21,9 @@ abstract class ARMInstr : Printable {
   override fun toString() = code
 }
 
-data class Reg(var id : Int)
+data class Reg(var id : Int) : Printable {
+  override val code = "r$id"
+}
 
 sealed class CondFlag
 
@@ -38,24 +44,3 @@ object LTCond : CondFlag() // Signed less than
 object GTCond : CondFlag() // Signed greater than
 object LECond : CondFlag() // Signed less than or equal
 object ALCond : CondFlag() // Always
-
-/**
- * 10-bit constant formed by left-shifting an 8-bit value by 2 bits
- */
-data class Immed_8_4(val v: Byte)
-
-/**
- * 8-bit constant
- */
-data class Immed_8(val v: Byte)
-
-/**
- * 5-bit constant
- */
-data class Immed_5(val v: Byte)
-
-/**
- * 32-bit constant formed by right-rotating an 8-bit value by an even number of bits
- */
-data class Immed_8r(val v: Byte, val r: Byte)
-
