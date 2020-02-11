@@ -38,3 +38,14 @@ data class Reg(val id : Int) : Printable {
 data class Label(val name: String) : Printable {
   override val code = ".$name"
 }
+
+/**
+ * Sign for offsets
+ */
+sealed class Sign : Printable
+object Plus : Sign() {
+  override val code = ""
+}
+object Minus : Sign() {
+  override val code = "-"
+}

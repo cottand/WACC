@@ -13,14 +13,14 @@ data class Immed_8_4(val v: Byte) : Printable {
  * 8-bit constant
  */
 data class Immed_8(val v: Byte) : Printable {
-  override val code = "#$v"
+  override val code = v.toString()
 }
 
 /**
  * 5-bit constant
  */
 data class Immed_5(val v: Byte) : Printable {
-  override val code = "#$v"
+  override val code = v.toString()
 }
 
 /**
@@ -28,4 +28,11 @@ data class Immed_5(val v: Byte) : Printable {
  */
 data class Immed_8r(val v: Byte, val r: Byte) : Printable {
   override val code = TODO()
+}
+
+/**
+ * 12-bit constant
+ */
+data class Immed_12(val v: Int) : Printable {
+  override val code = v.toString()
 }

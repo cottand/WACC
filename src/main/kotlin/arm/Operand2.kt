@@ -6,19 +6,19 @@ package ic.org.arm
 sealed class Operand2 : Printable
 
 data class ImmOperand2(val imm: Immed_8r) : Operand2() {
-  override val code = imm.code
+  override val code = "#${imm.code}"
 }
 data class LSLImmOperand2(val rm: Reg, val imm: Immed_5) : Operand2() {
-  override val code = "${rm.code} LSL ${imm.code}"
+  override val code = "${rm.code} LSL #${imm.code}"
 }
 data class LSRImmOperand2(val rm: Reg, val imm: Immed_5) : Operand2() {
-  override val code = "${rm.code} LSR ${imm.code}"
+  override val code = "${rm.code} LSR #${imm.code}"
 }
 data class ASRImmOperand2(val rm: Reg, val imm: Immed_5) : Operand2() {
-  override val code = "${rm.code} ASR ${imm.code}"
+  override val code = "${rm.code} ASR #${imm.code}"
 }
 data class RORImmOperand2(val rm: Reg, val imm: Immed_5) : Operand2() {
-  override val code = "${rm.code} ROR ${imm.code}"
+  override val code = "${rm.code} ROR #${imm.code}"
 }
 data class RegOperand2(val rm: Reg) : Operand2() {
   override val code = rm.code
