@@ -9,12 +9,7 @@ interface Printable {
   val code: String
 }
 
-abstract class ARMInstr : Printable {
-  /**
-   * Used to express conditional instructions
-   */
-  abstract var cond : Option<CondFlag>
-
+abstract class ARMInstr(val cond: Option<CondFlag>) : Printable {
   /**
    * Aliases to [Printable.code]
    */
