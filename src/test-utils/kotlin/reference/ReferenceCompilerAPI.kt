@@ -2,6 +2,10 @@
 
 package reference
 
+import com.github.kittinunf.fuel.Fuel
+import com.github.kittinunf.fuel.core.FileDataPart
+import com.github.kittinunf.fuel.core.InlineDataPart
+import ic.org.util.print
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.features.json.GsonSerializer
@@ -27,7 +31,7 @@ class ReferenceCompilerAPI {
   private val refCompilerMargin = 2
   private val url = "https://teaching.doc.ic.ac.uk/wacc_compiler/run.cgi"
 
-  suspend fun ask(prog: File): RefAnswer {
+  suspend fun ask2(prog: File): RefAnswer {
     val (_, _, out) = client.post<RefResponse>(url) {
       body = MultiPartContent.build {
         add("testfile", prog.readBytes(), ContentType.Application.OctetStream, "test.wacc")
@@ -38,7 +42,17 @@ class ReferenceCompilerAPI {
     return if ("Errors detected" in out)
       RefAnswer(false, out)
     else
-      RefAnswer(true, out.extractCode())
+      RefAnswer(true, out.extractCode()).print()
+  }
+
+  fun ask(prog: File): RefAnswer {
+    Fuel.upload(url)
+      .add {
+        FileDataPart(prog, "testfile", "test.wacc", contentDisposition = "form-data")
+      }
+      .add { InlineDataPart("-a", "options[]", contentDisposition = "form-data") }
+      .responseString().print()
+    TODO()
   }
 
   private fun String.extractCode() = lineSequence()

@@ -4,7 +4,7 @@ import arrow.core.getOrElse
 import ic.org.CompileResult
 import ic.org.WACCCompiler
 import ic.org.util.containsAll
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -38,11 +38,11 @@ class TestPrograms {
 
   companion object {
     // Testing constants
-    private val waccExamplesPath = "./wacc_examples/"
-    private val testOutputKeywords = false
-    private val testingKeyword = "TEST"
-    private val ignoreKeyword = "IGNORE"
-    private val testSemanticsOnly = true
+    private const val waccExamplesPath = "./wacc_examples/"
+    private const val testOutputKeywords = false
+    private const val testingKeyword = "TEST"
+    private const val ignoreKeyword = "IGNORE"
+    private const val testSemanticsOnly = true
     private val reference by lazy { ReferenceCompilerAPI() }
 
     @JvmStatic
@@ -69,9 +69,11 @@ class TestPrograms {
   private fun test(program: WACCProgram, doCheckOnly: Boolean) {
     val filename = program.file.absolutePath
     val canonicalPath = program.file.canonicalPath
+    val expRef = if (!doCheckOnly) CoroutineScope(Dispatchers.IO).async { reference.ask(program.file) } else null
     val res: CompileResult = try {
       WACCCompiler(filename).compile(doCheckOnly)
     } catch (e: Throwable) {
+      expRef?.cancel()
       assumeFalse(e is NotImplementedError)
       // If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
       // for some other reason. So fail the test case.
@@ -85,19 +87,17 @@ class TestPrograms {
       assertTrue(res.msg.containsAll(program.expectedKeyWords))
     }
     // If we are not doing only checks, also check with the reference compiler assembly output
-    assumingThat(!doCheckOnly) {
-      runBlocking {
-        val (success, expectedOut) = reference.ask(program.file)
-        if (!success)
-          fail {
-            "Reference compiler failed for succesfully checked program:\n  " +
-              "$canonicalPath,\n which returned output:\n $expectedOut"
-          }
-        val actualOut = res.out.getOrElse { fail("Compilation unsuccessful") }
-        assertEquals(expectedOut, actualOut) { "Non matching assembly output for $canonicalPath" }
-      }
-    }
-    println("Test successful (exit code ${res.exitCode}). Compiler output:\n${res.msg}")
+    if (!doCheckOnly) runBlocking {
+      val (success, expectedOut) = expRef!!.await()
+      if (!success)
+        fail {
+          "Reference compiler failed for succesfully checked program:\n  " +
+            "$canonicalPath,\n which returned output:\n $expectedOut"
+        }
+      val actualOut = res.out.getOrElse { fail("Compilation unsuccessful") }
+      assertEquals(expectedOut, actualOut) { "Non matching assembly output for $canonicalPath" }
+    } else
+      println("Test successful (exit code ${res.exitCode}). Compiler output:\n${res.msg}")
   }
 
   /**
@@ -121,8 +121,8 @@ class TestPrograms {
   @ExperimentalTime
   @TestFactory
   fun compileCheckPrograms() = waccFiles
-    .filterNot { "invalid" in it.file.path }
+    // .filterNot { "invalid" in it.file.path }
     .map { prog ->
-    DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = false) }
-  }
+      DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = false) }
+    }
 }

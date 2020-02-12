@@ -87,7 +87,6 @@ end.parse!
 
 # set up empty array of file_paths to process
 files = []
-puts ARGV[0]
 if $options[:directory] then
   # add the results of a search to the array
   files += Dir.glob(File.join(ARGV[0], "**", "*.wacc"))
@@ -104,7 +103,6 @@ end
 
 # now process each target file
 files.each do |file_path|
-  puts "calling the reference compiler on #{file_path}"
   
   #get stdin from the user to pass to the reference compiler
   stdin = ""
@@ -119,13 +117,10 @@ files.each do |file_path|
                     :testfile => File.new(file_path)
                    ) do |response|
     json = JSON.load(response)
-    puts "-- Test: #{json['test']}"
-    puts ""
-    puts "-- Uploaded file: "
-    puts "---------------------------------------------------------------"
     puts json['upload']
-    puts "---------------------------------------------------------------"
-    puts ""
+    open('ref.out','w') do |f|
+      f.puts json['compiler_out']
+    end
     puts "-- Compiler Output:"
     puts json['compiler_out']
     puts ""
