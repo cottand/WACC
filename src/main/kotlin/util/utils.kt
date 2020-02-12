@@ -1,14 +1,15 @@
 package ic.org.util
 
-import arrow.core.Either
-import arrow.core.Validated
+import arrow.core.*
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
+import arrow.syntax.collections.tail
 import ic.org.arm.Data
 import ic.org.arm.Instr
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 
@@ -73,8 +74,29 @@ data class Code(val instr: Instructions = persistentListOf(), val data: Datas = 
 
   inline fun combine(other: Code) = Code(instr + other.instr, data + other.data)
   inline operator fun plus(other: Code) = combine(other)
+  inline operator fun plus(other: Instructions) = combine(Code(other))
 
   companion object {
     val empty = Code(persistentListOf<Nothing>(), persistentListOf<Nothing>())
   }
 }
+
+fun List<Code>.flatten() = fold(Code.empty, Code::combine)
+
+fun <A, B> List<A>.mapp(transform: (A) -> B) = map(transform).toPersistentList()
+
+val <E> PersistentList<E>.head
+  get() = take(1).firstOrNone()
+
+fun <E> PersistentList<PersistentList<E>>.flatten(): PersistentList<E> {
+  if (head is None) return persistentListOf<Nothing>()
+  var total: PersistentList<E> = (head as Some<PersistentList<E>>).t
+  for (l in this.tail()) {
+    total += l
+  }
+  return total
+}
+
+fun Instructions.code() = Code(this)
+
+

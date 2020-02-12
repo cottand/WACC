@@ -1,5 +1,6 @@
 package ic.org.ast
 
+import ic.org.util.Code
 import org.antlr.v4.runtime.tree.TerminalNode
 
 // <program>
@@ -11,7 +12,9 @@ data class Func(
   val ident: Ident,
   val params: List<Param>,
   val stat: Stat
-)
+) {
+  fun instr(): Code = TODO()
+}
 
 // <param>
 data class Param(val type: Type, val ident: Ident)
