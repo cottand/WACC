@@ -1,6 +1,7 @@
 package ic.org.ast
 
 import ic.org.arm.Instr
+import ic.org.util.Code
 import ic.org.util.Position
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.plus
@@ -14,11 +15,11 @@ sealed class Stat {
   /**
    * Convert to an [Instr]
    */
-  abstract fun instr(): PersistentList<Instr>
+  abstract fun instr(): Code
 }
 
 data class Skip(override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = persistentListOf<Nothing>()
+  override fun instr() = Code.empty
 }
 
 data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Scope, override val pos: Position) :

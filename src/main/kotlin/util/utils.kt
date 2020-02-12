@@ -6,7 +6,10 @@ import arrow.core.Some
 import arrow.core.Validated
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
+import ic.org.arm.Data
+import ic.org.arm.Instr
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.persistentListOf
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
@@ -62,4 +65,21 @@ inline val <reified E, reified V> List<Validated<E, V>>.valids
 
 inline fun <A> Option<A>.ifExsists(run: (A) -> Unit) {
   if (this is Some) run(this.t)
+}
+typealias Instructions = PersistentList<Instr>
+typealias Datas = PersistentList<Data>
+
+/**
+ * Returned by something that produces assembly. [instr] corresponds to the assembly instructions,
+ * and [data] to information in the Data segment.
+ */
+@Suppress("NOTHING_TO_INLINE")
+data class Code(val instr: Instructions = persistentListOf(), val data: Datas = persistentListOf()) {
+
+  inline fun combine(other: Code) = Code(instr + other.instr, data + other.data)
+  inline operator fun plus(other: Code) = combine(other)
+
+  companion object {
+    val empty = Code(persistentListOf<Nothing>(), persistentListOf<Nothing>())
+  }
 }
