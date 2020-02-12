@@ -1,7 +1,0 @@
-#!/bin/sh
-
-
-echo running the ANTLR TestRig grammar tool
-#/usr/lib/jvm/java-11-openjdk/bin/java \
-java \
--cp build/classes/java/main:lib/antlr-4.7-complete.jar org.antlr.v4.gui.TestRig $@
