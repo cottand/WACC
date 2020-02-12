@@ -10,6 +10,7 @@ import arrow.core.valid
 import ic.org.ast.Prog
 import ic.org.ast.build.asAst
 import ast.graph.asGraph
+import ic.org.instr.instr
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
 import ic.org.util.*
@@ -77,7 +78,7 @@ class WACCCompiler(private val filename: String) {
       .flatMap { it.checkControlFlow() }
   }
 
-  private fun Prog.toAssembly(): String = TODO()
+  private fun Prog.toAssembly(): String = instr().joinToString(separator = "\n") { it.code }
 
   fun compile(checkOnly: Boolean = false): CompileResult {
     val start = MonoClock.markNow()
