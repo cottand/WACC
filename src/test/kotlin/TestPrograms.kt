@@ -1,8 +1,11 @@
 @file:Suppress("ConstantConditionIf")
 
+import arrow.core.getOrElse
 import ic.org.CompileResult
 import ic.org.WACCCompiler
 import ic.org.util.containsAll
+import kotlinx.coroutines.*
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeFalse
@@ -10,8 +13,8 @@ import org.junit.jupiter.api.Assumptions.assumingThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.fail
+import reference.ReferenceCompilerAPI
 import java.io.File
-import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
 /**
@@ -32,103 +35,95 @@ import kotlin.time.ExperimentalTime
  */
 @ExperimentalTime
 class TestPrograms {
-  // Testing constants
-  private val waccExamplesPath = "./wacc_examples/"
-  private val testOutputKeywords = false
-  private val testingKeyword = "TEST"
-  private val ignoreKeyword = "IGNORE"
-  private val testSemanticsOnly = true
+
+  companion object {
+    // Testing constants
+    private const val waccExamplesPath = "./wacc_examples/"
+    private const val testOutputKeywords = false
+    private const val testingKeyword = "TEST"
+    private const val ignoreKeyword = "IGNORE"
+    private const val testSemanticsOnly = true
+    private val reference by lazy { ReferenceCompilerAPI() }
+
+    @JvmStatic
+    @AfterAll
+    fun tearDown() = reference.client.close()
+  }
 
   private val waccFiles =
     File(waccExamplesPath).walkBottomUp()
       .filter { it.isFile && ".wacc" in it.path }
-      .filter { "TEST" in it.canonicalPath } // If a
+      .filter { "TEST" in it.canonicalPath }
       .filterNot { "IGNORE" in it.canonicalPath }
       .map { it.asProgram() }
       .toList()
 
   /**
-   * Tests whether the [WACCCompiler] can perform all syntactic checks on a [program] with the
-   * expected output
-   */
-  private fun testSyntax(program: WACCProgram) {
-    program.file.readText()
-    program.file.canonicalPath
-    val filename = program.file.absolutePath
-    println(filename)
-    val res: CompileResult =
-      try {
-        WACCCompiler(filename).compile()
-      } catch (e: Throwable) {
-        // If we are only checking the syntax and we hit a NotImplemented error, that means the
-        // syntactic check succeeded and returned. So we 'fake' a 0 return code to be checked
-        // later against the expected result.
-        if (e is NotImplementedError) {
-          // TODO Check the Duration casting
-          CompileResult.success(Duration.ZERO)
-        } else {
-          // If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
-          // for some other reason. So fail the test case.
-          System.err.println("Failed to compile ${program.file.canonicalPath} with exception:")
-          fail(e)
-        }
-      }
-    if (program.expectedReturn == 100)
-      assertEquals(100, res.exitCode)
-    else
-      assertTrue(res.exitCode in listOf(0, 200)) {
-        "Unexpected failure, expected a succesful syntax check (and that did not happen).\n" +
-          "  Errors:\n ${res.message}"
-      }
-  }
-
-  /**
    * Tests whether [WACCCompiler] can compile  [program] with the expected compile output (so no
-   * runtime execution tests) according to [testOutputKeywords]
+   * runtime execution tests) according to [testOutputKeywords].
+   *
+   * If [doCheckOnly] is false, it will also check the assembly output of the program is the same as the
+   * reference compiler's.
    */
   @ExperimentalTime
-  private fun testSemantics(program: WACCProgram) {
+  private fun test(program: WACCProgram, doCheckOnly: Boolean) {
     val filename = program.file.absolutePath
-    val res: CompileResult =
-      try {
-        WACCCompiler(filename).compile()
-      } catch (e: Throwable) {
-        assumeFalse(e is NotImplementedError)
-        // If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
-        // for some other reason. So fail the test case.
-        System.err.println("Failed to compile ${program.file.canonicalPath} with exception:")
-        fail(e)
-      }
-    res.let { result ->
-      assertEquals(program.expectedReturn, result.exitCode) {
-        "Bad exit code while comipiling\n $filename,\n compiler output: \n${result.message}"
-      }
-      assumingThat(testOutputKeywords) {
-        assertTrue(result.message.containsAll(program.expectedKeyWords))
-      }
-      println("Test successful (exit code ${res.exitCode}). Compiler output:\n${res.message}")
+    val canonicalPath = program.file.canonicalPath
+    val expRef = if (!doCheckOnly) CoroutineScope(Dispatchers.IO).async { reference.ask(program.file) } else null
+    val res: CompileResult = try {
+      WACCCompiler(filename).compile(doCheckOnly)
+    } catch (e: Throwable) {
+      expRef?.cancel()
+      assumeFalse(e is NotImplementedError)
+      // If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
+      // for some other reason. So fail the test case.
+      System.err.println("Failed to compile $canonicalPath with exception:")
+      fail(e)
     }
+    assertEquals(program.expectedReturn, res.exitCode) {
+      "Bad exit code while comipiling\n $canonicalPath,\n compiler output: \n${res.msg}"
+    }
+    assumingThat(testOutputKeywords) {
+      assertTrue(res.msg.containsAll(program.expectedKeyWords))
+    }
+    // If we are not doing only checks, also check with the reference compiler assembly output
+    if (!doCheckOnly) runBlocking {
+      val (success, expectedOut) = expRef!!.await()
+      if (!success)
+        fail {
+          "Reference compiler failed for succesfully checked program:\n  " +
+            "$canonicalPath,\n which returned output:\n $expectedOut"
+        }
+      val actualOut = res.out.getOrElse { fail("Compilation unsuccessful") }
+      assertEquals(expectedOut, actualOut) { "Non matching assembly output for $canonicalPath" }
+    } else
+      println("Test successful (exit code ${res.exitCode}). Compiler output:\n${res.msg}")
   }
 
   /**
-   * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [testSemantics]
+   * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [test]
    * Every one of these [DynamicTest]s are the unit tests that show up in the report.
+   *
+   * It only checks a program syntactically and semantically.
    */
   @ExperimentalTime
   @TestFactory
-  fun semanticallyCheckPrograms() = waccFiles.map {
-    DynamicTest.dynamicTest(it.file.canonicalPath) { testSemantics(it) }
+  fun semanticallyCheckPrograms() = waccFiles.map { prog ->
+    DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = true) }
   }
 
   /**
-   * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [testSyntax]
+   * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [test]
    * Every one of these [DynamicTest]s are the unit tests that show up in the report.
+   *
+   * It does only check tests that are supposed to preoduce assembly, ie, are valid.
    */
   @ExperimentalTime
   @TestFactory
-  fun syntacticallyCheckPrograms() = waccFiles
+  fun compileCheckPrograms() = waccFiles
     .filterNot { testSemanticsOnly }
-    .map {
-      DynamicTest.dynamicTest(it.file.canonicalPath) { testSyntax(it) }
+    .filterNot { "invalid" in it.file.path }
+    .map { prog ->
+      DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = false) }
     }
 }

@@ -2,11 +2,14 @@ package ic.org
 
 import antlr.WACCLexer
 import antlr.WACCParser
+import arrow.core.Option
+import arrow.core.extensions.option.align.empty
 import arrow.core.invalid
+import arrow.core.some
 import arrow.core.valid
 import ic.org.ast.Prog
 import ic.org.ast.build.asAst
-import ic.org.graph.asGraph
+import ast.graph.asGraph
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
 import ic.org.util.*
@@ -34,12 +37,19 @@ fun main(args: Array<String>) {
 }
 
 @ExperimentalTime
-data class CompileResult(val success: Boolean, val exitCode: Int, val message: String) {
+data class CompileResult(val success: Boolean, val exitCode: Int, val msg: String, val out: Option<String> = empty()) {
   companion object {
-    fun success(duration: Duration) = CompileResult(
+    fun checkSuccess(duration: Duration) = CompileResult(
       success = true,
       exitCode = 0,
-      message = "Compiled in ${duration.inMilliseconds.toLong()}ms"
+      msg = "Compiled in ${duration.inMilliseconds.toLong()}ms"
+    )
+
+    fun success(duration: Duration, output: String) = CompileResult(
+      success = true,
+      exitCode = 0,
+      msg = "Compiled in ${duration.inMilliseconds.toLong()}ms",
+      out = output.some()
     )
   }
 }
@@ -47,8 +57,10 @@ data class CompileResult(val success: Boolean, val exitCode: Int, val message: S
 @ExperimentalTime
 class WACCCompiler(private val filename: String) {
 
-  fun compile(): CompileResult {
-    val start = MonoClock.markNow()
+  /**
+   * Compiler front-end entrypoint
+   */
+  private fun check(): Parsed<Prog> {
     val input = File(filename)
     if (!(input.exists() && input.isFile)) {
       throw IllegalArgumentException("No such file $filename")
@@ -63,16 +75,29 @@ class WACCCompiler(private val filename: String) {
       .flatMap { it.prog().asAst() }
       // Check control flow by building a graph
       .flatMap { it.checkControlFlow() }
-      // Make a CompileResultout of the outcome
-      .fold({ errors ->
-        CompileResult(
-          success = false,
-          exitCode = errors.first().code,
-          message = errors.asLines(filename)
-        )
-      }, {
-        CompileResult.success(duration = start.elapsedNow())
-      })
+  }
+
+  private fun Prog.toAssembly(): String = TODO()
+
+  fun compile(checkOnly: Boolean = false): CompileResult {
+    val start = MonoClock.markNow()
+    // Make a CompileResultout of the outcome
+    return check().fold({ errors ->
+      // If the checks found a malformed program:
+      CompileResult(
+        success = false,
+        exitCode = errors.first().code,
+        msg = errors.asLines(filename)
+      )
+    }, { prog ->
+      // If checks were succesful, compile depending on checkOnly
+      if (checkOnly)
+        CompileResult.checkSuccess(duration = start.elapsedNow())
+      else {
+        val assembly = prog.toAssembly()
+        CompileResult.success(duration = start.elapsedNow(), output = assembly)
+      }
+    })
   }
 
   companion object {
@@ -97,7 +122,7 @@ class WACCCompiler(private val filename: String) {
     /**
      * Makes an additional pass to the AST in order to check correctness of the control flow.
      */
-    fun Prog.checkControlFlow(): Parsed<Prog> = funcs
+    private fun Prog.checkControlFlow(): Parsed<Prog> = funcs
       .map { it.stat.asGraph(it.retType) to it }
       .map { (graph, func) -> graph.checkReturnType(func.retType, func.ident) }
       .let {

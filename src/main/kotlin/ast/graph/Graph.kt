@@ -1,4 +1,4 @@
-package ic.org.graph
+package ast.graph
 
 import arrow.core.*
 import ic.org.ast.*

@@ -26,7 +26,12 @@ fun String.containsAll(words: List<String>, ignoreCase: Boolean = true) =
 /**
  * Prints [this], while returning [this]. Useful for [println] debugging.
  */
-inline fun <reified T> T.print() = this.also { println(it) }
+inline fun <reified T> T.print() = this.also { print(it) }
+
+/**
+ * Prints [this], while returning [this]. Useful for [println] debugging.
+ */
+inline fun <reified T> T.print(str : (T) -> String) = this.also { println(str(this)) }
 
 @Suppress("FunctionName")
 fun NOT_REACHED(): Nothing = throw IllegalStateException("Case should never be reached")
