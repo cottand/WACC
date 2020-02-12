@@ -16,7 +16,12 @@ class MultiPartContent(val parts: List<Part>) : OutgoingContent.WriteChannelCont
   val uuid = UUID.randomUUID().toString().take(19).replace("-", "")
   val boundary = "----WebsKitFormBoundary$uuid"
 
-  data class Part(val name: String, val filename: String? = null, val headers: Headers = Headers.Empty, val writer: suspend ByteWriteChannel.() -> Unit)
+  data class Part(
+    val name: String,
+    val filename: String? = null,
+    val headers: Headers = Headers.Empty,
+    val writer: suspend ByteWriteChannel.() -> Unit
+  )
 
   override suspend fun writeTo(channel: ByteWriteChannel) {
     for (part in parts) {
@@ -48,8 +53,15 @@ class MultiPartContent(val parts: List<Part>) : OutgoingContent.WriteChannelCont
       parts += part
     }
 
-    fun add(name: String, filename: String? = null, contentType: ContentType? = null, headers: Headers = Headers.Empty, writer: suspend ByteWriteChannel.() -> Unit) {
-      val contentTypeHeaders: Headers = if (contentType != null) headersOf(HttpHeaders.ContentType, contentType.toString()) else headersOf()
+    fun add(
+      name: String,
+      filename: String? = null,
+      contentType: ContentType? = null,
+      headers: Headers = Headers.Empty,
+      writer: suspend ByteWriteChannel.() -> Unit
+    ) {
+      val contentTypeHeaders: Headers =
+        if (contentType != null) headersOf(HttpHeaders.ContentType, contentType.toString()) else headersOf()
       add(Part(name, filename, headers + contentTypeHeaders, writer))
     }
 
@@ -57,7 +69,12 @@ class MultiPartContent(val parts: List<Part>) : OutgoingContent.WriteChannelCont
       add(name, filename, contentType) { writeStringUtf8(text.print()) }
     }
 
-    fun add(name: String, data: ByteArray, contentType: ContentType? = ContentType.Application.OctetStream, filename: String? = null) {
+    fun add(
+      name: String,
+      data: ByteArray,
+      contentType: ContentType? = ContentType.Application.OctetStream,
+      filename: String? = null
+    ) {
       add(name, filename, contentType) { writeFully(data.print()) }
     }
 

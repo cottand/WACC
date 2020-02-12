@@ -115,10 +115,14 @@ class TestPrograms {
   /**
    * Takes every [WACCProgram] in [waccFiles] and creates a [DynamicTest] with [test]
    * Every one of these [DynamicTest]s are the unit tests that show up in the report.
+   *
+   * It does only check tests that are supposed to preoduce assembly, ie, are valid.
    */
   @ExperimentalTime
   @TestFactory
-  fun compileCheckPrograms() = waccFiles.map { prog ->
+  fun compileCheckPrograms() = waccFiles
+    .filterNot { "invalid" in it.file.path }
+    .map { prog ->
     DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = false) }
   }
 }
