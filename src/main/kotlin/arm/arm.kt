@@ -9,9 +9,14 @@ interface Printable {
 }
 
 /**
+ * Highest level element of our IR. This compiler ends up producing a [List] of [Instr]s
+ */
+sealed class Instr : Printable
+
+/**
  * ARM instruction, can be translated to ARM assembly code
  */
-abstract class ARMInstr() : Printable {
+abstract class ARMInstr : Instr() {
   /**
    * Aliases to [Printable.code]
    */
@@ -33,7 +38,7 @@ abstract class ARMCondInstr() : ARMInstr() {
 /**
  * ARM instruction with a condition field (i.e. MOVEQ, BLT ..) and an S field to set flags
  */
-abstract class ARMCondSInstr() : ARMCondInstr() {
+abstract class ARMCondSInstr : ARMCondInstr() {
   abstract val s: Boolean
 
   override fun opcode(op: String) = super.opcode(op) + if (s) "S" else ""
@@ -49,7 +54,7 @@ data class Reg(val id : Int) : Printable {
 /**
  * Label, represented by a name
  */
-data class Label(val name: String) : Printable {
+data class Label(val name: String) : Instr() {
   override val code = ".$name"
 }
 
