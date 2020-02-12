@@ -43,7 +43,7 @@ fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
   val stat = stat().asAst(gScope)
 
   return if (funcs.areAllValid && stat is Valid)
-    Prog(funcs.valids).valid()
+    Prog(funcs.valids, stat.a).valid()
   else
     (funcs.errors + stat.errors).invalid()
 }

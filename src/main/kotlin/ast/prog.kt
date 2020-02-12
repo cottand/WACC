@@ -3,9 +3,7 @@ package ic.org.ast
 import org.antlr.v4.runtime.tree.TerminalNode
 
 // <program>
-data class Prog(
-  val funcs: List<Func>
-)
+data class Prog(val funcs: List<Func>, val body: Stat)
 
 // <func>
 data class Func(
