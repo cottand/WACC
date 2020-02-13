@@ -65,6 +65,11 @@ inline val <reified E, reified V> List<Validated<E, V>>.valids
 inline fun <A> Option<A>.ifExsists(run: (A) -> Unit) {
   if (this is Some) run(this.t)
 }
+
+inline fun <A> Option<A>.ifExsistsAnd(pred: Boolean, run: (A) -> Unit) {
+  if (this is Some && pred) run(this.t)
+}
+
 typealias Instructions = PersistentList<Instr>
 typealias Datas = PersistentList<Data>
 

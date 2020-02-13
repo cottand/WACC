@@ -22,7 +22,7 @@ import kotlin.time.MonoClock
 
 @ExperimentalTime
 fun main(args: Array<String>) {
-  println("\n\n")
+  println()
   if (args.size !in 1..2) {
     println(
       "Unexpected number of arguments: ${args.size}\n" +
@@ -31,12 +31,12 @@ fun main(args: Array<String>) {
     exitProcess(-1)
   }
   val cmds = args.toMutableList()
-  val printAssembly =  cmds.remove("-a")
+  val printAssembly = cmds.remove("-a")
   val result = WACCCompiler(cmds.first()).compile()
   val (_, exitCode, msg) = result
-  println(msg)
-  result.out.ifExsists {
-    println("Compiled assembly:\n$it")
+  println(msg + '\n')
+  result.out.ifExsistsAnd(printAssembly) {
+    println("Compiled assembly:\n\n$it")
   }
   exitProcess(exitCode)
 }
