@@ -4,6 +4,7 @@ import arrow.core.None
 import arrow.core.Option
 
 data class LDRInstr(override val cond: Option<CondFlag> = None, val rd: Register, val addressing: AddrMode2) : ARMCondInstr() {
+  constructor(rd: Register, addressing: AddrMode2) : this(None, rd = rd, addressing = addressing)
   override val code = "${opcode("LDR")} ${rd.code}, ${addressing.code}"
 }
 data class LDRTInstr(override val cond: Option<CondFlag>, val rd: Register, val addressing: AddrMode2P) : ARMCondInstr() {

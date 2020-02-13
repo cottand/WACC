@@ -15,6 +15,6 @@ fun Prog.instr(): Instructions = (body.instr() + funcs.map { it.instr() }.flatte
       Label("main") +
       PUSHInstr(LR) +
       instrs +
-      // LDRInstr(rd = Reg(0), addressing = AddrMode2()) TODO LDR r0, =0 how tf do you write that
+      LDRInstr(Reg(0), ImmEquals(0)) +
       POPInstr(PC)
   }

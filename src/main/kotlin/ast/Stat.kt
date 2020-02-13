@@ -1,6 +1,8 @@
 package ic.org.ast
 
+import ic.org.arm.BLInstr
 import ic.org.arm.Instr
+import ic.org.arm.Label
 import ic.org.util.Code
 import ic.org.util.Position
 import kotlinx.collections.immutable.PersistentList
@@ -46,7 +48,7 @@ data class Return(val expr: Expr, override val scope: Scope, override val pos: P
 }
 
 data class Exit(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = TODO()
+  override fun instr() = expr.code() + BLInstr(Label("exit")) + TODO("What about the label .ltorg") as Instr
 }
 
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {

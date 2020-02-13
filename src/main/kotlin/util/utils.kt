@@ -75,6 +75,7 @@ data class Code(val instr: Instructions = persistentListOf(), val data: Datas = 
   inline fun combine(other: Code) = Code(instr + other.instr, data + other.data)
   inline operator fun plus(other: Code) = combine(other)
   inline operator fun plus(other: Instructions) = combine(Code(other))
+  inline operator fun plus(other: Instr) = combine(Code(persistentListOf(other)))
 
   companion object {
     val empty = Code(persistentListOf<Nothing>(), persistentListOf<Nothing>())
