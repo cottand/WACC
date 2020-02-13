@@ -35,7 +35,7 @@ fun main(args: Array<String>) {
   val result = WACCCompiler(cmds.first()).compile()
   val (_, exitCode, msg) = result
   println(msg + '\n')
-  result.out.ifExsistsAnd(printAssembly) {
+  result.out.ifExsists {
     println("Compiled assembly:\n\n$it")
   }
   exitProcess(exitCode)
