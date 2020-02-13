@@ -25,16 +25,6 @@ fun <A, B> List<Either<A, B>>.containsLefts() = !this.forAll { it.isRight() }
  */
 fun <A, B> List<Either<A, B>>.containsRights() = !this.forAll { it.isLeft() }
 
-/**
- * Returns whether [this] contains every word in [words]
- */
-fun String.containsAll(words: List<String>, ignoreCase: Boolean = true) =
-  words.forAll { this.contains(it, ignoreCase) }
-
-/**
- * Prints [this], while returning [this]. Useful for [println] debugging.
- */
-inline fun <reified T> T.print() = this.also { print(it) }
 
 /**
  * Prints [this], while returning [this]. Useful for [println] debugging.
@@ -64,14 +54,6 @@ inline val ParserRuleContext.startPosition
 inline val <reified E, reified V> List<Validated<E, V>>.valids
   get() = this.filterIsInstance<Valid<V>>().map { it.a }
 
-inline fun <A> Option<A>.ifExsists(run: (A) -> Unit) {
-  if (this is Some) run(this.t)
-}
-
-inline fun <A> Option<A>.ifExsistsAnd(pred: Boolean, run: (A) -> Unit) : Option<A> {
-  if (this is Some && pred) run(this.t)
-  return this
-}
 
 typealias Instructions = PersistentList<Instr>
 typealias Datas = PersistentList<Data>
@@ -93,32 +75,9 @@ data class Code(val instr: Instructions = persistentListOf(), val data: Datas = 
   }
 }
 
-fun List<Code>.flatten() = fold(Code.empty, Code::combine)
-
-fun <A, B> List<A>.mapp(transform: (A) -> B) = map(transform).toPersistentList()
-
-val <E> PersistentList<E>.head
-  get() = take(1).firstOrNone()
-
-fun <E> PersistentList<PersistentList<E>>.flatten(): PersistentList<E> {
-  if (head is None) return persistentListOf<Nothing>()
-  var total: PersistentList<E> = (head as Some<PersistentList<E>>).t
-  for (l in this.tail()) {
-    total += l
-  }
-  return total
-}
-
-val <A> List<A>.head
-  get() = first()
-
-
-val <A> List<A>.tail
-  get() = tail()
-
 fun Instructions.code() = Code(this)
 
-fun List<String>.joinLines() = joinToString(separator = "\n")
-fun Stream<String>.joinLines() = toList().joinToString(separator = "\n")
+fun List<Code>.flatten() = fold(Code.empty, Code::combine)
+
 
 
