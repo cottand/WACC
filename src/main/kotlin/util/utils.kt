@@ -9,7 +9,6 @@ import ic.org.arm.Instr
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.toPersistentList
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
@@ -63,12 +62,9 @@ inline val ParserRuleContext.startPosition
 inline val <reified E, reified V> List<Validated<E, V>>.valids
   get() = this.filterIsInstance<Valid<V>>().map { it.a }
 
-<<<<<<< HEAD
 inline fun <A> Option<A>.ifExsists(run: (A) -> Unit) {
   if (this is Some) run(this.t)
 }
-=======
->>>>>>> 2f954d876556b7e0059dc409cfdae800cfebf2b2
 typealias Instructions = PersistentList<Instr>
 typealias Datas = PersistentList<Data>
 
