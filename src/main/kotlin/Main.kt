@@ -2,11 +2,8 @@ package ic.org
 
 import antlr.WACCLexer
 import antlr.WACCParser
-import arrow.core.Option
+import arrow.core.*
 import arrow.core.extensions.option.align.empty
-import arrow.core.invalid
-import arrow.core.some
-import arrow.core.valid
 import ic.org.ast.Prog
 import ic.org.ast.build.asAst
 import ast.graph.asGraph
@@ -25,15 +22,22 @@ import kotlin.time.MonoClock
 
 @ExperimentalTime
 fun main(args: Array<String>) {
-  if (args.size != 1) {
+  println("\n\n")
+  if (args.size !in 1..2) {
     println(
       "Unexpected number of arguments: ${args.size}\n" +
-        "Expected a single argument, the file to be compiled."
+        "Expected at least the file to be compiled."
     )
     exitProcess(-1)
   }
-  val (_, exitCode, msg) = WACCCompiler(args[0]).compile()
+  val cmds = args.toMutableList()
+  val printAssembly =  cmds.remove("-a")
+  val result = WACCCompiler(cmds.first()).compile()
+  val (_, exitCode, msg) = result
   println(msg)
+  result.out.ifExsists {
+    println("Compiled assembly:\n$it")
+  }
   exitProcess(exitCode)
 }
 
