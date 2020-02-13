@@ -122,7 +122,7 @@ class TestPrograms {
   @TestFactory
   fun compileCheckPrograms() = waccFiles
     // .filterNot { testSemanticsOnly }
-    // .filterNot { "invalid" in it.file.path }
+    .filterNot { "invalid" in it.file.path }
     .map { prog ->
       DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = false) }
     }

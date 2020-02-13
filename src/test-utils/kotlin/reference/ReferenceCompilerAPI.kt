@@ -14,52 +14,35 @@ import io.ktor.client.request.post
 import io.ktor.http.ContentType
 import kotlinx.serialization.Serializable
 import java.io.File
+import java.util.stream.Stream
+import kotlin.streams.toList
 
 @Serializable
 data class RefResponse(val test: String, val upload: String, val compiler_out: String)
 
-class ReferenceCompilerAPI {
+object ReferenceCompilerAPI {
 
-  val client = HttpClient(CIO) {
-    install(JsonFeature) {
-      serializer = GsonSerializer {
-        disableHtmlEscaping()
-        serializeNulls()
-      }
-    }
-  }
-  private val refCompilerMargin = 2
-  private val url = "https://teaching.doc.ic.ac.uk/wacc_compiler/run.cgi"
+  fun ask(prog: File): RefAnswer =
+    "ruby refCompile -a ${prog.path}".runCommand()
+      .filter { it.isNotEmpty() }
+      .filter { it[0] in '0'..'9' }
+      .map { it.drop(2).trim() }
+      .filter { it.isNotBlank() }
+      .toList()
+      // Remove the prefix added by the reference compiler
+      .joinToString(separator = "\n").trim()
+      .let { RefAnswer(true, it) }
 
-  suspend fun ask2(prog: File): RefAnswer {
-    val (_, _, out) = client.post<RefResponse>(url) {
-      body = MultiPartContent.build {
-        add("testfile", prog.readBytes(), ContentType.Application.OctetStream, "test.wacc")
-        add("options[]", "-a")
-      }
-    }
-
-    return if ("Errors detected" in out)
-      RefAnswer(false, out)
-    else
-      RefAnswer(true, out.extractCode()).print()
-  }
-
-  fun ask(prog: File): RefAnswer {
-    Fuel.upload(url)
-      .add {
-        FileDataPart(prog, "testfile", "test.wacc", contentDisposition = "form-data")
-      }
-      .add { InlineDataPart("-a", "options[]", contentDisposition = "form-data") }
-      .responseString().print()
-    TODO()
-  }
-
-  private fun String.extractCode() = lineSequence()
-    // Remove lines that are not assembly code
-    .filter { it[0].toInt() in 0..Int.MAX_VALUE }
-    // Remove the prefix added by the reference compiler
-    .joinToString(separator = "\n") { it.drop(refCompilerMargin) }
+  private fun String.runCommand(workingDir: File = File(".")): Stream<String> =
+    ProcessBuilder(*split("\\s".toRegex()).toTypedArray())
+      .directory(workingDir)
+      // .redirectOutput(ProcessBuilder.Redirect.PIPE)
+      // .redirectError(ProcessBuilder.Redirect.PIPE)
+      .start()
+      .inputStream
+      .reader()
+      .buffered()
+      .lines()
 }
 
 /**

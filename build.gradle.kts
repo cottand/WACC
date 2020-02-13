@@ -1,9 +1,9 @@
 @file:Suppress("SpellCheckingInspection")
 
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.stream.Stream
+import kotlin.streams.toList
 
 plugins {
   kotlin("jvm") version "1.3.61"
@@ -92,40 +92,3 @@ tasks {
   }
 }
 
-val generateRefAss by tasks.registering {
-  val waccExamples = file("./wacc_examples").walkBottomUp().toList().toTypedArray()
-  val refRuby = "./refCompile -a "
-  inputs.files(*waccExamples)
-  fun waccToAsm(wacc: String, asm: File) = (refRuby + wacc).runCommand()!!
-    .let { file("ref.out").readLines() }
-    // Remove lines that are not assembly code
-    .filter { it.isNotEmpty() }
-    .filter { it[0] in '0'..'9' }
-    // Remove the prefix added by the reference compiler
-    .joinToString(separator = "\n") { it.drop(2) }
-    .also { println("Wrote ass: $it") }
-    .let { str -> asm.writeText(str) }
-    .also { println("Wrote: $asm") }
-
-  doLast {
-    val waccs = inputs.files
-      .filter { ".wacc" in it.path }
-      .filterNot { "invalid" in it.path }
-    waccs.map { it to file(it.path.replace(".wacc", ".asm")) }
-      .filterNot { (_, asm) -> asm.exists() }
-      .forEach { (wacc, asm) -> waccToAsm(wacc.readText(), asm) }
-  }
-}
-
-fun String.runCommand(workingDir: File = file(".")): String? = try {
-  ProcessBuilder(*split("\\s".toRegex()).toTypedArray())
-    .directory(workingDir)
-    .redirectOutput(ProcessBuilder.Redirect.PIPE)
-    .redirectError(ProcessBuilder.Redirect.PIPE)
-    .start()
-    .apply { waitFor() }
-    .inputStream.reader().readText()
-} catch (e: java.io.IOException) {
-  e.printStackTrace()
-  null
-}

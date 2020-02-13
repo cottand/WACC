@@ -20,11 +20,15 @@ sealed class Instr : Printable {
 }
 
 object CodeSegment : Instr() {
-  override val code = ".global_main"
+  override val code = ".global main"
 }
 
 object DataSegment : Instr() {
   override val code = ".text"
+}
+
+object LTORG : Instr() {
+  override val code = ".ltorg"
 }
 
 /**

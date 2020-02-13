@@ -16,5 +16,6 @@ fun Prog.instr(): Instructions = (body.instr() + funcs.map { it.instr() }.flatte
       PUSHInstr(LR) +
       instrs +
       LDRInstr(Reg(0), ImmEquals(0)) +
-      POPInstr(PC)
+      POPInstr(PC) +
+      LTORG
   }

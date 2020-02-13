@@ -33,6 +33,11 @@ OptionParser.new do |opts|
     $opts << "-t" 
     $options[:print_ast] = true
   end
+  $options[:tofile] = false
+  opts.on("-tofile", "--to_file",
+    "Save to file .temp" ) do
+    $options[:tofile] = true
+  end
 
   $options[:print_asm] = false
   opts.on("-a", "--print_asm",
@@ -124,6 +129,7 @@ files.each do |file_path|
     puts "-- Compiler Output:"
     puts json['compiler_out']
     puts ""
+
   end
   
 end

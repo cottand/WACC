@@ -27,7 +27,8 @@ class MultiPartContent(val parts: List<Part>) : OutgoingContent.WriteChannelCont
     for (part in parts) {
       channel.writeStringUtf8("--$boundary\r\n".print())
       val partHeaders = Headers.build {
-        val fileNamePart = if (part.filename != null) "; filename=\"${part.filename}\"" else ""
+        val name = part.filename
+        val fileNamePart = if (part.filename != null) "; filename=\"$name\"; original_filename=\"$name\"" else ""
         append("Content-Disposition".print(), "form-data; name=\"${part.name}\"$fileNamePart".print())
         appendAll(part.headers)
       }
@@ -75,7 +76,7 @@ class MultiPartContent(val parts: List<Part>) : OutgoingContent.WriteChannelCont
       contentType: ContentType? = ContentType.Application.OctetStream,
       filename: String? = null
     ) {
-      add(name, filename, contentType) { writeFully(data.print()) }
+      add(name, filename, contentType) { writeFully(data) }
     }
 
     internal fun build(): MultiPartContent = MultiPartContent(parts.toList())
