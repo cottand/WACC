@@ -1,11 +1,15 @@
 @file:Suppress("ConstantConditionIf")
 
+import TestPrograms.Companion.ignoreKeyword
+import TestPrograms.Companion.testingKeyword
 import arrow.core.getOrElse
 import ic.org.CompileResult
 import ic.org.WACCCompiler
 import ic.org.util.containsAll
-import kotlinx.coroutines.*
-import org.junit.jupiter.api.AfterAll
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeFalse
@@ -13,9 +17,9 @@ import org.junit.jupiter.api.Assumptions.assumingThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.fail
-import reference.ReferenceCompilerAPI
 import java.io.File
 import kotlin.time.ExperimentalTime
+import reference.ReferenceCompilerAPI as Ref
 
 /**
  * This test class will scan the wacc_examples directory, and attempt to compile all files, one
@@ -42,12 +46,8 @@ class TestPrograms {
     private const val testOutputKeywords = false
     private const val testingKeyword = "TEST"
     private const val ignoreKeyword = "IGNORE"
-    private const val testSemanticsOnly = true
-    private val reference by lazy { ReferenceCompilerAPI() }
+    private const val testSemanticsOnly = false
 
-    @JvmStatic
-    @AfterAll
-    fun tearDown() = reference.client.close()
   }
 
   private val waccFiles =
@@ -69,7 +69,7 @@ class TestPrograms {
   private fun test(program: WACCProgram, doCheckOnly: Boolean) {
     val filename = program.file.absolutePath
     val canonicalPath = program.file.canonicalPath
-    val expRef = if (!doCheckOnly) CoroutineScope(Dispatchers.IO).async { reference.ask(program.file) } else null
+    val expRef = if (!doCheckOnly) CoroutineScope(Dispatchers.IO).async { Ref.ask(program.file) } else null
     val res: CompileResult = try {
       WACCCompiler(filename).compile(doCheckOnly)
     } catch (e: Throwable) {
@@ -121,7 +121,7 @@ class TestPrograms {
   @ExperimentalTime
   @TestFactory
   fun compileCheckPrograms() = waccFiles
-    // .filterNot { testSemanticsOnly }
+    .filterNot { testSemanticsOnly }
     .filterNot { "invalid" in it.file.path }
     .map { prog ->
       DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = false) }
