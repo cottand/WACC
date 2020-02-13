@@ -7,10 +7,12 @@ import ic.org.util.*
 // <expr>
 sealed class Expr {
   abstract val type: Type
+  abstract fun code(): Code
 }
 
 data class IntLit(val value: Int) : Expr() {
   override val type = IntT
+  override fun code(): Code = TODO("not implemented")
   override fun toString(): String = value.toString()
 
   companion object {
@@ -25,26 +27,31 @@ data class IntLit(val value: Int) : Expr() {
 data class BoolLit(val value: Boolean) : Expr() {
   override val type = BoolT
   override fun toString(): String = value.toString()
+  override fun code(): Code = TODO("not implemented")
 }
 
 data class CharLit(val value: Char) : Expr() {
   override val type = CharT
   override fun toString(): String = "$value"
+  override fun code(): Code = TODO("not implemented")
 }
 
 data class StrLit(val value: String) : Expr() {
   override val type = StringT
   override fun toString(): String = value
+  override fun code(): Code = TODO("not implemented")
 }
 
 object NullPairLit : Expr() {
   override val type = AnyPairTs() // TODO double check
   override fun toString(): String = "null"
+  override fun code(): Code = TODO("not implemented")
 }
 
 data class IdentExpr(val vari: Variable) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
+  override fun code(): Code = TODO("not implemented")
 }
 
 data class ArrayElemExpr internal constructor(
@@ -53,6 +60,7 @@ data class ArrayElemExpr internal constructor(
   override val type: Type
 ) : Expr() {
   override fun toString(): String = variable.ident.name + exprs.indices.joinToString(separator = "") { "[]" }
+  override fun code(): Code = TODO("not implemented")
 
   companion object {
     /**
@@ -82,6 +90,7 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override val type: Type = unaryOper.retType
 
   override fun toString(): String = "$unaryOper $expr"
+  override fun code(): Code = TODO("not implemented")
 
   companion object {
     /**
@@ -106,6 +115,7 @@ data class BinaryOperExpr internal constructor(
   override val type = binaryOper.retType
 
   override fun toString(): String = "($expr1 $binaryOper $expr2)"
+  override fun code(): Code = TODO("not implemented")
 
   companion object {
     /**
