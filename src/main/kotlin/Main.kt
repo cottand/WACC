@@ -2,12 +2,15 @@ package ic.org
 
 import antlr.WACCLexer
 import antlr.WACCParser
-import arrow.core.*
+import arrow.core.Option
 import arrow.core.extensions.option.align.empty
+import arrow.core.invalid
+import arrow.core.some
+import arrow.core.valid
 import arrow.syntax.collections.tail
+import ast.graph.asGraph
 import ic.org.ast.Prog
 import ic.org.ast.build.asAst
-import ast.graph.asGraph
 import ic.org.instr.instr
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
@@ -24,26 +27,34 @@ import kotlin.time.MonoClock
 @ExperimentalTime
 fun main(args: Array<String>) {
   println()
-  if (args.size !in 1..4) {
-    println(
-      "Unexpected number of arguments: ${args.size}\n" +
-        "Expected at least the file to be compiled."
-    )
+  if (args.size !in 1..6) {
+    println("Unexpected number of arguments: ${args.size}")
+    println("Expected at least the file to be compiled.")
     exitProcess(-1)
   }
+
   val cmds = args.toMutableList()
   val printAssembly = cmds.remove("-a")
+  val saveToFile = cmds.remove("-save")
   if (cmds.size != 1) {
     println("Proceeding with unrecognised arguments:")
-    println("  " + cmds.tail().joinToString() + '\n')
+    println("  " + cmds.tail.joinToString() + '\n')
   }
-  val result = WACCCompiler(cmds.first()).compile()
-  val (_, exitCode, msg) = result
-  println(msg + '\n')
+  val file = cmds.head
+  val result = WACCCompiler(file).compile()
+  println(result.msg + '\n')
+
+  // Deal with passed arguments
+
   result.out.ifExsistsAnd(printAssembly) {
-    println("Compiled assembly:\n\n$it")
+    println("Compiled assembly:\n\n$it\n")
+  }.ifExsistsAnd(saveToFile) {
+    // Replace extension with .s and save compiled text
+    val newFile = file.dropLast(".wacc".length) + ".s"
+    println("Saving file with compiled assembly:\n$newFile")
+    File(newFile).writeText(it)
   }
-  exitProcess(exitCode)
+  exitProcess(result.exitCode)
 }
 
 @ExperimentalTime

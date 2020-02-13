@@ -7,11 +7,13 @@ import arrow.syntax.collections.tail
 import ic.org.arm.Data
 import ic.org.arm.Instr
 import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.toPersistentList
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
+import java.util.stream.Stream
+import kotlin.streams.toList
 
 /**
  * Returns whether a [List] of [Either] contains any [Either.Left]
@@ -66,8 +68,9 @@ inline fun <A> Option<A>.ifExsists(run: (A) -> Unit) {
   if (this is Some) run(this.t)
 }
 
-inline fun <A> Option<A>.ifExsistsAnd(pred: Boolean, run: (A) -> Unit) {
+inline fun <A> Option<A>.ifExsistsAnd(pred: Boolean, run: (A) -> Unit) : Option<A> {
   if (this is Some && pred) run(this.t)
+  return this
 }
 
 typealias Instructions = PersistentList<Instr>
@@ -106,6 +109,16 @@ fun <E> PersistentList<PersistentList<E>>.flatten(): PersistentList<E> {
   return total
 }
 
+val <A> List<A>.head
+  get() = first()
+
+
+val <A> List<A>.tail
+  get() = tail()
+
 fun Instructions.code() = Code(this)
+
+fun List<String>.joinLines() = joinToString(separator = "\n")
+fun Stream<String>.joinLines() = toList().joinToString(separator = "\n")
 
 

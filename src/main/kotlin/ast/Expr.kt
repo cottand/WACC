@@ -12,7 +12,7 @@ sealed class Expr {
 
 data class IntLit(val value: Int) : Expr() {
   override val type = IntT
-  override fun code(): Code = TODO("not implemented")
+  override fun code(): Code = Code.empty
   override fun toString(): String = value.toString()
 
   companion object {

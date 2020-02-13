@@ -5,11 +5,7 @@ import ic.org.arm.Instr
 import ic.org.arm.Label
 import ic.org.util.Code
 import ic.org.util.Position
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.plus
-import kotlinx.collections.immutable.persistentListOf
 
-// <stat>
 sealed class Stat {
   abstract val scope: Scope
   abstract val pos: Position
@@ -48,7 +44,7 @@ data class Return(val expr: Expr, override val scope: Scope, override val pos: P
 }
 
 data class Exit(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = expr.code() + BLInstr(Label("exit")) + TODO("What about the label .ltorg") as Instr
+  override fun instr() = expr.code() + BLInstr(Label("exit"))
 }
 
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {

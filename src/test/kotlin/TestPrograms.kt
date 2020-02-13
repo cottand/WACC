@@ -47,11 +47,11 @@ class TestPrograms {
     private const val testingKeyword = "TEST"
     private const val ignoreKeyword = "IGNORE"
     private const val testSemanticsOnly = false
-
+    private const val input = "Hello"
   }
 
   private val waccFiles =
-    File(waccExamplesPath).walkBottomUp()
+    File(waccExamplesPath).walk()
       .filter { it.isFile && ".wacc" in it.path }
       .filter { "TEST" in it.canonicalPath }
       .filterNot { "IGNORE" in it.canonicalPath }
@@ -69,7 +69,7 @@ class TestPrograms {
   private fun test(program: WACCProgram, doCheckOnly: Boolean) {
     val filename = program.file.absolutePath
     val canonicalPath = program.file.canonicalPath
-    val expRef = if (!doCheckOnly) CoroutineScope(Dispatchers.IO).async { Ref.ask(program.file) } else null
+    val expRef = if (!doCheckOnly) CoroutineScope(Dispatchers.IO).async { Ref.ask(program.file, input) } else null
     val res: CompileResult = try {
       WACCCompiler(filename).compile(doCheckOnly)
     } catch (e: Throwable) {
@@ -88,16 +88,17 @@ class TestPrograms {
     }
     // If we are not doing only checks, also check with the reference compiler assembly output
     if (!doCheckOnly) runBlocking {
-      val (success, expectedOut) = expRef!!.await()
-      if (!success)
-        fail {
-          "Reference compiler failed for succesfully checked program:\n  " +
-            "$canonicalPath,\n which returned output:\n $expectedOut"
-        }
-      val actualOut = res.out.getOrElse { fail("Compilation unsuccessful") }
-      assertEquals(expectedOut, actualOut) { "Non matching assembly output for $canonicalPath" }
-    } else
-      println("Test successful (exit code ${res.exitCode}). Compiler output:\n${res.msg}")
+      val (expectedAss, expectedOut, expectedCode) = expRef!!.await()
+      val actualAss = res.out.getOrElse { fail("Compilation unsuccessful") }
+      if (expectedAss != actualAss) {
+        val (actualOut, actualCode) = Ref.run(actualAss, filename, input)
+        println("Expected:\n$expectedAss")
+        println("Compiled:\n$actualAss")
+        assertEquals(expectedOut, actualOut) { "Non matching program output for $canonicalPath" }
+        // assertEquals(expectedCode, actualCode) { "Non matching program output code for $canonicalPath" } TODO check codes
+      }
+    }
+    println("Test successful (exit code ${res.exitCode}). Compiler output:\n${res.msg}")
   }
 
   /**

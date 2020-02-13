@@ -16,5 +16,5 @@ src/main/gen/
 !compile
 
 #assembly from the ref compiler
-*.asm
+*.s
 
