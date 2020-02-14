@@ -1,18 +1,11 @@
 stages:
-        - compile
         - test
         - deploy
 
 
-assemble:
-        stage: compile
-        script: ./gradlew assemble
-
 check:
         stage: test
-        dependencies:
-                - assemble
-        script: ./gradlew check -i
+        script: ./gradlew clean check -i
         artifacts:
                 paths:
                         - build/reports/tests/test/

@@ -92,7 +92,7 @@ class TestPrograms {
       val actualAss = res.out.getOrElse { fail("Compilation unsuccessful") }
       if (expectedAss != actualAss) {
         val (actualOut, actualCode) = Ref.run(actualAss, filename, input)
-        println("Expected:\n$expectedAss")
+        println("Expected:\n$expectedAss\n")
         println("Compiled:\n$actualAss")
         assertEquals(expectedOut, actualOut) { "Non matching program output for $canonicalPath" }
         // assertEquals(expectedCode, actualCode) { "Non matching program output code for $canonicalPath" } TODO check codes
