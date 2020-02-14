@@ -7,6 +7,9 @@ import ic.org.util.NOT_REACHED
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
+import kotlinx.collections.immutable.toPersistentList
+
+typealias Regs = PersistentList<Reg>
 
 /**
  * Something that can be printed as ARM code
@@ -54,7 +57,7 @@ abstract class ARMInstr : Instr() {
  * ARM instruction with a condition field (i.e. MOVEQ, BLT ..)
  */
 abstract class ARMCondInstr() : ARMInstr() {
-  abstract val cond: Option<CondFlag>
+  abstract val cond: Flag
 
   /**
    * Returns opcode with condition flags
@@ -101,6 +104,12 @@ data class Reg(val id: Int) : Register() {
     val last = Reg(12)
     val first = Reg(0)
     val ret = first
+    /**
+     * All registers available by default, excluding [Reg.last]
+     */
+    val all by lazy {
+      (0..11).map { Reg(it) }.toPersistentList()
+    }
   }
 }
 

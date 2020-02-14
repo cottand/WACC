@@ -2,20 +2,30 @@ package ic.org.ast
 
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.valid
-import ic.org.arm.ImmEquals
-import ic.org.arm.LDRInstr
-import ic.org.arm.Reg
+import ic.org.arm.*
 import ic.org.util.*
+import java.lang.Integer.max
+import java.lang.Integer.min
 
 // <expr>
 sealed class Expr {
   abstract val type: Type
-  abstract fun code(dest: Reg): Code
+
+  /**
+   * Covert to [Code]. The result of evaluating this [Expr] should be put in [rem].
+   * In order to perform the computation, one may use [rem], and dest's [Reg.next] registers.
+   * If next happens to be [none], then the stack should be used.
+   */
+  abstract fun code(rem: Regs): Code
+
+  abstract val weight: Int
 }
 
 data class IntLit(val value: Int) : Expr() {
   override val type = IntT
-  override fun code(dest: Reg): Code = Code.empty +LDRInstr(dest, ImmEquals(value))
+  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals(value))
+  override val weight = 1
+
   override fun toString(): String = value.toString()
 
   companion object {
@@ -30,31 +40,42 @@ data class IntLit(val value: Int) : Expr() {
 data class BoolLit(val value: Boolean) : Expr() {
   override val type = BoolT
   override fun toString(): String = value.toString()
-  override fun code(dest: Reg): Code = TODO("not implemented")
+  // Booleans are represented as a 0 for true, and 1 for false
+  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals(if (value) 0 else 1))
+
+  override val weight = 1
 }
 
 data class CharLit(val value: Char) : Expr() {
   override val type = CharT
   override fun toString(): String = "$value"
-  override fun code(dest: Reg): Code = TODO("not implemented")
+  // Chars are represented as their ASCII value
+  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals(value.toInt()))
+
+  override val weight = 1
 }
 
 data class StrLit(val value: String) : Expr() {
   override val type = StringT
   override fun toString(): String = value
-  override fun code(dest: Reg): Code = TODO("not implemented")
+  override fun code(rem: Regs): Code = TODO("not implemented")
+  override val weight = 1
 }
 
 object NullPairLit : Expr() {
   override val type = AnyPairTs() // TODO double check
   override fun toString(): String = "null"
-  override fun code(dest: Reg): Code = TODO("not implemented")
+  // null is represented as 0
+  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals(0))
+
+  override val weight = 1
 }
 
 data class IdentExpr(val vari: Variable) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
-  override fun code(dest: Reg): Code = TODO("not implemented")
+  override fun code(rem: Regs): Code = TODO("not implemented")
+  override val weight = TODO("Does fetching from memory have a higher weight")
 }
 
 data class ArrayElemExpr internal constructor(
@@ -63,7 +84,8 @@ data class ArrayElemExpr internal constructor(
   override val type: Type
 ) : Expr() {
   override fun toString(): String = variable.ident.name + exprs.indices.joinToString(separator = "") { "[]" }
-  override fun code(dest: Reg): Code = TODO("not implemented")
+  override fun code(rem: Regs): Code = TODO("not implemented")
+  override val weight = TODO()
 
   companion object {
     /**
@@ -91,9 +113,16 @@ data class ArrayElemExpr internal constructor(
 
 data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override val type: Type = unaryOper.retType
+  override val weight = expr.weight + 1
 
   override fun toString(): String = "$unaryOper $expr"
-  override fun code(dest: Reg): Code = TODO("not implemented")
+  override fun code(rem: Regs) = when (unaryOper) {
+    NotUO -> TODO()
+    MinusUO -> TODO()
+    LenUO -> TODO()
+    OrdUO -> TODO()
+    ChrUO -> TODO()
+  }
 
   companion object {
     /**
@@ -116,9 +145,31 @@ data class BinaryOperExpr internal constructor(
   val expr2: Expr
 ) : Expr() {
   override val type = binaryOper.retType
+  override val weight by lazy {
+    val w1 = max(expr1.weight + 1, expr2.weight)
+    val w2 = max(expr1.weight, expr2.weight + 1)
+    min(w1, w2)
+  }
 
   override fun toString(): String = "($expr1 $binaryOper $expr2)"
-  override fun code(dest: Reg): Code = TODO("not implemented")
+  override fun code(rem: Regs) = rem.take2OrNone.fold({
+    val dest = rem.head
+    // No available registers, use stack machine! We can only use dest and Reg.last
+    expr2.code(rem) +
+      PUSHInstr(dest) +
+      expr1.code(rem) +
+      POPInstr(Reg.last) +
+      binaryOper.instruction(dest, Reg.last)
+  }, { (dest, next, rest) ->
+    // We can use at least two registers, dest and next, but we know there's more
+    if (expr1.weight > expr2.weight) {
+      expr1.code(rem) +
+        expr2.code(next prepend rest)
+    } else {
+      expr2.code(next prepend (dest prepend rest)) +
+        expr1.code(dest prepend rest)
+    } + binaryOper.instruction(dest, next)
+  })
 
   companion object {
     /**
@@ -218,6 +269,11 @@ sealed class BinaryOper {
   internal inline fun <reified T : Type> check(t1: Type, t2: Type) = t1 is T && t2 is T
   abstract val retType: Type
   abstract val inTypes: List<Type>
+
+  /**
+   * The [Instr] required in order to perform this [BinaryOper]. By convention, the result should be put in [dest]
+   */
+  abstract fun instruction(dest: Reg, r2: Reg): Instr
 }
 
 // (int, int) -> int:
@@ -248,39 +304,48 @@ sealed class BoolBinOp : BinaryOper() {
 
 object TimesBO : IntBinOp() {
   override fun toString(): String = "*"
+  override fun instruction(dest: Reg, r2: Reg) = TODO()
 }
 
 object DivisionBO : IntBinOp() {
   override fun toString(): String = "/"
+  override fun instruction(dest: Reg, r2: Reg) = TODO()
 }
 
 object ModBO : IntBinOp() {
   override fun toString(): String = "%"
+  override fun instruction(dest: Reg, r2: Reg) = TODO()
 }
 
 object PlusBO : IntBinOp() {
   override fun toString(): String = "+"
+  override fun instruction(dest: Reg, r2: Reg) = ADDInstr(rd = dest, rn = dest, op2 = r2)
 }
 
 object MinusBO : IntBinOp() {
   override fun toString(): String = "-"
+  override fun instruction(dest: Reg, r2: Reg) = TODO()
 }
 
 // (int, int) -> bool:
 object GtBO : CompBinOp() {
   override fun toString(): String = ">"
+  override fun instruction(dest: Reg, r2: Reg) = TODO()
 }
 
 object GeqBO : CompBinOp() {
   override fun toString(): String = ">="
+  override fun instruction(dest: Reg, r2: Reg) = TODO()
 }
 
 object LtBO : CompBinOp() {
   override fun toString(): String = "<"
+  override fun instruction(dest: Reg, r2: Reg) = TODO()
 }
 
 object LeqBO : CompBinOp() {
   override fun toString(): String = ">="
+  override fun instruction(dest: Reg, r2: Reg) = TODO()
 }
 
 sealed class EqualityBinOp : BinaryOper() {
@@ -306,16 +371,20 @@ sealed class EqualityBinOp : BinaryOper() {
 
 object EqBO : EqualityBinOp() {
   override fun toString(): String = "=="
+  override fun instruction(dest: Reg, r2: Reg) = TODO()
 }
 
 object NeqBO : EqualityBinOp() {
   override fun toString(): String = "!="
+  override fun instruction(dest: Reg, r2: Reg) = TODO()
 }
 
 object AndBO : BoolBinOp() {
   override fun toString(): String = "&&"
+  override fun instruction(dest: Reg, r2: Reg) = TODO()
 }
 
 object OrBO : BoolBinOp() {
   override fun toString(): String = "||"
+  override fun instruction(dest: Reg, r2: Reg) = TODO()
 }

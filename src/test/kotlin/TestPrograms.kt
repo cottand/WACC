@@ -6,7 +6,6 @@ import arrow.core.getOrElse
 import ic.org.CompileResult
 import ic.org.WACCCompiler
 import ic.org.util.containsAll
-import ic.org.util.joinLines
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -78,7 +77,8 @@ class TestPrograms {
       assumeFalse(e is NotImplementedError)
       // If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
       // for some other reason. So fail the test case.
-      System.err.println("Failed to compile $canonicalPath with exception:")
+      System.err.println("Failed to compile $canonicalPath with exception.")
+      println("Program:\n${program.file.readText()}")
       fail(e)
     }
     assertEquals(program.expectedReturn, res.exitCode) {

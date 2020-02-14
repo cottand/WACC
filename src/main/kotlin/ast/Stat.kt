@@ -7,6 +7,7 @@ import ic.org.arm.Reg
 import ic.org.util.Code
 import ic.org.util.Position
 
+
 sealed class Stat {
   abstract val scope: Scope
   abstract val pos: Position
@@ -46,7 +47,7 @@ data class Return(val expr: Expr, override val scope: Scope, override val pos: P
 
 data class Exit(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
   // TODO revisit how do we determine which dest register [Expr] should use
-  override fun instr() = expr.code(Reg.ret) + BLInstr(Label("exit"))
+  override fun instr() = expr.code(Reg.all) + BLInstr(Label("exit"))
 }
 
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {

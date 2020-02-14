@@ -1,10 +1,7 @@
 package ic.org.util
 
-import arrow.core.None
-import arrow.core.Option
-import arrow.core.Some
+import arrow.core.*
 import arrow.core.extensions.list.foldable.forAll
-import arrow.core.firstOrNone
 import arrow.syntax.collections.tail
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -18,15 +15,17 @@ import kotlin.streams.toList
  */
 fun <A, B> List<A>.mapp(transform: (A) -> B) = map(transform).toPersistentList()
 
-val <E> PersistentList<E>.head
+val <E> PersistentList<E>.headOrNone
   get() = take(1).firstOrNone()
+
+infix fun <E> E.prepend(list: PersistentList<E>) = list.add(0, this)
 
 /**
  * Like List flattening but for [PersistentList]
  */
 fun <E> PersistentList<PersistentList<E>>.flatten(): PersistentList<E> {
-  if (head is None) return persistentListOf<Nothing>()
-  var total: PersistentList<E> = (head as Some<PersistentList<E>>).t
+  if (headOrNone is None) return persistentListOf<Nothing>()
+  var total: PersistentList<E> = (headOrNone as Some<PersistentList<E>>).t
   for (l in this.tail()) {
     total += l
   }
@@ -67,3 +66,13 @@ inline fun <A> Option<A>.ifExsistsAnd(pred: Boolean, run: (A) -> Unit): Option<A
   if (this is Some && pred) run(this.t)
   return this
 }
+
+val <E> PersistentList<E>.take2: Triple<E, E, PersistentList<E>>
+  get() {
+    val (fst, snd) = this
+    val rest = this.removeAt(0).removeAt(0)
+    return Triple(fst, snd, rest)
+  }
+
+val <E> PersistentList<E>.take2OrNone
+  get() = if (this.size >= 2) take2.some() else None

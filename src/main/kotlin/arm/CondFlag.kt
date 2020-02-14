@@ -1,6 +1,10 @@
 package ic.org.arm
 
+import arrow.core.Option
+
 sealed class CondFlag : Printable
+
+typealias Flag = Option<CondFlag>
 
 object EQCond : CondFlag() { // Equal
   override val code = "EQ"
