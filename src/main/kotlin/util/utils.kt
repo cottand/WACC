@@ -1,3 +1,5 @@
+@file:Suppress("DataClassPrivateConstructor", "NOTHING_TO_INLINE")
+
 package ic.org.util
 
 import arrow.core.*
@@ -24,7 +26,6 @@ fun <A, B> List<Either<A, B>>.containsLefts() = !this.forAll { it.isRight() }
  * Returns whether a [List] of [Either] contains any [Either.Right]s
  */
 fun <A, B> List<Either<A, B>>.containsRights() = !this.forAll { it.isLeft() }
-
 
 /**
  * Prints [this], while returning [this]. Useful for [println] debugging.
@@ -62,13 +63,24 @@ typealias Datas = PersistentList<Data>
  * Returned by something that produces assembly. [instr] corresponds to the assembly instructions,
  * and [data] to information in the Data segment.
  */
-@Suppress("NOTHING_TO_INLINE")
-data class Code(val instr: Instructions = persistentListOf(), val data: Datas = persistentListOf()) {
+data class Code
+private constructor(
+  val instr: Instructions = persistentListOf(),
+  val data: Datas = persistentListOf(),
+  private val funcs: PersistentList<Code> = persistentListOf()
+) {
+
+  constructor(instr: Instructions = persistentListOf(), data: Datas = persistentListOf())
+    : this(instr, data, persistentListOf())
 
   inline fun combine(other: Code) = Code(instr + other.instr, data + other.data)
   inline operator fun plus(other: Code) = combine(other)
   inline operator fun plus(other: Instructions) = combine(Code(other))
   inline operator fun plus(other: Instr) = combine(Code.instr(other))
+
+  fun withFunction(other: Code) = Code(instr, data, funcs + other)
+
+  val functions by lazy { funcs.fold(Code.empty) { a, b -> a.combine(b) } }
 
   companion object {
     val empty = Code(persistentListOf<Nothing>(), persistentListOf<Nothing>())

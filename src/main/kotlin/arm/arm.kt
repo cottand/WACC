@@ -1,7 +1,6 @@
 package ic.org.arm
 
 import arrow.core.None
-import arrow.core.Option
 import arrow.core.some
 import ic.org.util.NOT_REACHED
 import kotlinx.collections.immutable.PersistentList
@@ -21,32 +20,41 @@ interface Printable {
 /**
  * Highest level element of our IR. This compiler ends up producing a [List] of [Instr]s
  */
-sealed class Instr : Printable {
+interface Instr : Printable {
   operator fun plus(other: Instr) = persistentListOf(this, other)
   operator fun plus(other: PersistentList<Instr>) = persistentListOf(this) + other
 }
 
-object CodeSegment : Instr() {
+data class Directive(val text: String) : Data() {
+  override val code = ".$text"
+}
+
+// TODO swap for directives?
+object CodeSegment : Instr {
   override val code = ".global main"
 }
 
-object DataSegment : Instr() {
+object DataSegment : Instr {
+  override val code = ".data"
+}
+
+object TextSegment : Instr {
   override val code = ".text"
 }
 
-object LTORG : Instr() {
+object LTORG : Instr {
   override val code = ".ltorg"
 }
 
 /**
  * [Instr] that goes inside the Data segment of the program
  */
-sealed class Data : Instr()
+sealed class Data : Instr
 
 /**
  * ARM instruction, can be translated to ARM assembly code
  */
-abstract class ARMInstr : Instr() {
+abstract class ARMInstr : Instr {
   /**
    * Aliases to [Printable.code]
    */
@@ -128,7 +136,7 @@ object PC : Register() {
 /**
  * Label, represented by a name
  */
-data class Label(val name: String) : Instr() {
+data class Label(val name: String) : Data() {
   override val code = "$name:"
 }
 

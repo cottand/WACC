@@ -23,7 +23,7 @@ sealed class Expr {
 
 data class IntLit(val value: Int) : Expr() {
   override val type = IntT
-  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals(value))
+  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(value))
   override val weight = 1
 
   override fun toString(): String = value.toString()
@@ -41,7 +41,7 @@ data class BoolLit(val value: Boolean) : Expr() {
   override val type = BoolT
   override fun toString(): String = value.toString()
   // Booleans are represented as a 0 for true, and 1 for false
-  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals(if (value) 0 else 1))
+  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(if (value) 0 else 1))
 
   override val weight = 1
 }
@@ -50,7 +50,7 @@ data class CharLit(val value: Char) : Expr() {
   override val type = CharT
   override fun toString(): String = "$value"
   // Chars are represented as their ASCII value
-  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals(value.toInt()))
+  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(value.toInt()))
 
   override val weight = 1
 }
@@ -66,7 +66,7 @@ object NullPairLit : Expr() {
   override val type = AnyPairTs() // TODO double check
   override fun toString(): String = "null"
   // null is represented as 0
-  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals(0))
+  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(0))
 
   override val weight = 1
 }

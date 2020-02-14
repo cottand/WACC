@@ -94,7 +94,7 @@ class TestPrograms {
       if (expectedAss != actualAss) {
         val (actualOut, actualCode) = Ref.run(actualAss, filename, input)
         println("Expected assembly:       Actual:\n")
-        println(expectedAss.sideToSideWith(actualAss) + '\n')
+        println(expectedAss.sideToSideWith(actualAss, pad = 60) + '\n')
         assertEquals(expectedOut, actualOut) { "Non matching program output for $canonicalPath" }
         // assertEquals(expectedCode, actualCode) { "Non matching program output code for $canonicalPath" } TODO check codes
       } else

@@ -3,11 +3,11 @@ package ic.org.arm
 import arrow.core.None
 
 data class ADDInstr(
+  override val cond: Flag = None,
   override val s: Boolean,
   val rd: Register,
   val rn: Register,
-  val op2: Operand2,
-  override val cond: Flag = None
+  val op2: Operand2
 ) : ARMCondSInstr() {
   constructor(
     cond: Flag = None,
@@ -15,7 +15,16 @@ data class ADDInstr(
     rd: Register,
     rn: Register,
     op2: Register
-  ) :  this(s, rd, rn, RegOperand2(op2), cond)
+  ) :  this(cond, s, rd, rn, RegOperand2(op2))
+
+  constructor(
+    cond: Flag = None,
+    s: Boolean = true,
+    rd: Register,
+    rn: Register,
+    int12b: Int
+  ) :  this(cond, s, rd, rn, ImmOperand2(Immed_12(int12b)))
+
   override val code = "${opcode("ADD")} ${rd.code}, ${rn.code}, ${op2.code}"
 }
 
