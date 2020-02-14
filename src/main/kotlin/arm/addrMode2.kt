@@ -14,8 +14,8 @@ data class ImmOffsetAddrMode2(val rn: Register, val imm: Immed_12) : AddrMode2()
  *
  * see [StackOverflow](https://reverseengineering.stackexchange.com/questions/17666/how-does-the-ldr-instruction-work-on-arm)
  */
-data class ImmEquals(val v: Int) : AddrMode2() {
-  override val code = "=$v"
+data class ImmEquals(val v32bit: Int) : AddrMode2() {
+  override val code = "=$v32bit"
 }
 
 data class ZeroOffsetAddrMode2(val rn: Register) : AddrMode2() {

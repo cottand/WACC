@@ -1,5 +1,9 @@
 package ic.org.arm
+
+import arrow.core.None
 import arrow.core.Option
+import arrow.core.some
+import ic.org.util.NOT_REACHED
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
@@ -72,19 +76,42 @@ sealed class Register : Printable
 /**
  * Register, represented by an ID
  */
-data class Reg(val id : Int) : Register() {
+data class Reg(val id: Int) : Register() {
   init {
     require(id in 0..12)
   }
+
   override val code = "r$id"
+
+  /**
+   * Returns the next highest numbered [Register.some], unless the next [Register] is the 12th.
+   * In that case, returns [None].
+   *
+   * Should never be called on [Reg.last]
+   */
+  val next by lazy {
+    when (id) {
+      in 0..10 -> Reg(id + 1).some()
+      11 -> None
+      else -> NOT_REACHED()
+    }
+  }
+
+  companion object {
+    val last = Reg(12)
+    val first = Reg(0)
+    val ret = first
+  }
 }
 
 object SP : Register() {
   override val code = "sp"
 }
+
 object LR : Register() {
   override val code = "lr"
 }
+
 object PC : Register() {
   override val code = "pc"
 }
@@ -100,9 +127,11 @@ data class Label(val name: String) : Instr() {
  * Sign for offsets
  */
 sealed class Sign : Printable
+
 object Plus : Sign() {
   override val code = ""
 }
+
 object Minus : Sign() {
   override val code = "-"
 }

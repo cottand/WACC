@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import ic.org.CompileResult
 import ic.org.WACCCompiler
 import ic.org.util.containsAll
+import ic.org.util.joinLines
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -92,13 +93,15 @@ class TestPrograms {
       val actualAss = res.out.getOrElse { fail("Compilation unsuccessful") }
       if (expectedAss != actualAss) {
         val (actualOut, actualCode) = Ref.run(actualAss, filename, input)
-        println("Expected:\n$expectedAss\n")
-        println("Compiled:\n$actualAss")
+        println("Expected assembly:       Actual:\n")
+        println(expectedAss.sideToSideWith(actualAss) + '\n')
         assertEquals(expectedOut, actualOut) { "Non matching program output for $canonicalPath" }
         // assertEquals(expectedCode, actualCode) { "Non matching program output code for $canonicalPath" } TODO check codes
-      }
+      } else
+        println("Expected and actual assembly outputs are identical")
     }
-    println("Test successful (exit code ${res.exitCode}). Compiler output:\n${res.msg}")
+    println("Test successful (compiler exit code ${res.exitCode}). Compiler output:\n${res.msg}\n")
+    println("Compiled WACC:\n${program.file.readText()}")
   }
 
   /**
