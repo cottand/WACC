@@ -9,6 +9,9 @@ import arrow.core.some
 import arrow.core.valid
 import arrow.syntax.collections.tail
 import ast.graph.asGraph
+import ic.org.arm.ARMInstr
+import ic.org.arm.Directive
+import ic.org.arm.Label
 import ic.org.ast.Prog
 import ic.org.ast.build.asAst
 import ic.org.instr.instr
@@ -98,7 +101,13 @@ class WACCCompiler(private val filename: String) {
       .flatMap { it.checkControlFlow() }
   }
 
-  private fun Prog.toAssembly(): String = instr().joinToString(separator = "\n") { it.code }
+  private fun Prog.toAssembly(): String = instr().joinToString(separator = "\n") {
+    val margin = when (it) {
+      is Directive, is Label -> "  "
+      else -> "    "
+    }
+    margin + it.code
+  }
 
   fun compile(checkOnly: Boolean = false): CompileResult {
     val start = MonoClock.markNow()

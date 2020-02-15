@@ -42,7 +42,7 @@ data class Free(val expr: Expr, override val scope: Scope, override val pos: Pos
 }
 
 data class Return(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = TODO()
+  override fun instr() = Code.empty + expr.code(Reg.all)
 }
 
 data class Exit(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {

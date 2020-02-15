@@ -79,6 +79,7 @@ private constructor(
   inline operator fun plus(other: Instr) = combine(Code.instr(other))
 
   fun withFunction(other: Code) = Code(instr, data, funcs + other)
+  fun withFunctions(others: Collection<Code>) = Code(instr, data, funcs + others.toPersistentList())
 
   val functions by lazy { funcs.fold(Code.empty) { a, b -> a.combine(b) } }
 

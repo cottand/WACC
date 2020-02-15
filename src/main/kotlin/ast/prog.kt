@@ -1,19 +1,26 @@
 package ic.org.ast
 
+import ic.org.arm.*
 import ic.org.util.Code
 import org.antlr.v4.runtime.tree.TerminalNode
+import kotlinx.collections.immutable.plus
 
 // <program>
 data class Prog(val funcs: List<Func>, val body: Stat)
 
 // <func>
-data class Func(
-  val retType: Type,
-  val ident: Ident,
-  val params: List<Param>,
-  val stat: Stat
-) {
-  fun instr(): Code = TODO()
+data class Func(val retType: Type, val ident: Ident, val params: List<Param>, val stat: Stat) {
+
+  fun instr(): Code {
+    val statCode = stat.instr()
+    val body = Label("f_" + ident.name) +
+      PUSHInstr(LR) +
+      statCode.instr +
+      POPInstr(PC) +
+      POPInstr(PC) +
+      Directive.ltorg
+    return Code(body, statCode.data)
+  }
 }
 
 // <param>

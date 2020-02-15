@@ -1,27 +1,30 @@
 package ic.org.instr
 
 import ic.org.arm.*
+import ic.org.ast.Func
 import ic.org.ast.Prog
 import ic.org.util.Code
 import ic.org.util.Instructions
-import ic.org.util.flatten
+import ic.org.util.print
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.toPersistentList
 
-fun Prog.instr(): Instructions = (body.instr() + funcs.map { it.instr() }.flatten())
+fun Prog.instr(): Instructions = body.instr()
+  .withFunctions(funcs.map(Func::instr))
   .addErrors()
   .let {
     val allData = it.data + it.functions.data
-    (if (allData.isNotEmpty()) DataSegment + allData else persistentListOf()) +
-      TextSegment +
-      CodeSegment +
+    val dataSegment = if (allData.isNotEmpty()) Directive.data + allData else persistentListOf<Nothing>()
+    dataSegment +
+      Directive.text +
+      Directive.main +
       Label("main") +
       PUSHInstr(LR) +
       it.instr +
       LDRInstr(Reg(0), 0) +
       POPInstr(PC) +
-      LTORG +
+      Directive.ltorg +
       // Function code segments:
       it.functions.instr
 
@@ -47,7 +50,7 @@ fun Code.addErrors(): Code {
       // TODO add more
     }
   }
-  var newCode = Code(program.toPersistentList(), data)
+  var newCode = Code(program.toPersistentList(), data).withFunction(functions)
 
   if (overflow) {
     newCode = newCode.withFunction(OverflowException.body)

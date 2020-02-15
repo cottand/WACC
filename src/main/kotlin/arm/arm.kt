@@ -27,23 +27,13 @@ interface Instr : Printable {
 
 data class Directive(val text: String) : Data() {
   override val code = ".$text"
-}
 
-// TODO swap for directives?
-object CodeSegment : Instr {
-  override val code = ".global main"
-}
-
-object DataSegment : Instr {
-  override val code = ".data"
-}
-
-object TextSegment : Instr {
-  override val code = ".text"
-}
-
-object LTORG : Instr {
-  override val code = ".ltorg"
+  companion object {
+    val main = Directive("global main")
+    val data = Directive("data")
+    val text = Directive("text")
+    val ltorg = Directive("ltorg")
+  }
 }
 
 /**
