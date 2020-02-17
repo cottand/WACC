@@ -9,16 +9,19 @@ import kotlinx.collections.immutable.plus
 data class Prog(val funcs: List<Func>, val body: Stat)
 
 // <func>
-data class Func(val retType: Type, val ident: Ident, val params: List<Param>, val stat: Stat) {
+data class Func(val retType: Type, val ident: Ident, val params: List<Variable>, val stat: Stat) {
+
+  val label = Label("f_" + ident.name)
 
   fun instr(): Code {
     val statCode = stat.instr()
-    val body = Label("f_" + ident.name) +
-      PUSHInstr(LR) +
-      statCode.instr +
-      POPInstr(PC) +
-      POPInstr(PC) +
-      Directive.ltorg
+    val body =
+      label +
+        PUSHInstr(LR) +
+        statCode.instr +
+        POPInstr(PC) +
+        POPInstr(PC) +
+        Directive.ltorg
     return Code(body, statCode.data)
   }
 }

@@ -8,16 +8,7 @@ import java.lang.Integer.max
 import java.lang.Integer.min
 
 // <expr>
-sealed class Expr {
-  abstract val type: Type
-
-  /**
-   * Covert to [Code]. The result of evaluating this [Expr] should be put in [rem].
-   * In order to perform the computation, one may use [rem], and dest's [Reg.next] registers.
-   * If next happens to be [none], then the stack should be used.
-   */
-  abstract fun code(rem: Regs): Code
-
+sealed class Expr : Computable {
   abstract val weight: Int
 }
 

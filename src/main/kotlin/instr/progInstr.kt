@@ -16,12 +16,15 @@ fun Prog.instr(): Instructions = body.instr()
   .let {
     val allData = it.data + it.functions.data
     val dataSegment = if (allData.isNotEmpty()) Directive.data + allData else persistentListOf<Nothing>()
+    val (initScope, endScope) = body.scope.makeInstrScope()
     dataSegment +
       Directive.text +
       Directive.main +
       Label("main") +
       PUSHInstr(LR) +
+      initScope +
       it.instr +
+      endScope +
       LDRInstr(Reg(0), 0) +
       POPInstr(PC) +
       Directive.ltorg +

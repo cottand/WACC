@@ -32,13 +32,18 @@ fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
     .map { ctx ->
       val t = ctx.type().asAst()
       val ident = Ident(ctx.ID().text)
-      val params = ctx.paramsAsAst()
-      val funcId = FuncIdent(t, ident, params.valids)
+      val fScope = FuncScope(ident, gScope)
+      val antlrParams = ctx.param_list()?.param() ?: emptyList()
+      val vars = ctx.paramsAsAst().mapIndexed { i, param ->
+        param.flatMap { fScope.addParameter(antlrParams[i].startPosition, it) }
+      }
+      // TODO get those invalids
+      val funcId = FuncIdent(t, ident, vars.valids, fScope)
       val validatedFuncId = gScope.addFunction(startPosition, funcId)
       Triple(ctx, funcId, validatedFuncId)
     } // Build the Function's AST and combine its errors with the possible errors from duplicate function definition errors.
     .map { (ctx, fId, alreadyDefinedErrors: Parsed<FuncIdent>) ->
-      ctx.asAst(gScope, fId.params).combineWith(alreadyDefinedErrors) { ast, _ -> ast }
+      ctx.asAst(fId).combineWith(alreadyDefinedErrors) { ast, _ -> ast }
     }
   val stat = stat().asAst(gScope)
 
@@ -71,16 +76,13 @@ fun FuncContext.paramsAsAst(): List<Parsed<Param>> {
  * Takes a [GlobalScope] [gScope] as well as list of [Param]s. Creates a [FuncScope] which is a child of the [GlobalScope]
  * Adds each parameter ot the [FuncScope]
  */
-fun FuncContext.asAst(gScope: GlobalScope, params: List<Param>): Parsed<Func> {
+fun FuncContext.asAst(funcIdent: FuncIdent): Parsed<Func> {
+  val params = funcIdent.params
   val ident = Ident(this.ID().text)
-  val funcScope = FuncScope(ident, gScope)
-  val antlrParams = param_list()?.param() ?: emptyList()
+  val funcScope = funcIdent.funcScope
 
   val type = type().asAst()
 
-  params.forEachIndexed { i, p ->
-    funcScope.addVariable(antlrParams[i].startPosition, ParamVariable(p))
-  }
 
   return stat().asAst(funcScope).map { body -> Func(type, ident, params, body) }
 }

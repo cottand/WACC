@@ -9,6 +9,13 @@ sealed class Type {
    * For example, [AnyArrayT] matches with [ArrayT].
    */
   abstract fun matches(other: Type): Boolean
+  val size : Sizes = TODO()
+  enum class Sizes(val bytes: Int) {
+    Word(4),
+    Char(1)
+  }
+  val Sizes.pointer
+    get() = Sizes.Word
 }
 
 sealed class BaseT : Type() {

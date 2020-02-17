@@ -1,8 +1,10 @@
 package ic.org.arm
 
+import arrow.core.None
 import arrow.core.Option
 
 data class STRInstr(override val cond: Flag, val rd: Register, val addressing: AddrMode2) : ARMCondInstr() {
+  constructor(rd: Register, addressing: AddrMode2) : this(None, rd, addressing)
   override val code = "${opcode("STR")} ${rd.code}, ${addressing.code}"
 }
 data class STRTInstr(override val cond: Flag, val rd: Register, val addressing: AddrMode2P) : ARMCondInstr() {

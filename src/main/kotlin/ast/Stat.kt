@@ -1,9 +1,6 @@
 package ic.org.ast
 
-import ic.org.arm.BLInstr
-import ic.org.arm.Instr
-import ic.org.arm.Label
-import ic.org.arm.Reg
+import ic.org.arm.*
 import ic.org.util.Code
 import ic.org.util.Position
 
@@ -26,10 +23,16 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
   Stat() {
   val type = variable.type
   val ident = variable.ident
-  override fun instr() = TODO()
+  override fun instr() = Code.empty +
+    // Eval rhs in r0 for example
+    // + ...
+    // Save value in r4 in stack at address of variable
+    // Look out for the size of STR...
+  STRInstr(Reg(0), SP.withOffset(variable.addrFromSP))
 }
 
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
+  // See Decl.instr()
   override fun instr() = TODO()
 }
 

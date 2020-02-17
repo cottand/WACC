@@ -36,10 +36,7 @@ internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
       lhsType is PairT && rhs.type is PairT -> inferPairsFromRhs(lhsType, rhs.type as PairT)
       else -> lhsType
     }
-
-    DeclVariable(lhsTypeInferred, Ident(ID()), rhs)
-      .valid()
-      .flatMap { scp.addVariable(startPosition, it) }
+    scp.addVariable(startPosition, lhsTypeInferred, Ident(ID()))
       // If RHS is empty array, we match any kind of array on the LHS (case of int[] a = [])
       .validate({ lhs -> lhs.type.matches(rhs.type) },
         { TypeError(startPosition, it.type, rhs.type, "declaration", rhs) })

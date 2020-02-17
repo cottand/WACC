@@ -76,3 +76,4 @@ val <E> PersistentList<E>.take2: Triple<E, E, PersistentList<E>>
 
 val <E> PersistentList<E>.take2OrNone
   get() = if (this.size >= 2) take2.some() else None
+

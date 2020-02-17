@@ -81,7 +81,7 @@ private constructor(
   fun withFunction(other: Code) = Code(instr, data, funcs + other)
   fun withFunctions(others: Collection<Code>) = Code(instr, data, funcs + others.toPersistentList())
 
-  val functions by lazy { funcs.fold(Code.empty) { a, b -> a.combine(b) } }
+  val functions by lazy { funcs.fold(empty, Code::combine) }
 
   companion object {
     val empty = Code(persistentListOf<Nothing>(), persistentListOf<Nothing>())

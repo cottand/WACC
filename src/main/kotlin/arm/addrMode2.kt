@@ -8,8 +8,10 @@ data class ImmOffsetAddrMode2(val rn: Register, val imm: Immed_12) : AddrMode2()
   override val code = "[${rn.code}, #+${imm.code}]"
 }
 
-val Reg.zeroOffsetAddr
+val Register.zeroOffsetAddr
   get() = ZeroOffsetAddrMode2(this)
+
+fun Register.withOffset(int12b: Int) = ImmOffsetAddrMode2(this, Immed_12(int12b))
 
 /**
  * 32 bit constant

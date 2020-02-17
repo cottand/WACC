@@ -1,10 +1,9 @@
+@file:Suppress("LeakingThis")
+
 package ic.org.ast
 
-import arrow.core.Option
-import arrow.core.or
-import arrow.core.toOption
-import arrow.core.valid
-import ic.org.util.Parsed
+import arrow.core.*
+import ic.org.arm.*
 import ic.org.util.Position
 import ic.org.util.RedeclarationError
 
@@ -15,6 +14,19 @@ import ic.org.util.RedeclarationError
  * [Variable]s of this [Scope]
  */
 sealed class Scope {
+
+  /**
+   * Stateful list that holds all the [Variable]s defined in this scope only (not its parents').
+   */
+  internal val variables = LinkedHashMap<Ident, Variable>()
+
+  /**
+   * How big the stack should be grown down upon starting a new stack. Determined by the variables that live on
+   * this scope's stack. Value relative to the address of the parent's scope stack.
+   * Grows as stuff is added to the stack!
+   */
+  fun stackSizeSoFar() = variables.toList().fold(0) { stack, (_, v) -> stack + v.type.size.bytes }
+
   /**
    * Returns the [Variable] associated with [ident]. If [ident] exists twice in this scope and/or
    * one if the parent scopes, the lowest level [Variable] is returned.
@@ -35,26 +47,40 @@ sealed class Scope {
   operator fun get(identName: String) = getVar(identName)
 
   /**
-   * Stateful list that holds all the [Variable]s defined in this scope only (not its parents').
+   * Adds a variable to the current [Scope]. Used in variable delcaration and function parameter
+   * creation.
+   *
+   * @see Scope.stackSizeSoFar
    */
-  internal val variables = HashMap<Ident, Variable>()
+  fun addVariable(pos: Position, t: Type, i: Ident) =
+    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar() + t.size.bytes).let {
+      if (variables.put(it.ident, it) == null)
+        it.valid()
+      else
+        RedeclarationError(pos, it.ident).toInvalidParsed()
+    }
 
   /**
-   * Adds [variable] to the current [Scope]. Used in variable delcaration and function parameter
-   * creation.
+   * Overloaded [addVariable] by using [param]
    */
-  fun addVariable(pos: Position, variable: Variable): Parsed<Variable> =
-    if (variables.put(variable.ident, variable) == null)
-      variable.valid()
-    else
-      RedeclarationError(pos, variable.ident).toInvalidParsed()
+  fun addParameter(pos: Position, param: Param) = addVariable(pos, param.type, param.ident)
 
   val globalFuncs: Map<String, FuncIdent>
     get() = when (this) {
       is GlobalScope -> functions
-      is FuncScope -> globalScope.functions
+      is FuncScope -> gScope.functions
       is ControlFlowScope -> parent.globalFuncs
     }
+
+  /**
+   * Returns the encapsulation of a scope in assembly instructions by growing the stack down to allocate local variables
+   *
+   * TODO make sure it is used by Prog.instr() (OK), Func.instr(), and BegEnd Stat.
+   */
+  fun makeInstrScope() = stackSizeSoFar().let { size ->
+    SUBInstr(s = false, rd = SP, rn = SP, int12b = size) to
+      ADDInstr(s = false, rd = SP, rn = SP, int12b = size)
+  }
 }
 
 /**
@@ -72,14 +98,16 @@ class GlobalScope : Scope() {
 }
 
 /**
- * Scope created by [funcIdent]. Does not see [GlobalScope] variables, and is parent of
+ * Scope created by a function. Does not see [GlobalScope] variables, and is parent of
  * [ControlFlowScope] defined inside the [Func].
+ *
+ * TODO remove ident which is for debuggin purposes
  */
-data class FuncScope(val funcIdent: Ident, val globalScope: GlobalScope) : Scope() {
+data class FuncScope(val ident: Ident, val gScope: GlobalScope) : Scope() {
 
   // A [FuncScope] does not have any parent scopes, so if the variable is not here, return an
   // option.
-  override fun getVar(ident: Ident): Option<Variable> = variables[ident].toOption()
+  override fun getVar(ident: Ident): Option<Variable> = variables.getOption(ident)
 }
 
 /**
@@ -95,21 +123,15 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
     variables[ident].toOption() or parent.getVar(ident)
 }
 
-// TODO Change all scope accesses to fit with these new definitions of Variable:
-sealed class Variable {
-  abstract val type: Type
-  abstract val ident: Ident
-  // abstract val value: Nothing // TODO revisit at backend
+/**
+ * Represents a WACC variable.
+ *
+ * Primitives and complex structures pointers all live in the stack,
+ * whose address is represented by [addrFromSP]. During code generation, [BegEnd], [Call] and [Prog]
+ * have the responsibility of growing the stack down before placing stuff on it.
+ */
+data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addrFromSP: Int)
+
+data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variable>, val funcScope: FuncScope) {
+  val label = Label("f_" + name.name)
 }
-
-data class DeclVariable(
-  override val type: Type,
-  override val ident: Ident,
-  val rhs: AssRHS
-) : Variable()
-
-data class ParamVariable(override val type: Type, override val ident: Ident) : Variable() {
-  constructor(param: Param) : this(param.type, param.ident)
-}
-
-data class FuncIdent(val retType: Type, val name: Ident, val params: List<Param>)

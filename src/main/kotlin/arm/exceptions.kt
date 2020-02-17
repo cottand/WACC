@@ -5,7 +5,6 @@ package ic.org.arm
 import arrow.core.None
 import ic.org.util.Code
 import kotlinx.collections.immutable.persistentListOf
-import java.util.Collections
 
 abstract class Exception {
   abstract val name: String
@@ -17,7 +16,7 @@ object OverflowException : Exception() {
   override val name = "p_throw_overflow_error"
 
   private const val errormsg = "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n"
-  private val msg0 = StringData("msg_0", errormsg, errormsg.length)
+  private val msg0 = StringData(errormsg, errormsg.length)
 
   private val instructions = persistentListOf(
     label,
@@ -31,7 +30,7 @@ object OverflowException : Exception() {
 object RuntimeError : Exception() {
 
   private const val format = "%.*s\\0"
-  private val msg1 = StringData("msg_1", format, format.length - 1)
+  private val msg1 = StringData(format, format.length - 1)
 
   override val name = "p_throw_runtime_error"
 
