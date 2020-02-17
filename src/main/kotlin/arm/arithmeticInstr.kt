@@ -47,11 +47,19 @@ data class SUBInstr(
 ) : ARMCondSInstr() {
   constructor(
     cond: Flag = None,
-    s: Boolean = false,
+    s: Boolean = true,
+    rd: Register,
+    rn: Register,
+    op2: Register
+  ) :  this(cond, s, rd, rn, RegOperand2(op2))
+
+  constructor(
+    cond: Flag = None,
+    s: Boolean = true,
     rd: Register,
     rn: Register,
     int12b: Int
-  ) : this(cond, s, rd, rn, ImmOperand2(Immed_12(int12b)))
+  ) :  this(cond, s, rd, rn, ImmOperand2(Immed_12(int12b)))
 
   override val code = "${opcode("SUB")} ${rd.code}, ${rn.code}, ${op2.code}"
 }

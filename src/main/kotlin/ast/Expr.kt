@@ -315,7 +315,7 @@ object PlusBO : IntBinOp() {
 
 object MinusBO : IntBinOp() {
   override fun toString(): String = "-"
-  override fun instruction(dest: Reg, r2: Reg) = TODO()
+  override fun instruction(dest: Reg, r2: Reg) = SUBInstr(rd = dest, rn = dest, op2 = r2)
 }
 
 // (int, int) -> bool:
