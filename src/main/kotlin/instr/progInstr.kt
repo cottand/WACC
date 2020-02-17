@@ -46,7 +46,7 @@ fun Code.addErrors(): Code {
   for (line in iter) {
     if (line !is ARMInstr) continue
     when (line) {
-      is ADDInstr, is SUBInstr, is MULInstr -> {
+      is ADDInstr, is SUBInstr, is MULInstr, is RSBInstr -> {
         iter.add(BLInstr(condFlag = VSCond, label = OverflowException.label))
         overflow = true
       }
