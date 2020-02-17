@@ -5,7 +5,7 @@ package ic.org.arm
  */
 sealed class Operand2 : Printable
 
-data class ImmOperand2(val imm: SimpleImmedate) : Operand2() {
+data class ImmOperand2(val imm: Immed_8r) : Operand2() {
   override val code = "#${imm.code}"
 }
 data class LSLImmOperand2(val rm: Register, val imm: Immed_5) : Operand2() {

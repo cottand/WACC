@@ -1,5 +1,6 @@
 package ic.org.ast
 
+import arrow.core.None
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.valid
 import ic.org.arm.*
@@ -108,7 +109,7 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
 
   override fun toString(): String = "$unaryOper $expr"
   override fun code(rem: Regs) = when (unaryOper) {
-    NotUO -> TODO()
+    NotUO -> TODO()//EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r(1, 0)))
     MinusUO -> TODO()
     LenUO -> TODO()
     OrdUO -> TODO()

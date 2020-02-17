@@ -22,8 +22,8 @@ data class ADDInstr(
     s: Boolean = true,
     rd: Register,
     rn: Register,
-    int12b: Int
-  ) : this(cond, s, rd, rn, ImmOperand2(Immed_12(int12b)))
+    int8b: Int
+  ) : this(cond, s, rd, rn, ImmOperand2(Immed_8r(int8b.toByte(), 0)))
 
   override val code = "${opcode("ADD")} ${rd.code}, ${rn.code}, ${op2.code}"
 }
@@ -58,8 +58,8 @@ data class SUBInstr(
     s: Boolean = true,
     rd: Register,
     rn: Register,
-    int12b: Int
-  ) :  this(cond, s, rd, rn, ImmOperand2(Immed_12(int12b)))
+    int8b: Int
+  ) : this(cond, s, rd, rn, ImmOperand2(Immed_8r(int8b.toByte(), 0)))
 
   override val code = "${opcode("SUB")} ${rd.code}, ${rn.code}, ${op2.code}"
 }

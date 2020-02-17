@@ -78,8 +78,8 @@ sealed class Scope {
    * TODO make sure it is used by Prog.instr() (OK), Func.instr(), and BegEnd Stat.
    */
   fun makeInstrScope() = stackSizeSoFar().let { size ->
-    SUBInstr(s = false, rd = SP, rn = SP, int12b = size) to
-      ADDInstr(s = false, rd = SP, rn = SP, int12b = size)
+    SUBInstr(s = false, rd = SP, rn = SP, int8b = size) to
+      ADDInstr(s = false, rd = SP, rn = SP, int8b = size)
   }
 }
 
