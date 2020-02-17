@@ -9,14 +9,14 @@ sealed class Type {
    * For example, [AnyArrayT] matches with [ArrayT].
    */
   abstract fun matches(other: Type): Boolean
-  val size : Sizes = TODO()
+  abstract val size : Sizes
   enum class Sizes(val bytes: Int) {
     Word(4),
     Char(1)
   }
-  val Sizes.pointer
-    get() = Sizes.Word
 }
+val Type.Sizes.Pointer
+  get() = Type.Sizes.Word
 
 sealed class BaseT : Type() {
   override fun matches(other: Type) = this == other
@@ -24,6 +24,8 @@ sealed class BaseT : Type() {
 
 open class AnyArrayT : Type() {
   override fun matches(other: Type) = other is EmptyArrayT
+  override val size = Sizes.Word
+
   override fun toString(): String = "AnyArray"
 }
 
@@ -84,6 +86,7 @@ open class AnyPairTs : Type() {
   override fun toString() = "AnyPair"
 
   override fun matches(other: Type) = other is AnyPairTs
+  override val size = Sizes.Word
 }
 
 data class PairT(val fstT: Type, val sndT: Type) : AnyPairTs() {
@@ -96,16 +99,20 @@ data class PairT(val fstT: Type, val sndT: Type) : AnyPairTs() {
 // <base-type>
 object IntT : BaseT() {
   override fun toString() = "Int"
+  override val size = Sizes.Word
 }
 
 object BoolT : BaseT() {
   override fun toString() = "Bool"
+  override val size = Sizes.Char
 }
 
 object CharT : BaseT() {
   override fun toString() = "Char"
+  override val size = Sizes.Char
 }
 
 object StringT : BaseT() {
   override fun toString() = "String"
+  override val size = Sizes.Word
 }
