@@ -17,7 +17,7 @@ object ReferenceCompilerAPI {
       .map { it.drop(2).trim() }
       .filter { it.isNotBlank() }
       .joinLines()
-    val outLineBeg = out.withIndex().last { (_, str) -> "-- Executing..." in str }.index + 2
+    val outLineBeg = out.withIndex().last { (_, str) -> "Executing..." in str }.index + 2
     val outLineEnd = out.size - 3
     val output = out.subList(outLineBeg, outLineEnd).joinLines()
     val code = out.last { "The exit code is" in it }.filter { it.isDigit() }.toInt()

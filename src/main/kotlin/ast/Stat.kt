@@ -3,8 +3,6 @@ package ic.org.ast
 import ic.org.arm.*
 import ic.org.util.Code
 import ic.org.util.Position
-import kotlinx.collections.immutable.persistentListOf
-
 
 sealed class Stat {
   abstract val scope: Scope
