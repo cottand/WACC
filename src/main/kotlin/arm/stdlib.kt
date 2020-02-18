@@ -19,9 +19,8 @@ object PrintStdFunc : StdFunc() {
     private val instructions = persistentListOf(
         label,
         PUSHInstr(LR),
-        LDRInstr(Reg(1), Reg(0).zeroOffsetAddr),
-        ADDInstr(None, false, Reg(2), Reg(0), 4),
-        LDRInstr(Reg(0), ImmEqualLabel(msg1.label)),
+        MOVInstr(rd=Reg(1), op2=Reg(0)),
+        LDRInstr(Reg.ret, ImmEqualLabel(msg1.label)),
         ADDInstr(None, false, Reg(0), Reg(0), 4),
         BLInstr("printf"),
         LDRInstr(Reg.ret, 0),
