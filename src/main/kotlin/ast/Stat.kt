@@ -1,8 +1,11 @@
 package ic.org.ast
 
+import arrow.core.None
+import arrow.core.some
 import ic.org.arm.*
 import ic.org.util.Code
 import ic.org.util.Position
+import ic.org.util.shortRandomUUID
 
 sealed class Stat {
   abstract val scope: Scope
@@ -50,7 +53,6 @@ data class Return(val expr: Expr, override val scope: Scope, override val pos: P
 }
 
 data class Exit(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  // TODO revisit how do we determine which dest register [Expr] should use
   override fun instr() = expr.code(Reg.all) + BLInstr(Label("exit"))
 }
 
@@ -68,11 +70,49 @@ data class Println(val expr: Expr, override val scope: Scope, override val pos: 
 
 data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val scope: Scope, override val pos: Position) :
   Stat() {
-  override fun instr() = TODO()
+  override fun instr(): Code {
+    val uuid = shortRandomUUID()
+    val (line, _) = pos
+    val jumpElse = Label("if_else_${uuid}_at_line_$line")
+    val jumpContinue = Label("if_continue_${uuid}_at_line_$line")
+    val (initThen, endThen) = then.scope.makeInstrScope()
+    val (initElse, endElse) = `else`.scope.makeInstrScope()
+
+    // This assumes cond.code will have made the actual comparison...
+    return cond.code(Reg.all) +
+      CMPInstr(cond = None, rn = Reg.first, int8b = 0) + // Test whether cond == 0
+      BInstr(cond = EQCond.some(), label = jumpElse) + /// If so, jump to the else (cond was false!)
+      initThen + // init the scope stack
+      then.instr() +
+      endThen + // end the scope stack
+      BInstr(cond = None, label = jumpContinue) + // exit the if
+      jumpElse + // begin `else`
+      initElse + // same as the `then` branch
+      `else`.instr() +
+      endElse +
+      jumpContinue
+  }
 }
 
 data class While(val cond: Expr, val stat: Stat, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = TODO()
+  override fun instr(): Code {
+    val uuid = shortRandomUUID()
+    val (line, _) = pos
+    val (initScope, endScope) = scope.makeInstrScope()
+    val bodyLabel = Label("while_body_${uuid}_at_line_$line")
+    val condLabel = Label("while_cond_${uuid}_at_line_$line")
+
+    return Code.empty +
+      BInstr(cond = None, label = condLabel) + 
+      bodyLabel +
+      initScope +
+      stat.instr() +
+      endScope +
+      condLabel +
+      cond.code(Reg.all) +
+      CMPInstr(cond = None, rn = Reg.first, int8b = 0) + // Test whether cond == 1
+      BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
+  }
 }
 
 data class BegEnd(val stat: Stat, override val scope: Scope, override val pos: Position) : Stat() {
