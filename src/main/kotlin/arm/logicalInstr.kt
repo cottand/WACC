@@ -1,8 +1,21 @@
 package ic.org.arm
 
+import arrow.core.None
 import arrow.core.Option
 
-data class MOVInstr(override val cond: Flag, override val s: Boolean, val rd: Register, val op2: Operand2) : ARMCondSInstr() {
+data class MOVInstr(
+  override val cond: Flag,
+  override val s: Boolean,
+  val rd: Register,
+  val op2: Operand2
+) : ARMCondSInstr() {
+  constructor(
+    cond: Flag = None,
+    s: Boolean = true,
+    rd: Register,
+    op2: Register
+  ) : this(cond, s, rd, RegOperand2(op2))
+
   override val code = "${opcode("MOV")} ${rd.code}, ${op2.code}"
 }
 data class MVNInstr(override val cond: Flag, override val s: Boolean, val rd: Register, val op2: Operand2) : ARMCondSInstr() {
