@@ -133,7 +133,22 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
  * whose address is represented by [addrFromSP]. During code generation, [BegEnd], [Call] and [Prog]
  * have the responsibility of growing the stack down before placing stuff on it.
  */
-data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addrFromSP: Int)
+data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addrFromSP: Int) {
+  /**
+   * Sets this variable to [rhs], allowing itself to use [rem] remaining registers
+   */
+  fun set(rhs: Computable, rem: Regs = Reg.all) =
+    rhs.code(rem) +
+      when (type.size) {
+        Type.Sizes.Word -> STRInstr(Reg.first, SP.withOffset(addrFromSP))
+        Type.Sizes.Char -> STRBInstr(Reg.first, SP.withOffset(addrFromSP))
+      }
+
+  fun get() = when (type.size) {
+    Type.Sizes.Word -> LDRInstr(Reg.first, SP.withOffset(addrFromSP))
+    Type.Sizes.Char -> LDRBInstr(Reg.first, SP.withOffset(addrFromSP))
+  }
+}
 
 data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variable>, val funcScope: FuncScope) {
   val label = Label("f_" + name.name)

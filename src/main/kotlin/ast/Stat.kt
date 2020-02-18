@@ -22,16 +22,20 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
   Stat() {
   val type = variable.type
   val ident = variable.ident
-  override fun instr() = rhs.code(Reg.all) +
-    when (rhs.type.size) {
-      Type.Sizes.Word -> STRInstr(Reg.first, SP.withOffset(variable.addrFromSP))
-      Type.Sizes.Char -> TODO()
-    }
+  override fun instr() = variable.set(rhs)
+
 }
 
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
   // See Decl.instr()
-  override fun instr() = TODO()
+  override fun instr() = Code.empty + when (lhs) {
+    is IdentLHS -> lhs.variable.set(rhs)
+    is ArrayElemLHS -> TODO()
+    is PairElemLHS -> when(lhs.pairElem) {
+      is Fst -> TODO()
+      is Snd -> TODO()
+    }
+  }
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
