@@ -311,7 +311,7 @@ object ModBO : IntBinOp() {
 
 object PlusBO : IntBinOp() {
   override fun toString(): String = "+"
-  override fun instruction(dest: Reg, r2: Reg) = ADDInstr(rd = dest, rn = dest, op2 = r2)
+  override fun instruction(dest: Reg, r2: Reg) = ADDInstr(s = true, rd = dest, rn = dest, op2 = r2)
 }
 
 object MinusBO : IntBinOp() {

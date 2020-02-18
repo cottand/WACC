@@ -45,15 +45,16 @@ fun Code.addErrors(): Code {
   val iter = program.listIterator()
   for (line in iter) {
     if (line !is ARMInstr) continue
-    when  {
-      line is ArithmeticInstr  && line.s -> {
+    when {
+      line is ArithmeticInstr && line.s -> {
         iter.add(BLInstr(condFlag = VSCond, label = OverflowException.label))
         overflow = true
       }
       // TODO add more
     }
   }
-  var newCode = Code(program.toPersistentList(), data).withFunction(functions)
+  val correctedFuncs = if (functions.isEmpty) functions else functions.addErrors()
+  var newCode = Code(program.toPersistentList(), data).withFunction(correctedFuncs)
 
   if (overflow) {
     newCode = newCode.withFunction(OverflowException.body)
@@ -62,6 +63,7 @@ fun Code.addErrors(): Code {
 
   if (runtimeError)
     newCode = newCode.withFunction(RuntimeError.body)
+
 
   return newCode
 }

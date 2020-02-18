@@ -4,6 +4,7 @@ import ic.org.arm.*
 import ic.org.util.Code
 import ic.org.util.flatten
 import ic.org.util.mapp
+import kotlinx.collections.immutable.toPersistentList
 
 // <assign-lhs>
 sealed class AssLHS {
@@ -77,20 +78,22 @@ data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
   override val type = func.retType
   val name = func.name
   // TODO this stat.code() has to do BL instr AND also add 4 to the stack pointer. See reference assembly code...
-  override fun code(rem: Regs) = func.funcScope.makeInstrScope().let { (init, end) ->
+  override fun code(rem: Regs) = func.funcScope.makeInstrScope().let { (init, end, stackSize) ->
     Code.empty +
-      init +
       args.mapIndexed { i, expr ->
-        // val (instr, data) =
         val param = func.params[i]
+        // Offset corresponds to pram's address, minues 4b (because the stack grows when calling a function
+        // minus the size of the function's stack (which will be compensated by when passing [init])
+        val dest = SP.withOffset(param.addrFromSP - Type.Sizes.Word.bytes - stackSize)
         expr.code(Reg.all) +
           when (expr.type.size) { // TODO fix address that does not take into account the
-            Type.Sizes.Word -> STRInstr(Reg.first, SP.withOffset(param.addrFromSP))
+            Type.Sizes.Word -> STRInstr(Reg.first, dest)
             Type.Sizes.Char -> TODO()
           }
       }.flatten() +
-    BLInstr(func.label) +
-    end
+      init +
+      BLInstr(func.label) +
+      end
   }
 
   override fun toString() = "call ${func.name.name} (..)"
