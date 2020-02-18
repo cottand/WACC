@@ -1,0 +1,18 @@
+# a simple increment function definition and usage
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  int inc(int x) is
+    return x + 1
+  end
+  int x = 0 ;
+  x = call inc(x) ;
+  x = call inc(x) ;
+  x = call inc(x) ;
+  x = call inc(x) ;
+  exit x
+end

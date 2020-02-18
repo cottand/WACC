@@ -45,8 +45,8 @@ fun Code.addErrors(): Code {
   val iter = program.listIterator()
   for (line in iter) {
     if (line !is ARMInstr) continue
-    when (line) {
-      is ADDInstr, is SUBInstr, is MULInstr, is RSBInstr -> {
+    when  {
+      line is ArithmeticInstr  && line.s -> {
         iter.add(BLInstr(condFlag = VSCond, label = OverflowException.label))
         overflow = true
       }
