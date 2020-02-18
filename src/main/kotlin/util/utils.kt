@@ -5,7 +5,6 @@ package ic.org.util
 import arrow.core.*
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
-import arrow.syntax.collections.tail
 import ic.org.arm.Data
 import ic.org.arm.Instr
 import kotlinx.collections.immutable.PersistentList
@@ -14,8 +13,6 @@ import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.toPersistentList
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
-import java.util.stream.Stream
-import kotlin.streams.toList
 
 /**
  * Returns whether a [List] of [Either] contains any [Either.Left]
@@ -70,16 +67,19 @@ private constructor(
   private val funcs: PersistentList<Code> = persistentListOf()
 ) {
 
+  val isEmpty by lazy { instr.isEmpty() && data.isEmpty() && funcs.isEmpty() }
+
   constructor(instr: Instructions = persistentListOf(), data: Datas = persistentListOf())
     : this(instr, data, persistentListOf())
 
-  inline fun combine(other: Code) = Code(instr + other.instr, data + other.data)
+  fun combine(other: Code) = Code(instr + other.instr, data + other.data).withFunctions(funcs + other.funcs)
   inline operator fun plus(other: Code) = combine(other)
   inline operator fun plus(other: Instructions) = combine(Code(other))
   inline operator fun plus(other: Instr) = combine(Code.instr(other))
 
-  fun withFunction(other: Code) = Code(instr, data, funcs + other)
-  fun withFunctions(others: Collection<Code>) = Code(instr, data, funcs + others.toPersistentList())
+  fun withFunction(other: Code) = Code(instr, data, funcs + other + other.funcs)
+  fun withFunctions(others: Collection<Code>) =
+    Code(instr, data, funcs + others.toPersistentList() + others.map { it.funcs }.flatten())
 
   val functions by lazy { funcs.fold(empty, Code::combine) }
 
