@@ -73,7 +73,9 @@ private constructor(
   constructor(instr: Instructions = persistentListOf(), data: Datas = persistentListOf())
     : this(instr, data, persistentListOf())
 
-  inline fun combine(other: Code) = Code(instr + other.instr, data + other.data)
+  fun combine(other: Code) =
+    Code(instr + other.instr, data + other.data)
+      .withFunctions(funcs + other.funcs)
   inline operator fun plus(other: Code) = combine(other)
   inline operator fun plus(other: Instructions) = combine(Code(other))
   inline operator fun plus(other: Instr) = combine(Code.instr(other))
