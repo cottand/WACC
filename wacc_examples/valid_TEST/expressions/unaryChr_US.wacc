@@ -1,0 +1,11 @@
+# unary neg operator
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  int x = 72;
+  char y = chr(x)
+end

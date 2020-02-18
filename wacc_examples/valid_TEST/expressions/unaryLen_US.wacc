@@ -1,0 +1,11 @@
+# unary len operator
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  int[] x = [6, 6, 6];
+  int y = len(x)
+end

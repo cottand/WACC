@@ -1,0 +1,11 @@
+# unary not operator
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  bool x = true;
+  bool y = !x
+end

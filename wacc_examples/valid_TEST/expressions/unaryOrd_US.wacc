@@ -1,0 +1,11 @@
+# unary neg operator
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  char x = 'a';
+  int y = ord(x)
+end
