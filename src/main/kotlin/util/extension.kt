@@ -69,14 +69,14 @@ inline fun <A> Option<A>.ifExsistsAnd(pred: Boolean, run: (A) -> Unit): Option<A
 }
 
 val <E> PersistentList<E>.take2: Triple<E, E, PersistentList<E>>
-  get() {
+  inline get() {
     val (fst, snd) = this
     val rest = this.removeAt(0).removeAt(0)
     return Triple(fst, snd, rest)
   }
 
 val <E> PersistentList<E>.take2OrNone
-  get() = if (this.size >= 2) take2.some() else None
+  inline get() = if (this.size >= 2) take2.some() else None
 
 fun File.createWithDirs() {
   parentFile.mkdirs()

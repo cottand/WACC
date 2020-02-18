@@ -2,8 +2,11 @@
 
 package reference
 
+import arrow.core.getOrElse
+import arrow.core.lastOrNone
 import ic.org.util.createWithDirs
 import ic.org.util.joinLines
+import ic.org.util.print
 import java.io.File
 import java.util.stream.Stream
 import kotlin.streams.toList
@@ -16,8 +19,9 @@ object ReferenceCompilerAPI {
       .replace(".wacc", ".temp")
     val cached = File(cachedName)
     val out =
-      if (cached.exists())
+      if (cached.exists() && cached.readText().isNotBlank())
         cached.readLines()
+          .also { println("Reading cached ruby query...") }
       else
         "ruby refCompile ${prog.path} $inp"
           .runCommand()
@@ -28,7 +32,9 @@ object ReferenceCompilerAPI {
       .map { it.drop(2).trim() }
       .filter { it.isNotBlank() }
       .joinLines()
-    val outLineBeg = out.withIndex().last { (_, str) -> "Executing..." in str }.index + 2
+    val outLineBeg = out.withIndex().lastOrNone() { (_, str) -> "Executing..." in str }
+      .map { it.index + 2 }
+      .getOrElse { System.err.println("Failed to parse ruby output and got ${out.joinLines()}"); out.size - 3 }
     val output = out.subList(outLineBeg, out.size - 3).joinLines()
     val code = out.last { "The exit code is" in it }.filter { it.isDigit() }.toInt()
     return RefAnswer(assembly, output, code)
