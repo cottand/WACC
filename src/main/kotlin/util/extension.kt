@@ -8,6 +8,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.toPersistentList
 import java.io.File
+import java.util.UUID
 import java.util.stream.Stream
 import kotlin.streams.toList
 
@@ -77,6 +78,8 @@ val <E> PersistentList<E>.take2: Triple<E, E, PersistentList<E>>
 
 val <E> PersistentList<E>.take2OrNone
   inline get() = if (this.size >= 2) take2.some() else None
+
+fun shortRandomUUID() = UUID.randomUUID().toString().take(8)
 
 fun File.createWithDirs() {
   parentFile.mkdirs()

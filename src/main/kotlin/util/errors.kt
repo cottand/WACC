@@ -246,6 +246,6 @@ inline fun <reified A, reified B, R> flatCombine(
 inline fun <reified A, reified B, R> Parsed<A>.combineWith(other: Parsed<B>, map: (A, B) -> R) =
   combine(this, other, map)
 
-class Position(private val l: Int, private val col: Int) {
+data class Position(val l: Int, val col: Int) {
   override fun toString(): String = "at $l:$col"
 }
