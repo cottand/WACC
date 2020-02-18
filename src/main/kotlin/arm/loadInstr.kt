@@ -16,6 +16,8 @@ data class LDRPCInstr(override val cond: Flag, val addressing: AddrMode2P) : ARM
   override val code = "${opcode("LDR")} r15 ${addressing.code}"
 }
 data class LDRBInstr(override val cond: Flag, val rd: Register, val addressing: AddrMode2) : ARMCondInstr() {
+  constructor(rd: Register, addressing: AddrMode2) : this(None, rd = rd, addressing = addressing)
+  constructor(rd: Register, int32b: Int) : this(None, rd = rd, addressing = ImmEquals32b(int32b))
   override val code = "${opcode("LDR")}B ${rd.code}, ${addressing.code}"
 }
 data class LDRBTInstr(override val cond: Flag, val rd: Register, val addressing: AddrMode2P) : ARMCondInstr() {

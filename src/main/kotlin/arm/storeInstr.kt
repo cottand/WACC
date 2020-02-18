@@ -11,6 +11,7 @@ data class STRTInstr(override val cond: Flag, val rd: Register, val addressing: 
   override val code = "${opcode("STR")}T ${rd.code}, ${addressing.code}"
 }
 data class STRBInstr(override val cond: Flag, val rd: Register, val addressing: AddrMode2) : ARMCondInstr() {
+  constructor(rd: Register, addressing: AddrMode2) : this(None, rd, addressing)
   override val code = "${opcode("STR")}B ${rd.code}, ${addressing.code}"
 }
 data class STRBTInstr(override val cond: Flag, val rd: Register, val addressing: AddrMode2P) : ARMCondInstr() {
