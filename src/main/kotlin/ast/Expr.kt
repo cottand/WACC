@@ -298,7 +298,7 @@ sealed class BoolBinOp : BinaryOper() {
   override val retType = BoolT
 }
 
-object TimesBO : IntBinOp() {
+object MulBO : IntBinOp() {
   override fun toString(): String = "*"
   override fun instruction(dest: Reg, r2: Reg) = TODO()
 }
