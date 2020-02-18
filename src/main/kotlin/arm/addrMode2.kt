@@ -5,7 +5,7 @@ sealed class AddrMode2 : Printable
 /* Normal Offset */
 
 data class ImmOffsetAddrMode2(val rn: Register, val imm: Immed_12) : AddrMode2() {
-  override val code = "[${rn.code}, #+${imm.code}]"
+  override val code = if (imm.v == 0) "[${rn.code}]" else "[${rn.code}, #${imm.code}]"
 }
 
 val Register.zeroOffsetAddr
@@ -15,7 +15,6 @@ fun Register.withOffset(int12b: Int) = ImmOffsetAddrMode2(this, Immed_12(int12b)
 
 /**
  * 32 bit constant
- * TODO is this part of AddrMode2??
  *
  * see [StackOverflow](https://reverseengineering.stackexchange.com/questions/17666/how-does-the-ldr-instruction-work-on-arm)
  */

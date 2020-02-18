@@ -1,0 +1,12 @@
+# simple negative integer variable declaration
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  int x = -1;
+  int y = x - 3;
+  exit y
+end

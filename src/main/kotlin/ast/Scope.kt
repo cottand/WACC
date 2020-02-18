@@ -6,6 +6,7 @@ import arrow.core.*
 import ic.org.arm.*
 import ic.org.util.Position
 import ic.org.util.RedeclarationError
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Represents a WACC Scope.
@@ -53,7 +54,7 @@ sealed class Scope {
    * @see Scope.stackSizeSoFar
    */
   fun addVariable(pos: Position, t: Type, i: Ident) =
-    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar() + t.size.bytes).let {
+    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar() /* + t.size.byte needed? */).let {
       if (variables.put(it.ident, it) == null)
         it.valid()
       else
@@ -78,8 +79,10 @@ sealed class Scope {
    * TODO make sure it is used by Prog.instr() (OK), Func.instr(), and BegEnd Stat.
    */
   fun makeInstrScope() = stackSizeSoFar().let { size ->
-    SUBInstr(s = false, rd = SP, rn = SP, int8b = size) to
-      ADDInstr(s = false, rd = SP, rn = SP, int8b = size)
+    if (size != 0) {
+      persistentListOf(SUBInstr(s = false, rd = SP, rn = SP, int8b = size)) to
+        persistentListOf(ADDInstr(s = false, rd = SP, rn = SP, int8b = size))
+    } else persistentListOf<Nothing>() to persistentListOf<Nothing>()
   }
 }
 

@@ -66,8 +66,8 @@ object NullPairLit : Expr() {
 data class IdentExpr(val vari: Variable) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
-  override fun code(rem: Regs): Code = TODO("not implemented")
-  override val weight = TODO("Does fetching from memory have a higher weight")
+  override fun code(rem: Regs): Code = Code.empty + LDRInstr(rem.head, SP.withOffset(vari.addrFromSP))
+  override val weight = 2 // Todo decide on a constant
 }
 
 data class ArrayElemExpr internal constructor(
@@ -111,7 +111,7 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override fun code(rem: Regs) = when (unaryOper) {
     NotUO -> Code.empty + EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r(1, 0)))
     MinusUO -> Code.empty + RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r(0, 0)))
-    LenUO -> Code.empty + LDRInstr(rem.head, rem.head.withOffset(0))
+    LenUO -> Code.empty + LDRInstr(rem.head, rem.head.zeroOffsetAddr)
     OrdUO -> Code.empty
     ChrUO -> Code.empty
   }

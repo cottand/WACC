@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.toPersistentList
+import java.io.File
 import java.util.stream.Stream
 import kotlin.streams.toList
 
@@ -76,4 +77,9 @@ val <E> PersistentList<E>.take2: Triple<E, E, PersistentList<E>>
 
 val <E> PersistentList<E>.take2OrNone
   get() = if (this.size >= 2) take2.some() else None
+
+fun File.createWithDirs() {
+  parentFile.mkdirs()
+  createNewFile()
+}
 

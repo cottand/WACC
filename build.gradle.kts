@@ -83,6 +83,12 @@ tasks {
     useJUnitPlatform()
   }
 
+  clean {
+    doFirst {
+      delete(file("./.test_cache/"))
+    }
+  }
+
   withType<KotlinCompile>().configureEach {
     kotlinOptions {
       freeCompilerArgs = listOf("-Xinline-classes")

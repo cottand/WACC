@@ -22,12 +22,11 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
   Stat() {
   val type = variable.type
   val ident = variable.ident
-  override fun instr() = Code.empty +
-    // Eval rhs in r0 for example
-    // + ...
-    // Save value in r4 in stack at address of variable
-    // Look out for the size of STR...
-  STRInstr(Reg(0), SP.withOffset(variable.addrFromSP))
+  override fun instr() = rhs.code(Reg.all) +
+    when (rhs.type.size) {
+      Type.Sizes.Word -> STRInstr(Reg.first, SP.withOffset(variable.addrFromSP))
+      Type.Sizes.Char -> TODO()
+    }
 }
 
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
@@ -54,10 +53,10 @@ data class Exit(val expr: Expr, override val scope: Scope, override val pos: Pos
 
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() =
-    when(expr.type) {
+    when (expr.type) {
       is IntT -> TODO()
       else -> TODO()
-  }
+    }
 }
 
 data class Println(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {

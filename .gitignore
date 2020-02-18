@@ -8,6 +8,7 @@ build/**
 
 #ignore other junk files
 *~
+*.temp
 .gradle/**
 .idea/
 src/main/antlr/WACCLexer.tokens
