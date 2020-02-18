@@ -12,6 +12,8 @@ val Register.zeroOffsetAddr
   get() = ZeroOffsetAddrMode2(this)
 
 fun Register.withOffset(int12b: Int) = ImmOffsetAddrMode2(this, Immed_12(int12b))
+val ImmOffsetAddrMode2.postIndexed
+  get() = ImmPreOffsetAddrMode2(this.rn, this.imm)
 
 /**
  * 32 bit constant
@@ -37,7 +39,7 @@ data class RegOffsetAddrMode2(val rn: Register, val sign: Sign, val rm: Register
 /* Pre-indexed Offset */
 
 data class ImmPreOffsetAddrMode2(val rn: Register, val imm: Immed_12) : AddrMode2() {
-  override val code = "[${rn.code}], #+${imm.code}"
+  override val code = "[${rn.code}, #${imm.code}]!"
 }
 
 data class ZeroPreOffsetAddrMode2(val rn: Register) : AddrMode2() {

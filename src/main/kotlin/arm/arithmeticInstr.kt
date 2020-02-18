@@ -2,13 +2,17 @@ package ic.org.arm
 
 import arrow.core.None
 
+interface ArithmeticInstr {
+  val s: Boolean
+}
+
 data class ADDInstr(
   override val cond: Flag = None,
   override val s: Boolean,
   val rd: Register,
   val rn: Register,
   val op2: Operand2
-) : ARMCondSInstr() {
+) : ARMCondSInstr(), ArithmeticInstr {
   constructor(
     cond: Flag = None,
     s: Boolean = true,
@@ -34,7 +38,7 @@ data class ADCInstr(
   val rn: Register,
   val op2: Operand2,
   override val cond: Flag = None
-) : ARMCondSInstr() {
+) : ARMCondSInstr(), ArithmeticInstr {
   override val code = "${opcode("ADC")} ${rd.code}, ${rn.code}, ${op2.code}"
 }
 
@@ -44,7 +48,7 @@ data class SUBInstr(
   val rd: Register,
   val rn: Register,
   val op2: Operand2
-) : ARMCondSInstr() {
+) : ARMCondSInstr(), ArithmeticInstr {
   constructor(
     cond: Flag = None,
     s: Boolean = true,
@@ -70,7 +74,7 @@ data class SBCInstr(
   val rd: Register,
   val rn: Register,
   val op2: Operand2
-) : ARMCondSInstr() {
+) : ARMCondSInstr(), ArithmeticInstr {
   override val code = "${opcode("SBC")} ${rd.code}, ${rn.code}, ${op2.code}"
 }
 
@@ -80,7 +84,7 @@ data class RSBInstr(
   val rd: Register,
   val rn: Register,
   val op2: Operand2
-) : ARMCondSInstr() {
+) : ARMCondSInstr(), ArithmeticInstr {
   override val code = "${opcode("RSB")} ${rd.code}, ${rn.code}, ${op2.code}"
 }
 
@@ -100,7 +104,7 @@ data class MULInstr(
   val rd: Register,
   val rm: Register,
   val rs: Register
-) : ARMCondSInstr() {
+) : ARMCondSInstr(), ArithmeticInstr {
   override val code = "${opcode("MUL")} ${rd.code}, ${rm.code}, ${rs.code}"
 }
 
@@ -111,6 +115,6 @@ data class MLAInstr(
   val rm: Register,
   val rs: Register,
   val rn: Register
-) : ARMCondSInstr() {
+) : ARMCondSInstr(), ArithmeticInstr {
   override val code = "${opcode("MLA")} ${rd.code}, ${rm.code}, ${rs.code}, ${rn.code}"
 }

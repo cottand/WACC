@@ -53,8 +53,8 @@ sealed class Scope {
    *
    * @see Scope.stackSizeSoFar
    */
-  fun addVariable(pos: Position, t: Type, i: Ident) =
-    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar() /* + t.size.byte needed? */).let {
+  fun addVariable(pos: Position, t: Type, i: Ident, offsetBytes: Int = 0) =
+    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar()  + offsetBytes /* + t.size.byte needed? */).let {
       if (variables.put(it.ident, it) == null)
         it.valid()
       else
@@ -62,9 +62,13 @@ sealed class Scope {
     }
 
   /**
-   * Overloaded [addVariable] by using [param]
+   * Overloaded [addVariable] by using [param].
+   *
+   * Parameters live 4 bytes higher in the stack because they are offset by LR pushed to the stack as
+   * functions are called.
    */
-  fun addParameter(pos: Position, param: Param) = addVariable(pos, param.type, param.ident)
+  fun addParameter(pos: Position, param: Param) =
+    addVariable(pos, param.type, param.ident, offsetBytes = Type.Sizes.Word.bytes)
 
   val globalFuncs: Map<String, FuncIdent>
     get() = when (this) {
@@ -78,11 +82,14 @@ sealed class Scope {
    *
    * TODO make sure it is used by Prog.instr() (OK), Func.instr(), and BegEnd Stat.
    */
-  fun makeInstrScope() = stackSizeSoFar().let { size ->
+  fun makeInstrScope(offset: Int = 0) = stackSizeSoFar().plus(offset).let { size ->
     if (size != 0) {
-      persistentListOf(SUBInstr(s = false, rd = SP, rn = SP, int8b = size)) to
-        persistentListOf(ADDInstr(s = false, rd = SP, rn = SP, int8b = size))
-    } else persistentListOf<Nothing>() to persistentListOf<Nothing>()
+      Triple(
+        persistentListOf(SUBInstr(s = false, rd = SP, rn = SP, int8b = size)),
+        persistentListOf(ADDInstr(s = false, rd = SP, rn = SP, int8b = size)),
+        size
+      )
+    } else Triple(persistentListOf<Nothing>(), persistentListOf<Nothing>(), 0)
   }
 }
 
@@ -133,8 +140,23 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
  * whose address is represented by [addrFromSP]. During code generation, [BegEnd], [Call] and [Prog]
  * have the responsibility of growing the stack down before placing stuff on it.
  */
-data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addrFromSP: Int)
+data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addrFromSP: Int) {
+  /**
+   * Sets this variable to [rhs], allowing itself to use [rem] remaining registers
+   */
+  fun set(rhs: Computable, rem: Regs = Reg.all) =
+    rhs.code(rem) +
+      when (type.size) {
+        Type.Sizes.Word -> STRInstr(Reg.first, SP.withOffset(addrFromSP))
+        Type.Sizes.Char -> STRBInstr(Reg.first, SP.withOffset(addrFromSP))
+      }
+
+  fun get(reg: Register = Reg.first) = when (type.size) {
+    Type.Sizes.Word -> LDRInstr(reg, SP.withOffset(addrFromSP))
+    Type.Sizes.Char -> LDRBInstr(reg, SP.withOffset(addrFromSP))
+  }
+}
 
 data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variable>, val funcScope: FuncScope) {
-  val label = Label("f_" + name.name)
+  val label = Label("f_$name")
 }
