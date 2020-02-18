@@ -7,6 +7,8 @@ import arrow.core.lastOrNone
 import ic.org.util.createWithDirs
 import ic.org.util.joinLines
 import ic.org.util.print
+import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.fail
 import java.io.File
 import java.util.stream.Stream
 import kotlin.streams.toList
@@ -34,7 +36,7 @@ object ReferenceCompilerAPI {
       .joinLines()
     val outLineBeg = out.withIndex().lastOrNone() { (_, str) -> "Executing..." in str }
       .map { it.index + 2 }
-      .getOrElse { System.err.println("Failed to parse ruby output and got ${out.joinLines()}"); out.size - 3 }
+      .getOrElse { System.err.println("Failed to parse ruby output and got ${out.joinLines()}"); assumeTrue(false) ; 0 }
     val output = out.subList(outLineBeg, out.size - 3).joinLines()
     val code = out.last { "The exit code is" in it }.filter { it.isDigit() }.toInt()
     return RefAnswer(assembly, output, code)
