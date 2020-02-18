@@ -3,6 +3,7 @@ package ic.org.ast
 import ic.org.arm.*
 import ic.org.util.Code
 import ic.org.util.flatten
+import ic.org.util.head
 import ic.org.util.mapp
 import kotlinx.collections.immutable.toPersistentList
 
@@ -36,6 +37,8 @@ interface Computable {
    * Covert to [Code]. The result of evaluating this [Computable] should be put in [rem].
    * In order to perform the computation, one may use [rem], and dest's [Reg.next] registers.
    * If [Reg.next] happens to be [none], then the stack should be used.
+   *
+   * If this [Computable] is non basic (ie, a pair or an array) then the pointer to the structure is put in [rem].head
    */
   fun code(rem: Regs): Code
 }
@@ -70,7 +73,10 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
     is Snd -> pairs.sndT
   }
 
-  override fun code(rem: Regs) = TODO()
+  override fun code(rem: Regs) =
+    pairElem.expr.code(rem) +
+      LDRInstr(rem.head, rem.head.withOffset(pairElem.offsetFromAddr))
+
   override fun toString() = pairElem.toString()
 }
 
@@ -85,8 +91,8 @@ data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
         // Offset corresponds to pram's address, minues 4b (because the stack grows when calling a function
         // minus the size of the function's stack (which will be compensated by when passing [init])
         val dest = SP.withOffset(param.addrFromSP - Type.Sizes.Word.bytes - stackSize)
-        expr.code(Reg.all) +
-          when (expr.type.size) { // TODO fix address that does not take into account the
+        expr.code(rem) +
+          when (expr.type.size) {
             Type.Sizes.Word -> STRInstr(Reg.first, dest)
             Type.Sizes.Char -> TODO()
           }
