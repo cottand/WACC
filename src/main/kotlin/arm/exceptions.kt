@@ -15,7 +15,7 @@ abstract class Exception {
 object OverflowException : Exception() {
   override val name = "p_throw_overflow_error"
 
-  private const val errormsg = "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n"
+  private const val errormsg = "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\\n"
   private val msg0 = StringData(errormsg, errormsg.length)
 
   private val instructions = persistentListOf(

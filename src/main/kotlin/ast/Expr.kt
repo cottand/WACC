@@ -50,7 +50,11 @@ data class CharLit(val value: Char) : Expr() {
 data class StrLit(val value: String) : Expr() {
   override val type = StringT
   override fun toString(): String = value
-  override fun code(rem: Regs): Code = TODO("not implemented")
+  override fun code(rem: Regs): Code {
+    val s = StringData(value, value.length)
+    val instr = LDRInstr(rem.head, ImmEqualLabel(s.label))
+    return Code(data = s.body) + instr
+  }
   override val weight = 1
 }
 

@@ -1,0 +1,10 @@
+# assign a simple string
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  string s = "just a string"
+end
