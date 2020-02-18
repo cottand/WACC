@@ -66,7 +66,7 @@ object NullPairLit : Expr() {
 data class IdentExpr(val vari: Variable) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
-  override fun code(rem: Regs): Code = Code.empty + LDRInstr(rem.head, SP.withOffset(vari.addrFromSP))
+  override fun code(rem: Regs): Code = Code.instr(vari.get())
   override val weight = 2 // Todo decide on a constant
 }
 

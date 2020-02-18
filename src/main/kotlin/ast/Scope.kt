@@ -151,5 +151,5 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
 }
 
 data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variable>, val funcScope: FuncScope) {
-  val label = Label("f_" + name.name)
+  val label = Label("f_$name")
 }
