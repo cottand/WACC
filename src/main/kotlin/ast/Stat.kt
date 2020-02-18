@@ -54,8 +54,8 @@ data class Exit(val expr: Expr, override val scope: Scope, override val pos: Pos
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() =
     when(expr.type) {
-      is IntT -> expr.code(Reg.all).withFunction(PrintStdFunc.body) +
-              BLInstr("p_print_int")
+      is IntT -> expr.code(Reg.all).withFunction(PrintIntStdFunc.body) +
+              BLInstr(PrintIntStdFunc.label)
       else -> TODO()
   }
 }
