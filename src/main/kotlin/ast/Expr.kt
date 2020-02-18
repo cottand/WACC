@@ -33,7 +33,7 @@ data class BoolLit(val value: Boolean) : Expr() {
   override val type = BoolT
   override fun toString(): String = value.toString()
   // Booleans are represented as a 0 for true, and 1 for false
-  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(if (value) 0 else 1))
+  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(if (value) 1 else 0))
 
   override val weight = 1
 }
