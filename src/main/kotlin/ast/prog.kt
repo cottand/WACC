@@ -30,8 +30,14 @@ data class Func(val retType: Type, val ident: Ident, val params: List<Variable>,
 data class Param(val type: Type, val ident: Ident)
 
 // <pair-elem>
+@Suppress("LeakingThis")
 sealed class PairElem {
   abstract val expr: Expr
+
+  val offsetFromAddr = when (this) {
+    is Fst -> 0
+    is Snd -> Type.Sizes.Word.bytes
+  }
 
   companion object {
     fun fst(expr: Expr) = Fst(expr)

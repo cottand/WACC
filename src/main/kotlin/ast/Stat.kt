@@ -9,7 +9,7 @@ sealed class Stat {
   abstract val pos: Position
 
   /**
-   * Convert to an [Instr]
+   * Convert to [Code]
    */
   abstract fun instr(): Code
 }
@@ -23,7 +23,6 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
   val type = variable.type
   val ident = variable.ident
   override fun instr() = variable.set(rhs)
-
 }
 
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
@@ -31,7 +30,7 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
   override fun instr() = Code.empty + when (lhs) {
     is IdentLHS -> lhs.variable.set(rhs)
     is ArrayElemLHS -> TODO()
-    is PairElemLHS -> when(lhs.pairElem) {
+    is PairElemLHS -> when (lhs.pairElem) {
       is Fst -> TODO()
       is Snd -> TODO()
     }
@@ -77,7 +76,9 @@ data class While(val cond: Expr, val stat: Stat, override val scope: Scope, over
 }
 
 data class BegEnd(val stat: Stat, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = TODO()
+  override fun instr() = scope.makeInstrScope().let { (init, end) ->
+    Code.empty + init + stat.instr() + end
+  }
 }
 
 data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope, override val pos: Position) : Stat() {
