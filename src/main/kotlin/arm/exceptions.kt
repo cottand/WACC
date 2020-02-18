@@ -40,19 +40,10 @@ object RuntimeError : Exception() {
     label,
     BLInstr(printString),
     LDRInstr(Reg.ret, -1),
-    BLInstr("exit"),
-    printString,
-    PUSHInstr(LR),
-    LDRInstr(Reg(1), Reg(0).zeroOffsetAddr),
-    ADDInstr(None, false, Reg(2), Reg(0), 4),
-    LDRInstr(Reg(0), ImmEqualLabel(msg1.label)),
-    ADDInstr(None, false, Reg(0), Reg(0), 4),
-    BLInstr("printf"),
-    LDRInstr(Reg.ret, 0),
-    BLInstr("fflush"),
-    POPInstr(PC)
+    BLInstr("exit")
   )
 
-  override val body = Code(instructions, msg1.body)
+  //TODO Adding PrintStringStdFunc seems not to work!
+  override val body = Code(instructions, msg1.body).withFunction(PrintStringStdFunc.body)
 
 }
