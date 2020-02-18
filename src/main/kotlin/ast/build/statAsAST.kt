@@ -70,9 +70,9 @@ internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
       { TypeError(expr().startPosition, IntT, "exit", it) })
     .map { Exit(it, scp, startPosition) }
 
-  is PrintlnStatContext -> expr().asAst(scp).map { Print(it, scp, startPosition) }
+  is PrintlnStatContext -> expr().asAst(scp).map { Println(it, scp, startPosition) }
 
-  is PrintStatContext -> expr().asAst(scp).map { Println(it, scp, startPosition) }
+  is PrintStatContext -> expr().asAst(scp).map { Print(it, scp, startPosition) }
 
   is IfElseContext -> asAst(scp)
 
