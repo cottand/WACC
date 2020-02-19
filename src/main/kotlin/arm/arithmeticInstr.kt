@@ -114,3 +114,14 @@ data class MLAInstr(
 ) : ARMCondSInstr() {
   override val code = "${opcode("MLA")} ${rd.code}, ${rm.code}, ${rs.code}, ${rn.code}"
 }
+
+data class SMULLInstr(
+  override val cond: Flag,
+  override val s: Boolean,
+  val rdlo: Register,
+  val rdhi: Register,
+  val rm: Register,
+  val rs: Register
+) : ARMCondSInstr() {
+  override val code = "${opcode("SMULL")} ${rdlo.code}, ${rdhi.code}, ${rm.code}, ${rs.code}"
+}
