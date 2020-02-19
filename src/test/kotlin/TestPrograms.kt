@@ -92,17 +92,17 @@ class TestPrograms {
       val (expectedAss, expectedOut, expectedCode) = expRef!!.await()
       val actualAss = res.out.getOrElse { fail("Compilation unsuccessful") }
       if (expectedAss != actualAss) {
-        val (actualOut, actualCode) = Ref.run(actualAss, filename, input)
+        val (actualOut, actualCode) = Ref.emulate(actualAss, filename, input)
         println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
         println("Expected assembly:              Actual:\n")
         println(expectedAss.sideToSideWith(actualAss, pad = 60) + '\n')
+        println("\nCompiled WACC:\n${program.file.readText()}")
         assertEquals(expectedOut, actualOut) { "Non matching program output for $canonicalPath" }
-        // assertEquals(expectedCode, actualCode) { "Non matching program output code for $canonicalPath" } TODO check codes
+        assertEquals(expectedCode, actualCode) { "Non matching program output code for $canonicalPath" }
       } else
         println("Expected and actual assembly outputs are identical")
     }
     println("Test successful (compiler exit code ${res.exitCode}). Compiler output:\n${res.msg}\n")
-    println("Compiled WACC:\n${program.file.readText()}")
   }
 
   /**

@@ -1,0 +1,16 @@
+# tests whether the compiler can handle long expressions with several variables
+
+# Output:
+# #empty#
+
+# Exit:
+# 16
+
+begin
+
+  int a = 1 + 2 ;
+  int b = 3;
+  int i = 2 ;
+  exit a + b + i + 8
+
+end

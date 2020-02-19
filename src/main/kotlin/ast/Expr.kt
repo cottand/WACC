@@ -5,6 +5,7 @@ import arrow.core.extensions.list.foldable.forAll
 import arrow.core.valid
 import ic.org.arm.*
 import ic.org.util.*
+import kotlinx.collections.immutable.persistentListOf
 import java.lang.Integer.max
 import java.lang.Integer.min
 
@@ -71,7 +72,7 @@ object NullPairLit : Expr() {
 data class IdentExpr(val vari: Variable) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
-  override fun code(rem: Regs): Code = Code.instr(vari.get())
+  override fun code(rem: Regs): Code = Code.instr(vari.get(destReg = rem.head))
   override val weight = 2 // Todo decide on a constant
 }
 
@@ -153,18 +154,20 @@ data class BinaryOperExpr internal constructor(
     val dest = rem.head
     // No available registers, use stack machine! We can only use dest and Reg.last
     expr2.code(rem) +
-            PUSHInstr(dest) +
-            expr1.code(rem) +
-            POPInstr(Reg.last) +
-            binaryOper.code(dest, Reg.last)
+      PUSHInstr(dest) +
+      ADDInstr(s = false, rd = SP, rn = SP, int8b = Type.Sizes.Word.bytes) +
+      expr1.code(rem) +
+      SUBInstr(s = false, rd = SP, rn = SP, int8b = Type.Sizes.Word.bytes) +
+      POPInstr(Reg.last) +
+      binaryOper.code(dest, Reg.last)
   }, { (dest, next, rest) ->
     // We can use at least two registers, dest and next, but we know there's more
     if (expr1.weight > expr2.weight) {
       expr1.code(rem) +
-              expr2.code(next prepend rest)
+        expr2.code(next prepend rest)
     } else {
       expr2.code(next prepend (dest prepend rest)) +
-              expr1.code(dest prepend rest)
+        expr1.code(dest prepend rest)
     } + binaryOper.code(dest, next)
   })
 
@@ -302,48 +305,48 @@ sealed class BoolBinOp : BinaryOper() {
 object MulBO : IntBinOp() {
   override fun toString(): String = "*"
   override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + SMULLInstr(None, false, r2, dest, r2, dest)
-          + CMPInstr(None, dest, ASRImmOperand2(r2, Immed_5(31)))
-          + BLInstr(NECond, OverflowException.label)
-          ).withFunction(OverflowException.body)
+    + SMULLInstr(None, false, r2, dest, r2, dest)
+    + CMPInstr(None, dest, ASRImmOperand2(r2, Immed_5(31)))
+    + BLInstr(NECond, OverflowException.label)
+    ).withFunction(OverflowException.body)
 }
 
 object DivBO : IntBinOp() {
   override fun toString(): String = "/"
   override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + MOVInstr(None, false, dest, Reg(0))
-          + MOVInstr(None, false, r2, Reg(1))
-          + BLInstr(None, CheckDivByZero.label)
-          + BLInstr(None, Label("__aeabi_idiv"))
-          + MOVInstr(None, false, dest, Reg(0))
-          ).withFunction(CheckDivByZero.body)
+    + MOVInstr(None, false, dest, Reg(0))
+    + MOVInstr(None, false, r2, Reg(1))
+    + BLInstr(None, CheckDivByZero.label)
+    + BLInstr(None, Label("__aeabi_idiv"))
+    + MOVInstr(None, false, dest, Reg(0))
+    ).withFunction(CheckDivByZero.body)
 }
 
 object ModBO : IntBinOp() {
   override fun toString(): String = "%"
   override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + MOVInstr(None, false, dest, Reg(0))
-          + MOVInstr(None, false, r2, Reg(1))
-          + BLInstr(None, CheckDivByZero.label)
-          + BLInstr(None, Label("__aeabi_idivmod"))
-          + MOVInstr(None, false, dest, Reg(1))
-          ).withFunction(CheckDivByZero.body)
+    + MOVInstr(None, false, dest, Reg(0))
+    + MOVInstr(None, false, r2, Reg(1))
+    + BLInstr(None, CheckDivByZero.label)
+    + BLInstr(None, Label("__aeabi_idivmod"))
+    + MOVInstr(None, false, dest, Reg(1))
+    ).withFunction(CheckDivByZero.body)
 }
 
 object PlusBO : IntBinOp() {
   override fun toString(): String = "+"
   override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + ADDInstr(rd = dest, rn = dest, op2 = r2)
-          + BLInstr(VSCond, OverflowException.label)
-          ).withFunction(OverflowException.body)
+    + ADDInstr(rd = dest, rn = dest, op2 = r2)
+    + BLInstr(VSCond, OverflowException.label)
+    ).withFunction(OverflowException.body)
 }
 
 object MinusBO : IntBinOp() {
   override fun toString(): String = "-"
   override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + SUBInstr(rd = dest, rn = dest, op2 = r2)
-          + BLInstr(VSCond, OverflowException.label)
-          ).withFunction(OverflowException.body)
+    + SUBInstr(rd = dest, rn = dest, op2 = r2)
+    + BLInstr(VSCond, OverflowException.label)
+    ).withFunction(OverflowException.body)
 }
 
 // (int, int) -> bool:
@@ -370,11 +373,11 @@ object LeqBO : CompBinOp() {
 sealed class EqualityBinOp : BinaryOper() {
   override val validArgs: (Type, Type) -> Boolean = { b1, b2 ->
     check<BoolT>(b1, b2) ||
-            check<IntT>(b1, b2) ||
-            check<CharT>(b1, b2) ||
-            check<StringT>(b1, b2) ||
-            check<AnyPairTs>(b1, b2) ||
-            check<ArrayT>(b1, b2)
+      check<IntT>(b1, b2) ||
+      check<CharT>(b1, b2) ||
+      check<StringT>(b1, b2) ||
+      check<AnyPairTs>(b1, b2) ||
+      check<ArrayT>(b1, b2)
   }
   override val validReturn: (Type) -> Boolean = { it is BoolT }
   override val inTypes = listOf(
