@@ -349,7 +349,11 @@ object MinusBO : IntBinOp() {
 // (int, int) -> bool:
 object GtBO : CompBinOp() {
   override fun toString(): String = ">"
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + CMPInstr(None, dest, RegOperand2(r2))
+          + MOVInstr(GTCond, false, dest, ImmOperand2(Immed_8r(1, 0)))
+          + MOVInstr(LECond, false, dest, ImmOperand2(Immed_8r(0, 0)))
+          )
 }
 
 object GeqBO : CompBinOp() {

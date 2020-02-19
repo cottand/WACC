@@ -1,7 +1,6 @@
 package ic.org.arm
 
 import arrow.core.None
-import arrow.core.Option
 import arrow.core.some
 
 data class BInstr(override val cond: Flag = None, val label: Label) : ARMCondInstr() {
