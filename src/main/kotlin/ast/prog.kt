@@ -22,7 +22,7 @@ data class Func(val retType: Type, val ident: Ident, val params: List<Variable>,
         POPInstr(PC) +
         POPInstr(PC) +
         Directive.ltorg
-    return Code(body, statCode.data)
+    return Code(body, statCode.data).withFunctions(statCode.funcs)
   }
 }
 

@@ -304,22 +304,20 @@ sealed class BoolBinOp : BinaryOper() {
 
 object MulBO : IntBinOp() {
   override fun toString(): String = "*"
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-    + SMULLInstr(None, false, r2, dest, r2, dest)
-    + CMPInstr(None, dest, ASRImmOperand2(r2, Immed_5(31)))
-    + BLInstr(NECond, OverflowException.label)
-    ).withFunction(OverflowException.body)
+  override fun code(dest: Reg, r2: Reg) = Code.empty.withFunction(OverflowException.body) +
+    SMULLInstr(None, false, r2, dest, r2, dest) +
+    CMPInstr(None, dest, ASRImmOperand2(r2, Immed_5(31))) +
+    BLInstr(NECond, OverflowException.label)
 }
 
 object DivBO : IntBinOp() {
   override fun toString(): String = "/"
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-    + MOVInstr(None, false, dest, Reg(0))
-    + MOVInstr(None, false, r2, Reg(1))
-    + BLInstr(None, CheckDivByZero.label)
-    + BLInstr(None, Label("__aeabi_idiv"))
-    + MOVInstr(None, false, dest, Reg(0))
-    ).withFunction(CheckDivByZero.body)
+  override fun code(dest: Reg, r2: Reg) = Code.empty.withFunction(CheckDivByZero.body) +
+    MOVInstr(None, false, dest, Reg(0)) +
+    MOVInstr(None, false, r2, Reg(1)) +
+    BLInstr(None, CheckDivByZero.label) +
+    BLInstr(None, Label("__aeabi_idiv")) +
+    MOVInstr(None, false, dest, Reg(0))
 }
 
 object ModBO : IntBinOp() {
@@ -335,10 +333,9 @@ object ModBO : IntBinOp() {
 
 object PlusBO : IntBinOp() {
   override fun toString(): String = "+"
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-    + ADDInstr(rd = dest, rn = dest, op2 = r2)
-    + BLInstr(VSCond, OverflowException.label)
-    ).withFunction(OverflowException.body)
+  override fun code(dest: Reg, r2: Reg) = Code.empty.withFunction(OverflowException.body) +
+    ADDInstr(rd = dest, rn = dest, op2 = r2) +
+    BLInstr(VSCond, OverflowException.label)
 }
 
 object MinusBO : IntBinOp() {

@@ -70,6 +70,11 @@ object ReferenceCompilerAPI {
     val reply = queryReference<EmulatorReply>(armFile, emulatorUrl, stdin = input)
       .getOrElse { System.err.println("Failed to reach the reference emulator"); assumeTrue(false); NOT_REACHED() }
     if (reply.assemble_out.isNotBlank()) {
+      val asmWithLines  = armProg.lines().mapIndexed { i, s ->
+        val lNo = i.toString()
+        lNo + "      ".drop(lNo.length) + s
+      }.joinLines()
+      println("Faulty assembly:\n$asmWithLines")
       throw IllegalStateException("Failed to assemble program with error:\n${reply.assemble_out}")
     }
     return reply.emulator_out to reply.emulator_exit.toInt()

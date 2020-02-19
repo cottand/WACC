@@ -3,10 +3,7 @@ package ic.org.ast
 import arrow.core.None
 import arrow.core.some
 import ic.org.arm.*
-import ic.org.util.Code
-import ic.org.util.Position
-import ic.org.util.shortRandomUUID
-import ic.org.util.tail
+import ic.org.util.*
 
 sealed class Stat {
   abstract val scope: Scope

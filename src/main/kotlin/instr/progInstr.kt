@@ -11,9 +11,10 @@ import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.toPersistentList
 
 fun Prog.instr(): Instructions = body.instr()
-  .withFunctions(funcs.map(Func::instr))
+  .withFunctions(funcs.map { it.instr() })
   .let {
-    val allData = it.data + it.functions.data
+    val allFuncs = it.funcs.fold(Code.empty, Code::combine)
+    val allData = it.data + allFuncs.data
     val dataSegment = if (allData.isNotEmpty()) Directive.data + allData else persistentListOf<Nothing>()
     val (initScope, endScope) = body.scope.makeInstrScope()
     dataSegment +
@@ -28,5 +29,5 @@ fun Prog.instr(): Instructions = body.instr()
       POPInstr(PC) +
       Directive.ltorg +
       // Function code segments:
-      it.functions.instr
+      allFuncs.instr
   }

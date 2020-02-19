@@ -15,27 +15,24 @@ class Code
 private constructor(
   val instr: Instructions = persistentListOf(),
   val data: Datas = persistentListOf(),
-  private val funcs: PersistentSet<Code> = persistentSetOf()
+  val funcs: PersistentSet<Code> = persistentSetOf()
 ) {
   val isEmpty by lazy { instr.isEmpty() && data.isEmpty() && funcs.isEmpty() }
 
   constructor(instr: Instructions = persistentListOf(), data: Datas = persistentListOf())
     : this(instr, data, persistentSetOf())
 
-  fun combine(other: Code) = Code(instr + other.instr, data + other.data)
-    .withFunctions(funcs + other.funcs)
+  fun combine(other: Code) = Code(instr + other.instr, data + other.data, funcs + other.funcs)
 
   operator fun plus(other: Code) = combine(other)
   operator fun plus(other: Instructions) = combine(Code(other))
   operator fun plus(other: Instr) = combine(instr(other))
 
   fun withFunction(other: Code) =
-    Code(instr, data, funcs + other + other.funcs)
+    Code(instr, data, funcs + other).withFunctions(other.funcs)
 
   fun withFunctions(others: Collection<Code>) =
-    Code(instr, data, funcs + others.toPersistentList() + others.map { it.funcs }.flatten())
-
-  val functions by lazy { funcs.fold(empty, Code::combine) }
+    Code(instr, data, funcs + others + others.map { it.funcs }.flatten())
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
