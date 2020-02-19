@@ -2,18 +2,18 @@
 
 package reference
 
-import arrow.core.getOrElse
-import arrow.core.lastOrNone
+import com.google.gson.Gson
 import ic.org.util.createWithDirs
 import ic.org.util.joinLines
-import ic.org.util.print
-import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.fail
 import java.io.File
 import java.util.stream.Stream
 import kotlin.streams.toList
 
 object ReferenceCompilerAPI {
+
+  val gson by lazy { Gson() }
+
+  private const val delimiters = "==========================================================="
 
   fun ask(prog: File, inp: String): RefAnswer {
     val cachedName = prog.absolutePath
@@ -30,23 +30,31 @@ object ReferenceCompilerAPI {
           .filter { it.isNotEmpty() }.toList()
           .also { cached.createWithDirs() }
           .also { cached.writeText(it.joinLines()) }
-    val assembly = out.filter { it.first().isDigit() }
+    val assembly = out
+      .asSequence()
+      .dropWhile { delimiters !in it }
+      .drop(1)
+      .takeWhile { delimiters !in it }
       .map { it.drop(2).trim() }
       .filter { it.isNotBlank() }
+      .toList()
       .joinLines()
-    val outLineBeg = out.withIndex().lastOrNone() { (_, str) -> "Executing..." in str }
-      .map { it.index + 2 }
-      .getOrElse { System.err.println("Failed to parse ruby output and got ${out.joinLines()}"); assumeTrue(false) ; 0 }
-    val output = out.subList(outLineBeg, out.size - 3).joinLines()
+    val runtimeOut = out
+      .dropWhile { "-- Executing..." !in it }
+      .drop(2)
+      .takeWhile { "The exit code is" !in it }
+      .map { if (delimiters in it) it.replace(delimiters, "") else it }
+      .joinLines()
     val code = out.last { "The exit code is" in it }.filter { it.isDigit() }.toInt()
-    return RefAnswer(assembly, output, code)
+    return RefAnswer(assembly, runtimeOut, code)
   }
 
   fun run(armProg: String, filename: String, input: String): Pair<String, Int> {
     val newFile = filename.replace(".wacc", ".s")
     File(newFile).writeText(armProg)
-    val actualOut = "ruby refRun $newFile $input".runCommand().joinLines()
-    return actualOut to 0 // TODO not 0
+    val queryjson = "ruby refRun $newFile $input".runCommand().joinLines()
+    val reply = gson.fromJson(queryjson, EmulatorReply::class.java)
+    return reply.emulator_out to reply.emulator_exit.toInt()
   }
 }
 
@@ -64,3 +72,12 @@ fun String.runCommand(workingDir: File = File(".")): Stream<String> =
     .apply { waitFor() }
     .inputStream.bufferedReader()
     .lines()
+
+data class EmulatorReply(
+  val test: String,
+  val upload: String,
+  val assemble_out: String,
+  val emulator_out: String,
+  val emulator_exit: String
+)
+

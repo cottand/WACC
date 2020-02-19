@@ -1,5 +1,5 @@
 #!/usr/bin/ruby
-# comand line script that sends an HTTPS request to the WACC compiler web interface and interprets the JSON response
+# command line script that sends an HTTPS request to the WACC compiler web interface and interprets the JSON response
 
 require "rest-client"
 require "json"
@@ -18,16 +18,18 @@ files = []
 file_path = ARGV[0]
 stdin = ARGV[1]
 
-  RestClient.post("https://teaching.doc.ic.ac.uk/wacc_compiler/run.cgi", 
-                    :stdin => stdin,
-                    :options => $opts,
-                    :testfile => File.new(file_path)
-                   ) do |response|
-    json = JSON.load(response)
-    puts json['upload']
-    puts "-- Compiler Output:"
-    puts json['compiler_out']
-    puts ""
+RestClient.post("https://teaching.doc.ic.ac.uk/wacc_compiler/run.cgi", 
+                 :stdin => stdin,
+                 :options => $opts,
+                 :testfile => File.new(file_path)
+                ) do |response|
+
+json = JSON.load(response)
+puts json['upload']
+puts "-- Compiler Output:"
+puts json['compiler_out']
+puts ""
+
 
   
 end

@@ -93,6 +93,7 @@ class TestPrograms {
       val actualAss = res.out.getOrElse { fail("Compilation unsuccessful") }
       if (expectedAss != actualAss) {
         val (actualOut, actualCode) = Ref.run(actualAss, filename, input)
+        println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
         println("Expected assembly:              Actual:\n")
         println(expectedAss.sideToSideWith(actualAss, pad = 60) + '\n')
         assertEquals(expectedOut, actualOut) { "Non matching program output for $canonicalPath" }
