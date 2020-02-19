@@ -12,7 +12,6 @@ import kotlinx.collections.immutable.toPersistentList
 
 fun Prog.instr(): Instructions = body.instr()
   .withFunctions(funcs.map(Func::instr))
-  .addErrors()
   .let {
     val allData = it.data + it.functions.data
     val dataSegment = if (allData.isNotEmpty()) Directive.data + allData else persistentListOf<Nothing>()
@@ -30,44 +29,4 @@ fun Prog.instr(): Instructions = body.instr()
       Directive.ltorg +
       // Function code segments:
       it.functions.instr
-
   }
-
-/**
- * Traverses all the code in [Code] and looks for instructions that might throw exceptions, like [ADDInstr] and
- * overflows. For each unique one it finds, it adds the respective error handling functions to the program.
- */
-fun Code.addErrors(): Code {
-  var overflow = false
-  var runtimeError = false
-  // TODO more
-  val program = instr.toMutableList()
-  val iter = program.listIterator()
-  for (line in iter) {
-    if (line !is ARMInstr) continue
-    when {
-      line is ArithmeticInstr && line.s -> {
-        iter.add(BLInstr(condFlag = VSCond, label = OverflowException.label))
-        overflow = true
-      }
-      // TODO add more
-    }
-  }
-  val correctedFuncs = if (functions.isEmpty) functions else functions.addErrors()
-  var newCode = Code(program.toPersistentList(), data).withFunction(correctedFuncs)
-
-  if (overflow) {
-    newCode = newCode.withFunction(OverflowException.body)
-    runtimeError = true
-  }
-
-  if (runtimeError)
-    newCode = newCode.withFunction(RuntimeError.body)
-
-
-  return newCode
-}
-
-
-
-

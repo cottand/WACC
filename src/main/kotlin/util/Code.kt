@@ -17,7 +17,6 @@ private constructor(
   val data: Datas = persistentListOf(),
   private val funcs: PersistentSet<Code> = persistentSetOf()
 ) {
-
   val isEmpty by lazy { instr.isEmpty() && data.isEmpty() && funcs.isEmpty() }
 
   constructor(instr: Instructions = persistentListOf(), data: Datas = persistentListOf())

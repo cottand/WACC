@@ -23,7 +23,7 @@ object OverflowException : Exception() {
     )
   }
 
-  override val body = Code(instructions, msg0.body)
+  override val body = Code(instructions, msg0.body).withFunction(RuntimeError.body)
 }
 
 object RuntimeError : Exception() {

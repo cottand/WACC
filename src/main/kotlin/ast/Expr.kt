@@ -55,6 +55,7 @@ data class StrLit(val value: String) : Expr() {
     val instr = LDRInstr(rem.head, ImmEqualLabel(s.label))
     return Code(data = s.body) + instr
   }
+
   override val weight = 1
 }
 
@@ -152,18 +153,18 @@ data class BinaryOperExpr internal constructor(
     val dest = rem.head
     // No available registers, use stack machine! We can only use dest and Reg.last
     expr2.code(rem) +
-      PUSHInstr(dest) +
-      expr1.code(rem) +
-      POPInstr(Reg.last) +
-      binaryOper.code(dest, Reg.last)
+            PUSHInstr(dest) +
+            expr1.code(rem) +
+            POPInstr(Reg.last) +
+            binaryOper.code(dest, Reg.last)
   }, { (dest, next, rest) ->
     // We can use at least two registers, dest and next, but we know there's more
     if (expr1.weight > expr2.weight) {
       expr1.code(rem) +
-        expr2.code(next prepend rest)
+              expr2.code(next prepend rest)
     } else {
       expr2.code(next prepend (dest prepend rest)) +
-        expr1.code(dest prepend rest)
+              expr1.code(dest prepend rest)
     } + binaryOper.code(dest, next)
   })
 
@@ -315,12 +316,18 @@ object ModBO : IntBinOp() {
 
 object PlusBO : IntBinOp() {
   override fun toString(): String = "+"
-  override fun code(dest: Reg, r2: Reg) = Code.empty + ADDInstr(rd = dest, rn = dest, op2 = r2)
+  override fun code(dest: Reg, r2: Reg) =
+    (Code.empty + ADDInstr(rd = dest, rn = dest, op2 = r2) + BLInstr(VSCond, OverflowException.label)).withFunction(
+      OverflowException.body
+    )
 }
 
 object MinusBO : IntBinOp() {
   override fun toString(): String = "-"
-  override fun code(dest: Reg, r2: Reg) = Code.empty + SUBInstr(rd = dest, rn = dest, op2 = r2)
+  override fun code(dest: Reg, r2: Reg) =
+    (Code.empty + SUBInstr(rd = dest, rn = dest, op2 = r2) + BLInstr(VSCond, OverflowException.label)).withFunction(
+      OverflowException.body
+    )
 }
 
 // (int, int) -> bool:
@@ -347,11 +354,11 @@ object LeqBO : CompBinOp() {
 sealed class EqualityBinOp : BinaryOper() {
   override val validArgs: (Type, Type) -> Boolean = { b1, b2 ->
     check<BoolT>(b1, b2) ||
-      check<IntT>(b1, b2) ||
-      check<CharT>(b1, b2) ||
-      check<StringT>(b1, b2) ||
-      check<AnyPairTs>(b1, b2) ||
-      check<ArrayT>(b1, b2)
+            check<IntT>(b1, b2) ||
+            check<CharT>(b1, b2) ||
+            check<StringT>(b1, b2) ||
+            check<AnyPairTs>(b1, b2) ||
+            check<ArrayT>(b1, b2)
   }
   override val validReturn: (Type) -> Boolean = { it is BoolT }
   override val inTypes = listOf(
