@@ -20,7 +20,7 @@ abstract class PrintLn : StdFunc() {
 
 object PrintIntStdFunc : PrintLn() {
   override val name = "p_print_int"
-  override val msgTemplate = "%.d\\0"
+  override val msgTemplate = "%d\\0"
 
   override val instructions by lazy {
     persistentListOf(

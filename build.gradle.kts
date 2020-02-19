@@ -46,6 +46,7 @@ dependencies {
   testImplementation("io.ktor:ktor-client-serialization-jvm:$ktorVer")
   testImplementation("io.ktor:ktor-gson:$ktorVer")
   testImplementation("io.ktor:ktor-client-gson:$ktorVer")
+  testImplementation("com.google.code.gson:gson:2.8.5")
 
   val fuelVer = "2.2.1"
 
