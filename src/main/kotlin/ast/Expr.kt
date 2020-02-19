@@ -352,8 +352,7 @@ object GtBO : CompBinOp() {
   override fun code(dest: Reg, r2: Reg) = (Code.empty
           + CMPInstr(None, dest, RegOperand2(r2))
           + MOVInstr(GTCond, false, dest, ImmOperand2(Immed_8r(1, 0)))
-          + MOVInstr(LECond, false, dest, ImmOperand2(Immed_8r(0, 0)))
-          )
+          + MOVInstr(LECond, false, dest, ImmOperand2(Immed_8r(0, 0))))
 }
 
 object GeqBO : CompBinOp() {
@@ -361,8 +360,7 @@ object GeqBO : CompBinOp() {
   override fun code(dest: Reg, r2: Reg) = (Code.empty
           + CMPInstr(None, dest, RegOperand2(r2))
           + MOVInstr(GECond, false, dest, ImmOperand2(Immed_8r(1, 0)))
-          + MOVInstr(LTCond, false, dest, ImmOperand2(Immed_8r(0, 0)))
-          )
+          + MOVInstr(LTCond, false, dest, ImmOperand2(Immed_8r(0, 0))))
 }
 
 object LtBO : CompBinOp() {
@@ -370,8 +368,7 @@ object LtBO : CompBinOp() {
   override fun code(dest: Reg, r2: Reg) = (Code.empty
           + CMPInstr(None, dest, RegOperand2(r2))
           + MOVInstr(LTCond, false, dest, ImmOperand2(Immed_8r(1, 0)))
-          + MOVInstr(GECond, false, dest, ImmOperand2(Immed_8r(0, 0)))
-          )
+          + MOVInstr(GECond, false, dest, ImmOperand2(Immed_8r(0, 0))))
 }
 
 object LeqBO : CompBinOp() {
@@ -379,8 +376,7 @@ object LeqBO : CompBinOp() {
   override fun code(dest: Reg, r2: Reg) = (Code.empty
           + CMPInstr(None, dest, RegOperand2(r2))
           + MOVInstr(LECond, false, dest, ImmOperand2(Immed_8r(1, 0)))
-          + MOVInstr(GTCond, false, dest, ImmOperand2(Immed_8r(0, 0)))
-          )
+          + MOVInstr(GTCond, false, dest, ImmOperand2(Immed_8r(0, 0))))
 }
 
 sealed class EqualityBinOp : BinaryOper() {
