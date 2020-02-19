@@ -11,7 +11,9 @@ import kotlin.streams.toList
 
 object ReferenceCompilerAPI {
 
-  val gson by lazy { Gson() }
+  private val gson by lazy { Gson() }
+
+  private inline fun <reified T> String.fromJson() = gson.fromJson(this, T::class.java)
 
   private const val delimiters = "==========================================================="
 
@@ -52,15 +54,14 @@ object ReferenceCompilerAPI {
   fun run(armProg: String, filename: String, input: String): Pair<String, Int> {
     val newFile = filename.replace(".wacc", ".s")
     File(newFile).writeText(armProg)
-    val queryjson = "ruby refRun $newFile $input".runCommand().joinLines()
-    val reply = gson.fromJson(queryjson, EmulatorReply::class.java)
+    val reply = "ruby refRun $newFile $input".runCommand().joinLines().fromJson<EmulatorReply>()
     return reply.emulator_out to reply.emulator_exit.toInt()
   }
 }
 
 /**
- * Represents an answer from the reference compiler. If [success] is true, then [out] represents the compiled assembly,
- * or the received errors otherwise.
+ * Represents an answer from the reference compiler.[out] represents the compiled assembly,
+ * or the received errors.
  */
 data class RefAnswer(val assembly: String, val out: String, val code: Int)
 
