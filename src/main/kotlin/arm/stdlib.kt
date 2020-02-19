@@ -7,15 +7,18 @@ import kotlinx.collections.immutable.persistentListOf
 
 abstract class StdFunc {
   abstract val name: String
-  abstract val msgTemplate: String
-  abstract val instructions: PersistentList<Instr>
-
+  abstract val body: Code
   internal val label by lazy { Label(name) }
-  internal val msg by lazy { StringData(msgTemplate, msgTemplate.length - 1) }
-  val body by lazy { Code(instructions, msg.body) }
 }
 
-object PrintIntStdFunc : StdFunc() {
+abstract class PrintLn : StdFunc() {
+  abstract val msgTemplate: String
+  internal val msg by lazy { StringData(msgTemplate, msgTemplate.length - 1) }
+  override val body by lazy { Code(instructions, msg.body) }
+  abstract val instructions: PersistentList<Instr>
+}
+
+object PrintIntStdFunc : PrintLn() {
   override val name = "p_print_int"
   override val msgTemplate = "%.d\\0"
 
@@ -34,7 +37,7 @@ object PrintIntStdFunc : StdFunc() {
   }
 }
 
-object PrintStringStdFunc : StdFunc() {
+object PrintStringStdFunc : PrintLn() {
   override val name = "p_print_string"
   override val msgTemplate = "%.*s\\0"
 
