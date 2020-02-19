@@ -155,7 +155,7 @@ data class BinaryOperExpr internal constructor(
       PUSHInstr(dest) +
       expr1.code(rem) +
       POPInstr(Reg.last) +
-      binaryOper.instruction(dest, Reg.last)
+      binaryOper.code(dest, Reg.last)
   }, { (dest, next, rest) ->
     // We can use at least two registers, dest and next, but we know there's more
     if (expr1.weight > expr2.weight) {
@@ -164,7 +164,7 @@ data class BinaryOperExpr internal constructor(
     } else {
       expr2.code(next prepend (dest prepend rest)) +
         expr1.code(dest prepend rest)
-    } + binaryOper.instruction(dest, next)
+    } + binaryOper.code(dest, next)
   })
 
   companion object {
@@ -267,9 +267,9 @@ sealed class BinaryOper {
   abstract val inTypes: List<Type>
 
   /**
-   * The [Instr] required in order to perform this [BinaryOper]. By convention, the result should be put in [dest]
+   * The [Code] required in order to perform this [BinaryOper]. By convention, the result should be put in [dest]
    */
-  abstract fun instruction(dest: Reg, r2: Reg): Instr
+  abstract fun code(dest: Reg, r2: Reg): Code
 }
 
 // (int, int) -> int:
@@ -300,48 +300,48 @@ sealed class BoolBinOp : BinaryOper() {
 
 object MulBO : IntBinOp() {
   override fun toString(): String = "*"
-  override fun instruction(dest: Reg, r2: Reg) = MULInstr(None, false, dest, dest, r2)
+  override fun code(dest: Reg, r2: Reg) = Code.empty + MULInstr(None, false, dest, dest, r2)
 }
 
 object DivBO : IntBinOp() {
   override fun toString(): String = "/"
-  override fun instruction(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = TODO()
 }
 
 object ModBO : IntBinOp() {
   override fun toString(): String = "%"
-  override fun instruction(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = TODO()
 }
 
 object PlusBO : IntBinOp() {
   override fun toString(): String = "+"
-  override fun instruction(dest: Reg, r2: Reg) = ADDInstr(rd = dest, rn = dest, op2 = r2)
+  override fun code(dest: Reg, r2: Reg) = Code.empty + ADDInstr(rd = dest, rn = dest, op2 = r2)
 }
 
 object MinusBO : IntBinOp() {
   override fun toString(): String = "-"
-  override fun instruction(dest: Reg, r2: Reg) = SUBInstr(rd = dest, rn = dest, op2 = r2)
+  override fun code(dest: Reg, r2: Reg) = Code.empty + SUBInstr(rd = dest, rn = dest, op2 = r2)
 }
 
 // (int, int) -> bool:
 object GtBO : CompBinOp() {
   override fun toString(): String = ">"
-  override fun instruction(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = TODO()
 }
 
 object GeqBO : CompBinOp() {
   override fun toString(): String = ">="
-  override fun instruction(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = TODO()
 }
 
 object LtBO : CompBinOp() {
   override fun toString(): String = "<"
-  override fun instruction(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = TODO()
 }
 
 object LeqBO : CompBinOp() {
   override fun toString(): String = ">="
-  override fun instruction(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = TODO()
 }
 
 sealed class EqualityBinOp : BinaryOper() {
@@ -367,20 +367,20 @@ sealed class EqualityBinOp : BinaryOper() {
 
 object EqBO : EqualityBinOp() {
   override fun toString(): String = "=="
-  override fun instruction(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = TODO()
 }
 
 object NeqBO : EqualityBinOp() {
   override fun toString(): String = "!="
-  override fun instruction(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = TODO()
 }
 
 object AndBO : BoolBinOp() {
   override fun toString(): String = "&&"
-  override fun instruction(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = TODO()
 }
 
 object OrBO : BoolBinOp() {
   override fun toString(): String = "||"
-  override fun instruction(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = TODO()
 }
