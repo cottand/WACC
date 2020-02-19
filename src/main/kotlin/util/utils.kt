@@ -6,9 +6,6 @@ import arrow.core.Either
 import arrow.core.Validated
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
-import ic.org.arm.Data
-import ic.org.arm.Instr
-import kotlinx.collections.immutable.*
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 
@@ -49,47 +46,6 @@ inline val ParserRuleContext.startPosition
  */
 inline val <reified E, reified V> List<Validated<E, V>>.valids
   get() = this.filterIsInstance<Valid<V>>().map { it.a }
-
-
-typealias Instructions = PersistentList<Instr>
-typealias Datas = PersistentList<Data>
-
-/**
- * Returned by something that produces assembly. [instr] corresponds to the assembly instructions,
- * and [data] to information in the Data segment.
- */
-data class Code
-private constructor(
-  val instr: Instructions = persistentListOf(),
-  val data: Datas = persistentListOf(),
-  private val funcs: PersistentSet<Code> = persistentSetOf()
-) {
-
-  val isEmpty by lazy { instr.isEmpty() && data.isEmpty() && funcs.isEmpty() }
-
-  constructor(instr: Instructions = persistentListOf(), data: Datas = persistentListOf())
-    : this(instr, data, persistentSetOf())
-
-  fun combine(other: Code) = Code(instr + other.instr, data + other.data).withFunctions(funcs + other.funcs)
-  inline operator fun plus(other: Code) = combine(other)
-  inline operator fun plus(other: Instructions) = combine(Code(other))
-  inline operator fun plus(other: Instr) = combine(Code.instr(other))
-
-  fun withFunction(other: Code) = Code(instr, data, funcs + other + other.funcs)
-  fun withFunctions(others: Collection<Code>) =
-    Code(instr, data, funcs + others.toPersistentList() + others.map { it.funcs }.flatten())
-
-  val functions by lazy { funcs.fold(empty, Code::combine) }
-
-  companion object {
-    val empty = Code(persistentListOf<Nothing>(), persistentListOf<Nothing>())
-    fun instr(instr: Instr) = Code(persistentListOf(instr), persistentListOf<Nothing>())
-  }
-}
-
-fun Instructions.code() = Code(this)
-
-fun List<Code>.flatten() = fold(Code.empty, Code::combine)
 
 
 
