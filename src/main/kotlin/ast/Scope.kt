@@ -54,7 +54,7 @@ sealed class Scope {
    * @see Scope.stackSizeSoFar
    */
   fun addVariable(pos: Position, t: Type, i: Ident, offsetBytes: Int = 0) =
-    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar()  + offsetBytes /* + t.size.byte needed? */).let {
+    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar() + offsetBytes /* + t.size.byte needed? */).let {
       if (variables.put(it.ident, it) == null)
         it.valid()
       else
@@ -142,19 +142,12 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
  */
 data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addrFromSP: Int) {
   /**
-   * Sets this variable to [rhs], allowing itself to use [rem] remaining registers
+   * Sets this [Variable] to [rhs], allowing itself to use [availableRegs] remaining registers
    */
-  fun set(rhs: Computable, rem: Regs = Reg.all) =
-    rhs.code(rem) +
-      when (type.size) {
-        Type.Sizes.Word -> STRInstr(Reg.first, SP.withOffset(addrFromSP))
-        Type.Sizes.Char -> STRBInstr(Reg.first, SP.withOffset(addrFromSP))
-      }
+  fun set(rhs: Computable, availableRegs: Regs = Reg.all) =
+    rhs.code(availableRegs) + type.sizedSTR(Reg.first, SP.withOffset(addrFromSP))
 
-  fun get(reg: Register = Reg.first) = when (type.size) {
-    Type.Sizes.Word -> LDRInstr(reg, SP.withOffset(addrFromSP))
-    Type.Sizes.Char -> LDRBInstr(reg, SP.withOffset(addrFromSP))
-  }
+  fun get(destReg: Register = Reg.first) = type.sizedLDR(destReg, SP.withOffset(addrFromSP))
 }
 
 data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variable>, val funcScope: FuncScope) {

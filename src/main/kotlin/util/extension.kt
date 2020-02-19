@@ -38,7 +38,7 @@ val <A> List<A>.head
   get() = first()
 
 val <A> List<A>.tail
-  get() = tail()
+  get() = tail().toPersistentList()
 
 fun List<String>.joinLines() = joinToString(separator = "\n")
 fun Stream<String>.joinLines() = toList().joinToString(separator = "\n")
