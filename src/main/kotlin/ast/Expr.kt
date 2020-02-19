@@ -301,7 +301,12 @@ sealed class BoolBinOp : BinaryOper() {
 
 object MulBO : IntBinOp() {
   override fun toString(): String = "*"
-  override fun code(dest: Reg, r2: Reg) = Code.empty + MULInstr(None, false, dest, dest, r2)
+  override fun code(dest: Reg, r2: Reg) =
+    (Code.empty + SMULLInstr(None, false, r2, dest, r2, dest) + CMPInstr(
+      None,
+      dest,
+      ASRImmOperand2(r2, Immed_5(31))
+    ) + BLInstr(NECond, OverflowException.label)).withFunction(OverflowException.body)
 }
 
 object DivBO : IntBinOp() {
