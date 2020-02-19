@@ -1,0 +1,10 @@
+# basic Integer printing
+
+# Output:
+# 189
+
+# Program:
+
+begin
+  print 189
+end
