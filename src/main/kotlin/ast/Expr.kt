@@ -5,6 +5,7 @@ import arrow.core.extensions.list.foldable.forAll
 import arrow.core.valid
 import ic.org.arm.*
 import ic.org.util.*
+import kotlinx.collections.immutable.persistentListOf
 import java.lang.Integer.max
 import java.lang.Integer.min
 
@@ -55,6 +56,7 @@ data class StrLit(val value: String) : Expr() {
     val instr = LDRInstr(rem.head, ImmEqualLabel(s.label))
     return Code(data = s.body) + instr
   }
+
   override val weight = 1
 }
 
@@ -70,7 +72,7 @@ object NullPairLit : Expr() {
 data class IdentExpr(val vari: Variable) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
-  override fun code(rem: Regs): Code = Code.instr(vari.get())
+  override fun code(rem: Regs): Code = Code.instr(vari.get(destReg = rem.head))
   override val weight = 2 // Todo decide on a constant
 }
 
@@ -151,9 +153,11 @@ data class BinaryOperExpr internal constructor(
   override fun code(rem: Regs) = rem.take2OrNone.fold({
     val dest = rem.head
     // No available registers, use stack machine! We can only use dest and Reg.last
-    expr2.code(rem) +
+    expr1.code(rem) +
       PUSHInstr(dest) +
-      expr1.code(rem) +
+      ADDInstr(s = false, rd = SP, rn = SP, int8b = Type.Sizes.Word.bytes) +
+      expr2.code(rem) +
+      SUBInstr(s = false, rd = SP, rn = SP, int8b = Type.Sizes.Word.bytes) +
       POPInstr(Reg.last) +
       binaryOper.instruction(dest, Reg.last)
   }, { (dest, next, rest) ->

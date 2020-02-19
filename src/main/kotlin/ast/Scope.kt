@@ -83,13 +83,26 @@ sealed class Scope {
    * TODO make sure it is used by Prog.instr() (OK), Func.instr(), and BegEnd Stat.
    */
   fun makeInstrScope(offset: Int = 0) = stackSizeSoFar().plus(offset).let { size ->
-    if (size != 0) {
-      Triple(
-        persistentListOf(SUBInstr(s = false, rd = SP, rn = SP, int8b = size)),
-        persistentListOf(ADDInstr(s = false, rd = SP, rn = SP, int8b = size)),
-        size
-      )
-    } else Triple(persistentListOf<Nothing>(), persistentListOf<Nothing>(), 0)
+    val auxReg = Reg.first
+    val regLoad = LDRInstr(auxReg, size)
+    val (beg, end) =
+      when (size) {
+        0 -> persistentListOf<Nothing>() to persistentListOf<Nothing>()
+        in 1..250 -> {
+          persistentListOf(SUBInstr(s = false, rd = SP, rn = SP, int8b = size)) to
+            persistentListOf(ADDInstr(s = false, rd = SP, rn = SP, int8b = size))
+        }
+        else ->
+          persistentListOf(
+            regLoad,
+            SUBInstr(s = false, rd = SP, rn = SP, op2 = RegOperand2(auxReg))
+          ) to
+            persistentListOf(
+              regLoad,
+              ADDInstr(s = false, rd = SP, rn = SP, op2 = RegOperand2(auxReg))
+            )
+      }
+    Triple(beg, end, size)
   }
 }
 
