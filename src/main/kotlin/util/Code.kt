@@ -26,10 +26,9 @@ private constructor(
   fun combine(other: Code) = Code(instr + other.instr, data + other.data)
     .withFunctions(funcs + other.funcs)
 
-  inline operator fun plus(other: Code) = combine(other)
-  inline operator fun plus(other: Instructions) = combine(Code(other))
-
-  inline operator fun plus(other: Instr) = combine(Code.instr(other))
+  operator fun plus(other: Code) = combine(other)
+  operator fun plus(other: Instructions) = combine(Code(other))
+  operator fun plus(other: Instr) = combine(instr(other))
 
   fun withFunction(other: Code) =
     Code(instr, data, funcs + other + other.funcs)

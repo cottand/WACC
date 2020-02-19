@@ -2,10 +2,13 @@
 
 package reference
 
+import arrow.core.getOrElse
+import arrow.core.lastOrNone
 import com.google.gson.Gson
 import ic.org.util.createWithDirs
 import ic.org.util.joinLines
 import java.io.File
+import java.lang.IllegalStateException
 import java.util.stream.Stream
 import kotlin.streams.toList
 
@@ -47,7 +50,9 @@ object ReferenceCompilerAPI {
       .takeWhile { "The exit code is" !in it }
       .map { if (delimiters in it) it.replace(delimiters, "") else it }
       .joinLines()
-    val code = out.last { "The exit code is" in it }.filter { it.isDigit() }.toInt()
+    val code = out.lastOrNone() { "The exit code is" in it }
+      .getOrElse { throw IllegalStateException("Failed to parse:\n${out.joinLines()}") }
+      .filter { str -> str.isDigit() }.toInt()
     return RefAnswer(assembly, runtimeOut, code)
   }
 
