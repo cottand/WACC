@@ -2,15 +2,13 @@
 
 package ic.org.util
 
-import arrow.core.*
+import arrow.core.Either
+import arrow.core.Validated
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import ic.org.arm.Data
 import ic.org.arm.Instr
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.plus
-import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.*
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 
@@ -64,13 +62,13 @@ data class Code
 private constructor(
   val instr: Instructions = persistentListOf(),
   val data: Datas = persistentListOf(),
-  private val funcs: PersistentList<Code> = persistentListOf()
+  private val funcs: PersistentSet<Code> = persistentSetOf()
 ) {
 
   val isEmpty by lazy { instr.isEmpty() && data.isEmpty() && funcs.isEmpty() }
 
   constructor(instr: Instructions = persistentListOf(), data: Datas = persistentListOf())
-    : this(instr, data, persistentListOf())
+    : this(instr, data, persistentSetOf())
 
   fun combine(other: Code) =
     Code(instr + other.instr, data + other.data)
