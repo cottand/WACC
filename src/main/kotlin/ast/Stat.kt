@@ -6,6 +6,7 @@ import ic.org.arm.*
 import ic.org.util.Code
 import ic.org.util.Position
 import ic.org.util.shortRandomUUID
+import ic.org.util.tail
 
 sealed class Stat {
   abstract val scope: Scope
@@ -30,14 +31,16 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
 
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
   // See Decl.instr()
-  override fun instr() = Code.empty + when (lhs) {
-    is IdentLHS -> lhs.variable.set(rhs)
-    is ArrayElemLHS -> TODO()
-    is PairElemLHS -> when (lhs.pairElem) {
-      is Fst -> TODO()
-      is Snd -> TODO()
+  override fun instr() = Code.empty +
+    when (lhs) {
+      is IdentLHS -> lhs.variable.set(rhs)
+      is ArrayElemLHS -> TODO()
+      is PairElemLHS -> rhs.code(Reg.all) + // Put RHS expr in r0
+        // TODO check for NULL pointers!
+        lhs.variable.get(Reg(1)) + // Put Pair Ident in r1 (which is an addr)
+        // SDR r0 [r1 + pairElemOffset]
+        rhs.type.sizedSTR(Reg(0), Reg(1).withOffset(lhs.pairElem.offsetFromAddr))
     }
-  }
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
@@ -49,7 +52,7 @@ data class Free(val expr: Expr, override val scope: Scope, override val pos: Pos
 }
 
 data class Return(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = Code.empty + expr.code(Reg.all)
+  override fun instr() = expr.code(Reg.all)
 }
 
 data class Exit(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
@@ -103,14 +106,14 @@ data class While(val cond: Expr, val stat: Stat, override val scope: Scope, over
     val condLabel = Label("while_cond_${uuid}_at_line_$line")
 
     return Code.empty +
-      BInstr(cond = None, label = condLabel) + 
+      BInstr(cond = None, label = condLabel) +
       bodyLabel +
       initScope +
       stat.instr() +
       endScope +
       condLabel +
       cond.code(Reg.all) +
-      CMPInstr(cond = None, rn = Reg.first, int8b = 0) + // Test whether cond == 1
+      CMPInstr(cond = None, rn = Reg.first, int8b = 1) + // Test whether cond == 1
       BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
   }
 }

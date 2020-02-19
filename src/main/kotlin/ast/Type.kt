@@ -1,20 +1,35 @@
 package ic.org.ast
 
+import ic.org.arm.*
+
 /**
  * Class representing one of WACC's types.
  */
 sealed class Type {
+  fun sizedSTR(rd: Register, addr: AddrMode2) = when (size) {
+    Sizes.Word -> STRInstr(rd, addr)
+    Sizes.Char -> STRBInstr(rd, addr)
+  }
+
+  fun sizedLDR(rd: Register, addr: AddrMode2) = when (size) {
+    Sizes.Word -> LDRInstr(rd, addr)
+    Sizes.Char -> LDRBInstr(rd, addr)
+  }
+
   /**
    * Determines whether a variable of type `this `would accept a variable of type [other].
    * For example, [AnyArrayT] matches with [ArrayT].
    */
   abstract fun matches(other: Type): Boolean
-  abstract val size : Sizes
+
+  abstract val size: Sizes
+
   enum class Sizes(val bytes: Int) {
     Word(4),
     Char(1)
   }
 }
+
 val Type.Sizes.Pointer
   get() = Type.Sizes.Word
 
