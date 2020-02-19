@@ -315,13 +315,19 @@ object DivBO : IntBinOp() {
           + MOVInstr(None, false, r2, Reg(1))
           + BLInstr(None, CheckDivByZero.label)
           + BLInstr(None, Label("__aeabi_idiv"))
-          + MOVInstr(None, false, Reg(0), dest)
+          + MOVInstr(None, false, dest, Reg(0))
           ).withFunction(CheckDivByZero.body)
 }
 
 object ModBO : IntBinOp() {
   override fun toString(): String = "%"
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + MOVInstr(None, false, dest, Reg(0))
+          + MOVInstr(None, false, r2, Reg(1))
+          + BLInstr(None, CheckDivByZero.label)
+          + BLInstr(None, Label("__aeabi_idivmod"))
+          + MOVInstr(None, false, dest, Reg(1))
+          ).withFunction(CheckDivByZero.body)
 }
 
 object PlusBO : IntBinOp() {
