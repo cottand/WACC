@@ -1,7 +1,6 @@
 package ic.org.arm
 
 import arrow.core.None
-import arrow.core.Option
 
 data class MOVInstr(
   override val cond: Flag,

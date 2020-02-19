@@ -1,9 +1,10 @@
 package ic.org.arm
 
 import arrow.core.None
-import arrow.core.Option
+import arrow.core.some
 
 data class LDRInstr(override val cond: Flag = None, val rd: Register, val addressing: AddrMode2) : ARMCondInstr() {
+  constructor(condFlag: CondFlag, rd: Register, addressing: AddrMode2) : this(condFlag.some(), rd, addressing)
   constructor(rd: Register, addressing: AddrMode2) : this(None, rd = rd, addressing = addressing)
   constructor(rd: Register, int32b: Int) : this(None, rd = rd, addressing = ImmEquals32b(int32b))
   override val code = "${opcode("LDR")} ${rd.code}, ${addressing.code}"
