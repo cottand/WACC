@@ -47,7 +47,7 @@ internal fun ExprContext.asAst(scope: Scope): Parsed<Expr> = when (this) {
 
 private fun BinOpContext.extractBinOp() = when {
   MUL() != null -> MulBO
-  DIV() != null -> DivisionBO
+  DIV() != null -> DivBO
   MOD() != null -> ModBO
   PLUS() != null -> PlusBO
   MINUS() != null -> MinusBO

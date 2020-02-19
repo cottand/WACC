@@ -300,10 +300,10 @@ sealed class BoolBinOp : BinaryOper() {
 
 object MulBO : IntBinOp() {
   override fun toString(): String = "*"
-  override fun instruction(dest: Reg, r2: Reg) = TODO()
+  override fun instruction(dest: Reg, r2: Reg) = MULInstr(None, false, dest, dest, r2)
 }
 
-object DivisionBO : IntBinOp() {
+object DivBO : IntBinOp() {
   override fun toString(): String = "/"
   override fun instruction(dest: Reg, r2: Reg) = TODO()
 }

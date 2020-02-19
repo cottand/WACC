@@ -1,0 +1,10 @@
+# binary mul operator
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  int x = 1 / 2
+end
