@@ -1,4 +1,4 @@
-# binary geq operator
+# binary lt operator
 
 # Output:
 # #empty#
@@ -6,5 +6,5 @@
 # Program:
 
 begin
-  bool x = 1 >= 2
+  bool x = 1 < 2
 end
