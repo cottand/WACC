@@ -410,7 +410,10 @@ object EqBO : EqualityBinOp() {
 
 object NeqBO : EqualityBinOp() {
   override fun toString(): String = "!="
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + CMPInstr(None, dest, RegOperand2(r2))
+          + MOVInstr(NECond, false, dest, ImmOperand2(Immed_8r(1, 0)))
+          + MOVInstr(EQCond, false, dest, ImmOperand2(Immed_8r(0, 0))))
 }
 
 object AndBO : BoolBinOp() {
