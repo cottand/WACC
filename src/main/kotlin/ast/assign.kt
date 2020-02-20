@@ -99,14 +99,12 @@ data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
         // minus the size of the function's stack (which will be compensated by when passing [init])
         val dest = SP.withOffset(param.addrFromSP - Type.Sizes.Word.bytes - stackSize)
         expr.code(rem) +
-          when (expr.type.size) {
-            Type.Sizes.Word -> STRInstr(Reg.first, dest)
-            Type.Sizes.Char -> TODO()
-          }
+          expr.type.sizedSTR(rem.head, dest)
       }.flatten() +
       init +
       BLInstr(func.label) +
-      end
+      end +
+      MOVInstr(rd = rem.head, op2 = Reg.ret)
   }
 
   override fun toString() = "call ${func.name.name} (..)"
