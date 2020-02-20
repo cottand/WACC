@@ -115,7 +115,10 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override fun toString(): String = "$unaryOper $expr"
   override fun code(rem: Regs) = when (unaryOper) {
     NotUO -> Code.empty + EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r(1, 0)))
-    MinusUO -> Code.empty + RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r(0, 0)))
+    MinusUO -> (Code.empty
+            + RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r(0, 0)))
+            + BLInstr(None, OverflowException.label)
+            ).withFunction(OverflowException.body)
     LenUO -> Code.empty + LDRInstr(rem.head, rem.head.zeroOffsetAddr)
     OrdUO -> Code.empty
     ChrUO -> Code.empty
