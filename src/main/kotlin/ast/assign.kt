@@ -4,8 +4,6 @@ import ic.org.arm.*
 import ic.org.util.Code
 import ic.org.util.flatten
 import ic.org.util.head
-import ic.org.util.mapp
-import kotlinx.collections.immutable.toPersistentList
 
 // <assign-lhs>
 sealed class AssLHS {
@@ -33,7 +31,6 @@ data class PairElemLHS(val pairElem: PairElem, val variable: Variable, val pairs
 interface Computable {
   val type: Type
 
-
   /**
    * Covert to [Code]. The result of evaluating this [Computable] should be put in [rem].
    * In order to perform the computation, one may use [rem], and dest's [Reg.next] registers.
@@ -42,6 +39,15 @@ interface Computable {
    * If this [Computable] is non basic (ie, a pair or an array) then the pointer to the structure is put in [rem].head
    */
   fun code(rem: Regs): Code
+
+  /**
+   * Evaluates an expression in order to put it in [dest]. Should be used by [Stat]
+   */
+  fun eval(dest: Register) = code(Reg.fromExpr).let {
+    if (dest != Reg.firstExpr)
+      it.plus(MOVInstr(rd = dest, op2 = Reg.firstExpr))
+    else it
+  }
 }
 
 sealed class AssRHS : Computable

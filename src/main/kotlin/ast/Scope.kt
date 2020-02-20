@@ -6,6 +6,7 @@ import arrow.core.*
 import ic.org.arm.*
 import ic.org.util.Position
 import ic.org.util.RedeclarationError
+import ic.org.util.head
 import kotlinx.collections.immutable.persistentListOf
 
 /**
@@ -157,10 +158,10 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
   /**
    * Sets this [Variable] to [rhs], allowing itself to use [availableRegs] remaining registers
    */
-  fun set(rhs: Computable, availableRegs: Regs = Reg.all) =
-    rhs.code(availableRegs) + type.sizedSTR(Reg.first, SP.withOffset(addrFromSP))
+  fun set(rhs: Computable, availableRegs: Regs = Reg.fromExpr) =
+    rhs.code(availableRegs) + type.sizedSTR(availableRegs.head, SP.withOffset(addrFromSP))
 
-  fun get(destReg: Register = Reg.first) = type.sizedLDR(destReg, SP.withOffset(addrFromSP))
+  fun get(destReg: Register = Reg(4)) = type.sizedLDR(destReg, SP.withOffset(addrFromSP))
 }
 
 data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variable>, val funcScope: FuncScope) {

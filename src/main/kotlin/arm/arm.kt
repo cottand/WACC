@@ -101,12 +101,16 @@ data class Reg(val id: Int) : Register() {
   companion object {
     val last = Reg(12)
     val first = Reg(0)
+    val firstExpr = Reg(4)
     val ret = first
     /**
      * All registers available by default, excluding [Reg.last]
      */
     val all by lazy {
       (0..11).map { Reg(it) }.toPersistentList()
+    }
+    val fromExpr by lazy {
+      (4..11).map { Reg(it) }.toPersistentList()
     }
   }
 }

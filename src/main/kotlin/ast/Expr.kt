@@ -5,7 +5,10 @@ import arrow.core.extensions.list.foldable.forAll
 import arrow.core.valid
 import ic.org.arm.*
 import ic.org.util.*
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.plus
+import kotlinx.collections.immutable.toPersistentList
 import java.lang.Integer.max
 import java.lang.Integer.min
 
@@ -117,9 +120,9 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override fun code(rem: Regs) = when (unaryOper) {
     NotUO -> Code.empty + EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r(1, 0)))
     MinusUO -> (Code.empty
-            + RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r(0, 0)))
-            + BLInstr(None, OverflowException.label)
-            ).withFunction(OverflowException.body)
+      + RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r(0, 0)))
+      + BLInstr(None, OverflowException.label)
+      ).withFunction(OverflowException.body)
     LenUO -> Code.empty + LDRInstr(rem.head, rem.head.zeroOffsetAddr)
     OrdUO -> Code.empty
     ChrUO -> Code.empty
@@ -315,17 +318,15 @@ object MulBO : IntBinOp() {
 
 object DivBO : IntBinOp() {
   override fun toString(): String = "/"
-  override fun code(dest: Reg, r2: Reg) = Code.empty.withFunction(CheckDivByZero.body) +
-    PUSHInstr(Reg(0)) +
-    PUSHInstr(Reg(1)) +
-    MOVInstr(None, false, dest, Reg(0)) +
-    MOVInstr(None, false, r2, Reg(1)) +
-    BLInstr(None, CheckDivByZero.label) +
-    BLInstr(None, Label("__aeabi_idiv")) +
-    MOVInstr(None, false, dest, Reg(0)) +
-    POPInstr(Reg(1)) +
-    POPInstr(Reg(0))
+  override fun code(dest: Reg, r2: Reg) =
+    Code.empty.withFunction(CheckDivByZero.body) +
+      MOVInstr(None, false, Reg(0), dest) +
+      MOVInstr(None, false, Reg(1), r2) +
+      BLInstr(None, CheckDivByZero.label) +
+      BLInstr(None, Label("__aeabi_idiv")) +
+      MOVInstr(None, false, dest, Reg(0))
 }
+
 
 object ModBO : IntBinOp() {
   override fun toString(): String = "%"
