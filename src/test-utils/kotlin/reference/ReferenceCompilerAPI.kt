@@ -2,12 +2,11 @@
 
 package reference
 
-import arrow.core.Option
 import arrow.core.getOrElse
-import arrow.core.lastOrNone
 import arrow.core.toOption
 import com.github.kittinunf.fuel.Fuel
-import com.github.kittinunf.fuel.core.*
+import com.github.kittinunf.fuel.core.FileDataPart
+import com.github.kittinunf.fuel.core.InlineDataPart
 import com.github.kittinunf.fuel.gson.responseObject
 import com.google.gson.Gson
 import ic.org.util.NOT_REACHED
@@ -15,15 +14,10 @@ import ic.org.util.createWithDirs
 import ic.org.util.joinLines
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import java.io.File
-import java.lang.IllegalStateException
-import java.util.stream.Stream
-import kotlin.streams.toList
 
 object ReferenceCompilerAPI {
 
   private val gson by lazy { Gson() }
-
-  private inline fun <reified T> String.fromJson() = gson.fromJson(this, T::class.java)
 
   private const val delimiters = "==========================================================="
 
@@ -71,11 +65,10 @@ object ReferenceCompilerAPI {
       .getOrElse { System.err.println("Failed to reach the reference emulator"); assumeTrue(false); NOT_REACHED() }
     if (reply.assemble_out.isNotBlank()) {
       val asmWithLines  = armProg.lines().mapIndexed { i, s ->
-        val lNo = i.toString()
+        val lNo = (i + 1).toString()
         lNo + "      ".drop(lNo.length) + s
       }.joinLines()
-      println("Faulty assembly:\n$asmWithLines")
-      throw IllegalStateException("Failed to assemble program with error:\n${reply.assemble_out}")
+      throw IllegalStateException("Failed to assemble program with error:\n${reply.assemble_out}\n$asmWithLines")
     }
     return reply.emulator_out to reply.emulator_exit.toInt()
   }
@@ -87,7 +80,8 @@ object ReferenceCompilerAPI {
       .let { options ->
         Fuel.upload(url)
           .add(FileDataPart(f, "testfile", f.name, "application/octet-stream"))
-          .add(*options).apply { if (stdin.isNotBlank()) add(InlineDataPart(stdin, "stdin")) }
+          .add(*options)
+          .apply { if (stdin.isNotBlank()) add(InlineDataPart(stdin, "stdin")) }
           .responseObject<T>(gson).third
           .component1()
           .toOption()
@@ -99,15 +93,6 @@ object ReferenceCompilerAPI {
  * or the received errors.
  */
 data class RefAnswer(val assembly: String, val out: String, val code: Int)
-
-@Suppress("BlockingMethodInNonBlockingContext")
-fun String.runCommand(workingDir: File = File(".")): Stream<String> =
-  ProcessBuilder(*split("\\s".toRegex()).toTypedArray())
-    .directory(workingDir)
-    .start()
-    .apply { waitFor() }
-    .inputStream.bufferedReader()
-    .lines()
 
 /**
  * Serialised JSON produced by the reference emulator
