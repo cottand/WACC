@@ -316,22 +316,29 @@ object MulBO : IntBinOp() {
 object DivBO : IntBinOp() {
   override fun toString(): String = "/"
   override fun code(dest: Reg, r2: Reg) = Code.empty.withFunction(CheckDivByZero.body) +
+    PUSHInstr(Reg(0)) +
+    PUSHInstr(Reg(1)) +
     MOVInstr(None, false, dest, Reg(0)) +
     MOVInstr(None, false, r2, Reg(1)) +
     BLInstr(None, CheckDivByZero.label) +
     BLInstr(None, Label("__aeabi_idiv")) +
-    MOVInstr(None, false, dest, Reg(0))
+    MOVInstr(None, false, dest, Reg(0)) +
+    POPInstr(Reg(1)) +
+    POPInstr(Reg(0))
 }
 
 object ModBO : IntBinOp() {
   override fun toString(): String = "%"
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-    + MOVInstr(None, false, dest, Reg(0))
-    + MOVInstr(None, false, r2, Reg(1))
-    + BLInstr(None, CheckDivByZero.label)
-    + BLInstr(None, Label("__aeabi_idivmod"))
-    + MOVInstr(None, false, dest, Reg(1))
-    ).withFunction(CheckDivByZero.body)
+  override fun code(dest: Reg, r2: Reg) = Code.empty.withFunction(CheckDivByZero.body) +
+    PUSHInstr(Reg(0)) +
+    PUSHInstr(Reg(1)) +
+    MOVInstr(None, false, dest, Reg(0)) +
+    MOVInstr(None, false, r2, Reg(1)) +
+    BLInstr(None, CheckDivByZero.label) +
+    BLInstr(None, Label("__aeabi_idivmod")) +
+    MOVInstr(None, false, dest, Reg(1)) +
+    POPInstr(Reg(1)) +
+    POPInstr(Reg(0))
 }
 
 object PlusBO : IntBinOp() {
@@ -343,43 +350,42 @@ object PlusBO : IntBinOp() {
 
 object MinusBO : IntBinOp() {
   override fun toString(): String = "-"
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-    + SUBInstr(rd = dest, rn = dest, op2 = r2)
-    + BLInstr(VSCond, OverflowException.label)
-    ).withFunction(OverflowException.body)
+  override fun code(dest: Reg, r2: Reg) = Code.empty.withFunction(OverflowException.body) +
+    SUBInstr(rd = dest, rn = dest, op2 = r2) +
+    BLInstr(VSCond, OverflowException.label)
 }
 
 // (int, int) -> bool:
 object GtBO : CompBinOp() {
   override fun toString(): String = ">"
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + CMPInstr(None, dest, RegOperand2(r2))
-          + MOVInstr(GTCond, false, dest, ImmOperand2(Immed_8r(1, 0)))
-          + MOVInstr(LECond, false, dest, ImmOperand2(Immed_8r(0, 0))))
+  override fun code(dest: Reg, r2: Reg) = Code.empty +
+    CMPInstr(None, dest, RegOperand2(r2)) +
+    MOVInstr(GTCond, false, dest, ImmOperand2(Immed_8r(1, 0))) +
+    MOVInstr(LECond, false, dest, ImmOperand2(Immed_8r(0, 0)))
 }
 
 object GeqBO : CompBinOp() {
   override fun toString(): String = ">="
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + CMPInstr(None, dest, RegOperand2(r2))
-          + MOVInstr(GECond, false, dest, ImmOperand2(Immed_8r(1, 0)))
-          + MOVInstr(LTCond, false, dest, ImmOperand2(Immed_8r(0, 0))))
+  override fun code(dest: Reg, r2: Reg) = Code.empty +
+    CMPInstr(None, dest, RegOperand2(r2)) +
+    MOVInstr(GECond, false, dest, ImmOperand2(Immed_8r(1, 0))) +
+    MOVInstr(LTCond, false, dest, ImmOperand2(Immed_8r(0, 0)))
 }
 
 object LtBO : CompBinOp() {
   override fun toString(): String = "<"
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + CMPInstr(None, dest, RegOperand2(r2))
-          + MOVInstr(LTCond, false, dest, ImmOperand2(Immed_8r(1, 0)))
-          + MOVInstr(GECond, false, dest, ImmOperand2(Immed_8r(0, 0))))
+  override fun code(dest: Reg, r2: Reg) = Code.empty +
+    CMPInstr(None, dest, RegOperand2(r2)) +
+    MOVInstr(LTCond, false, dest, ImmOperand2(Immed_8r(1, 0))) +
+    MOVInstr(GECond, false, dest, ImmOperand2(Immed_8r(0, 0)))
 }
 
 object LeqBO : CompBinOp() {
   override fun toString(): String = ">="
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + CMPInstr(None, dest, RegOperand2(r2))
-          + MOVInstr(LECond, false, dest, ImmOperand2(Immed_8r(1, 0)))
-          + MOVInstr(GTCond, false, dest, ImmOperand2(Immed_8r(0, 0))))
+  override fun code(dest: Reg, r2: Reg) = Code.empty +
+    CMPInstr(None, dest, RegOperand2(r2)) +
+    MOVInstr(LECond, false, dest, ImmOperand2(Immed_8r(1, 0))) +
+    MOVInstr(GTCond, false, dest, ImmOperand2(Immed_8r(0, 0)))
 }
 
 sealed class EqualityBinOp : BinaryOper() {
@@ -405,28 +411,28 @@ sealed class EqualityBinOp : BinaryOper() {
 
 object EqBO : EqualityBinOp() {
   override fun toString(): String = "=="
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + CMPInstr(None, dest, RegOperand2(r2))
-          + MOVInstr(EQCond, false, dest, ImmOperand2(Immed_8r(1, 0)))
-          + MOVInstr(NECond, false, dest, ImmOperand2(Immed_8r(0, 0))))
+  override fun code(dest: Reg, r2: Reg) = Code.empty +
+    CMPInstr(None, dest, RegOperand2(r2)) +
+    MOVInstr(EQCond, false, dest, ImmOperand2(Immed_8r(1, 0))) +
+    MOVInstr(NECond, false, dest, ImmOperand2(Immed_8r(0, 0)))
 }
 
 object NeqBO : EqualityBinOp() {
   override fun toString(): String = "!="
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + CMPInstr(None, dest, RegOperand2(r2))
-          + MOVInstr(NECond, false, dest, ImmOperand2(Immed_8r(1, 0)))
-          + MOVInstr(EQCond, false, dest, ImmOperand2(Immed_8r(0, 0))))
+  override fun code(dest: Reg, r2: Reg) = Code.empty +
+    CMPInstr(None, dest, RegOperand2(r2)) +
+    MOVInstr(NECond, false, dest, ImmOperand2(Immed_8r(1, 0))) +
+    MOVInstr(EQCond, false, dest, ImmOperand2(Immed_8r(0, 0)))
 }
 
 object AndBO : BoolBinOp() {
   override fun toString(): String = "&&"
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + ANDInstr(None, false, dest, dest, RegOperand2(r2)))
+  override fun code(dest: Reg, r2: Reg) = Code.empty +
+    ANDInstr(None, false, dest, dest, RegOperand2(r2))
 }
 
 object OrBO : BoolBinOp() {
   override fun toString(): String = "||"
-  override fun code(dest: Reg, r2: Reg) = (Code.empty
-          + ORRInstr(None, false, dest, dest, RegOperand2(r2)))
+  override fun code(dest: Reg, r2: Reg) = Code.empty +
+    ORRInstr(None, false, dest, dest, RegOperand2(r2))
 }
