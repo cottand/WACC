@@ -418,7 +418,8 @@ object NeqBO : EqualityBinOp() {
 
 object AndBO : BoolBinOp() {
   override fun toString(): String = "&&"
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + ANDInstr(None, false, dest, dest, RegOperand2(r2)))
 }
 
 object OrBO : BoolBinOp() {
