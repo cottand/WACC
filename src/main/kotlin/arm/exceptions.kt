@@ -45,7 +45,7 @@ object RuntimeError : Exception() {
 object CheckDivByZero : Exception() {
   override val name = "p_check_divide_by_zero"
 
-  private const val errormsg = "DivideByZeroError: divide or modulo by zero\\n"
+  private const val errormsg = "DivideByZeroError: divide or modulo by zero\\n\\0"
   private val msg0 = StringData(errormsg, errormsg.length - 1)
 
   private val instructions by lazy {

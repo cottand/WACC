@@ -30,14 +30,10 @@ data class Func(val retType: Type, val ident: Ident, val params: List<Variable>,
 data class Param(val type: Type, val ident: Ident)
 
 // <pair-elem>
-@Suppress("LeakingThis")
 sealed class PairElem {
   abstract val expr: Expr
 
-  val offsetFromAddr = when (this) {
-    is Fst -> 0
-    is Snd -> Type.Sizes.Word.bytes
-  }
+  abstract val offsetFromAddr: Int
 
   companion object {
     fun fst(expr: Expr) = Fst(expr)
@@ -47,10 +43,12 @@ sealed class PairElem {
 
 data class Fst internal constructor(override val expr: Expr) : PairElem() {
   override fun toString() = "fst $expr"
+  override val offsetFromAddr = 0
 }
 
 data class Snd internal constructor(override val expr: Expr) : PairElem() {
   override fun toString() = "snd $expr"
+  override val offsetFromAddr = Type.Sizes.Word.bytes
 }
 
 @Suppress("EXPERIMENTAL_FEATURE_WARNING")
