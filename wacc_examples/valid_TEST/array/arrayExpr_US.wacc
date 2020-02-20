@@ -1,0 +1,11 @@
+# array declaration with expressions
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  int[] a = [1, 1+1]
+end
+

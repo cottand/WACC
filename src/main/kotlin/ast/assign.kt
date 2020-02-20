@@ -1,9 +1,12 @@
 package ic.org.ast
 
+import arrow.core.None
+import arrow.core.firstOrNone
 import ic.org.arm.*
 import ic.org.util.Code
 import ic.org.util.flatten
 import ic.org.util.head
+import kotlinx.collections.immutable.toPersistentList
 
 // <assign-lhs>
 sealed class AssLHS {
@@ -62,7 +65,39 @@ data class ExprRHS(val expr: Expr) : AssRHS(), Computable by expr {
  */
 data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
   override val type = arrT
-  override fun code(rem: Regs) = TODO()
+  override fun code(rem: Regs): Code {
+    // TODO push regs if none available
+    require(rem.size >= 2)
+
+    val dst = rem[0]
+
+    val exprSize = exprs.firstOrNone().fold({ 0 }, { it.type.size.bytes })
+    val arrSize = exprs.size * exprSize
+
+    var instrs = Code.empty.withFunction(MallocStdFunc.body) +
+            // Load array size, add 4 bytes to store size
+            LDRInstr(Reg(0), arrSize + 4) +
+            // Malloc the array
+            BLInstr(MallocStdFunc.label) +
+            // Move the addr of the malloc (array) into the working reg
+            MOVInstr(None, false, dst, Reg(0))
+
+    // We start at 1 since first slot holds array size
+    var index = 1
+    // regs to be used by expressions
+    val exprRem = rem.drop(1).toPersistentList()
+    // For each expr, evaluate and put in array at index + exprSize
+    instrs = exprs.fold(instrs, { acc, expr ->
+      acc +
+              expr.code(exprRem) +
+              STRInstr(None, exprRem.head, ImmOffsetAddrMode2(dst, Immed_12(index++ * exprSize)))
+    })
+
+    // Add array size to first slot
+    instrs += LDRInstr(rem[1], exprs.size) + STRInstr(rem[1], ZeroOffsetAddrMode2(dst))
+
+    return instrs
+  }
 
   override fun toString() =
     exprs.joinToString(separator = ", ", prefix = "[", postfix = "]") { it.toString() }

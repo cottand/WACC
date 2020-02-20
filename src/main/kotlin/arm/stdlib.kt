@@ -56,3 +56,8 @@ object PrintStringStdFunc : PrintLn() {
     )
   }
 }
+
+object MallocStdFunc : StdFunc() {
+  override val name = "malloc"
+  override val body = Code.empty
+}
