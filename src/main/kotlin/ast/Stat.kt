@@ -23,20 +23,20 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
   Stat() {
   val type = variable.type
   val ident = variable.ident
-  override fun instr() = variable.set(rhs)
+  override fun instr() = variable.set(rhs, scope)
 }
 
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
   // See Decl.instr()
   override fun instr() = Code.empty +
     when (lhs) {
-      is IdentLHS -> lhs.variable.set(rhs)
+      is IdentLHS -> lhs.variable.set(rhs, scope)
       is ArrayElemLHS -> TODO()
       is PairElemLHS ->
         rhs.eval(Reg(0)) + // Put RHS expr in r0
       // TODO check for NULL pointers!
-      lhs.variable.get(Reg(1)) + // Put Pair Ident in r1 (which is an addr)
-        // SDR r0 [r1 + pairElemOffset]
+      lhs.variable.get(scope, Reg(1)) + // Put Pair Ident in r1 (which is an addr)
+        // STR r0 [r1 + pairElemOffset]
         rhs.type.sizedSTR(Reg(0), Reg(1).withOffset(lhs.pairElem.offsetFromAddr))
     }
 }

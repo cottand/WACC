@@ -22,7 +22,7 @@ internal fun ExprContext.asAst(scope: Scope): Parsed<Expr> = when (this) {
   is IdentExprContext -> scope[ID().text].fold({
     UndefinedIdentifier(ID().position, ID().text).toInvalidParsed()
   }, { variable ->
-    IdentExpr(variable).valid()
+    IdentExpr(variable, scope).valid()
   })
 
   is ArrayElemExprContext -> array_elem().asAst(scope)

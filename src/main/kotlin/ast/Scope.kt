@@ -4,9 +4,7 @@ package ic.org.ast
 
 import arrow.core.*
 import ic.org.arm.*
-import ic.org.util.Position
-import ic.org.util.RedeclarationError
-import ic.org.util.head
+import ic.org.util.*
 import kotlinx.collections.immutable.persistentListOf
 
 /**
@@ -141,10 +139,10 @@ data class FuncScope(val ident: Ident, val gScope: GlobalScope) : Scope() {
  *
  */
 data class ControlFlowScope(val parent: Scope) : Scope() {
-
   // Return whatever ident is found in this scope's varMap, and look in its parent's otherwise.
   override fun getVar(ident: Ident): Option<Variable> =
-    variables[ident].toOption() or parent.getVar(ident)
+    variables[ident].toOption() or
+      parent.getVar(ident).map { it.copy(addrFromSP = it.addrFromSP + stackSizeSoFar()) }.print().print { this.variables.toString() }
 }
 
 /**
@@ -155,13 +153,28 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
  * have the responsibility of growing the stack down before placing stuff on it.
  */
 data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addrFromSP: Int) {
+
+  /**
+   * Returns this [Variable]'s stack address with the respect to [childScope], for accessing from a nested scope.
+   */
+  private fun addrWithScopeOffset(childScope: Scope): Int = when (childScope) {
+    this.scope -> addrFromSP
+    is ControlFlowScope -> addrWithScopeOffset(childScope.parent) + childScope.parent.stackSizeSoFar()
+    else -> NOT_REACHED()
+  }
+
   /**
    * Sets this [Variable] to [rhs], allowing itself to use [availableRegs] remaining registers
    */
-  fun set(rhs: Computable, availableRegs: Regs = Reg.fromExpr) =
-    rhs.code(availableRegs) + type.sizedSTR(availableRegs.head, SP.withOffset(addrFromSP))
+  fun set(rhs: Computable, currentScope: Scope, availableRegs: Regs = Reg.fromExpr) =
+    rhs.code(availableRegs) +
+      type.sizedSTR(availableRegs.head, SP.withOffset(addrWithScopeOffset(currentScope)))
 
-  fun get(destReg: Register = Reg(4)) = type.sizedLDR(destReg, SP.withOffset(addrFromSP))
+  /**
+   * Puts this [Variable] into the register [destReg] (usually an expression register like [Reg.firstExpr])
+   */
+  fun get(currentScope: Scope, destReg: Register = Reg.firstExpr) =
+    type.sizedLDR(destReg, SP.withOffset(addrWithScopeOffset(currentScope)))
 }
 
 data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variable>, val funcScope: FuncScope) {

@@ -5,10 +5,6 @@ import arrow.core.extensions.list.foldable.forAll
 import arrow.core.valid
 import ic.org.arm.*
 import ic.org.util.*
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.plus
-import kotlinx.collections.immutable.toPersistentList
 import java.lang.Integer.max
 import java.lang.Integer.min
 
@@ -72,10 +68,10 @@ object NullPairLit : Expr() {
   override val weight = 1
 }
 
-data class IdentExpr(val vari: Variable) : Expr() {
+data class IdentExpr(val vari: Variable, val scope: Scope) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
-  override fun code(rem: Regs): Code = Code.instr(vari.get(destReg = rem.head))
+  override fun code(rem: Regs): Code = Code.instr(vari.get(destReg = rem.head, currentScope = scope))
   override val weight = 2 // Todo decide on a constant
 }
 
