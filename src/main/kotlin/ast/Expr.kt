@@ -313,29 +313,32 @@ object MulBO : IntBinOp() {
 }
 
 object DivBO : IntBinOp() {
+  private val stdlibDiv = Label("__aeabi_idiv")
   override fun toString(): String = "/"
   override fun code(dest: Reg, r2: Reg) =
     Code.empty.withFunction(CheckDivByZero.body) +
       MOVInstr(None, false, Reg(0), dest) +
       MOVInstr(None, false, Reg(1), r2) +
       BLInstr(None, CheckDivByZero.label) +
-      BLInstr(None, Label("__aeabi_idiv")) +
+      BLInstr(None, stdlibDiv) +
       MOVInstr(None, false, dest, Reg(0))
 }
 
-
 object ModBO : IntBinOp() {
   override fun toString(): String = "%"
-  override fun code(dest: Reg, r2: Reg) = Code.empty.withFunction(CheckDivByZero.body) +
-    PUSHInstr(Reg(0)) +
-    PUSHInstr(Reg(1)) +
-    MOVInstr(None, false, dest, Reg(0)) +
-    MOVInstr(None, false, r2, Reg(1)) +
-    BLInstr(None, CheckDivByZero.label) +
-    BLInstr(None, Label("__aeabi_idivmod")) +
-    MOVInstr(None, false, dest, Reg(1)) +
-    POPInstr(Reg(1)) +
-    POPInstr(Reg(0))
+  override fun code(dest: Reg, r2: Reg): Code {
+    val stdlibMod = Label("__aeabi_idivmod")
+    return Code.empty.withFunction(CheckDivByZero.body) +
+      PUSHInstr(Reg(0)) +
+      PUSHInstr(Reg(1)) +
+      MOVInstr(None, false, dest, Reg(0)) +
+      MOVInstr(None, false, r2, Reg(1)) +
+      BLInstr(None, CheckDivByZero.label) +
+      BLInstr(None, stdlibMod) +
+      MOVInstr(None, false, dest, Reg(1)) +
+      POPInstr(Reg(1)) +
+      POPInstr(Reg(0))
+  }
 }
 
 object PlusBO : IntBinOp() {
