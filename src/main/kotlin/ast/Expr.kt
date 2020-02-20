@@ -424,5 +424,6 @@ object AndBO : BoolBinOp() {
 
 object OrBO : BoolBinOp() {
   override fun toString(): String = "||"
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + ORRInstr(None, false, dest, dest, RegOperand2(r2)))
 }
