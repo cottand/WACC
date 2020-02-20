@@ -1,0 +1,10 @@
+# binary leq operator
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  bool x = 1 <= 2
+end

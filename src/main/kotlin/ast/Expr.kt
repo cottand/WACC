@@ -116,7 +116,10 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override fun toString(): String = "$unaryOper $expr"
   override fun code(rem: Regs) = when (unaryOper) {
     NotUO -> Code.empty + EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r(1, 0)))
-    MinusUO -> Code.empty + RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r(0, 0)))
+    MinusUO -> (Code.empty
+            + RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r(0, 0)))
+            + BLInstr(None, OverflowException.label)
+            ).withFunction(OverflowException.body)
     LenUO -> Code.empty + LDRInstr(rem.head, rem.head.zeroOffsetAddr)
     OrdUO -> Code.empty
     ChrUO -> Code.empty
@@ -349,22 +352,34 @@ object MinusBO : IntBinOp() {
 // (int, int) -> bool:
 object GtBO : CompBinOp() {
   override fun toString(): String = ">"
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + CMPInstr(None, dest, RegOperand2(r2))
+          + MOVInstr(GTCond, false, dest, ImmOperand2(Immed_8r(1, 0)))
+          + MOVInstr(LECond, false, dest, ImmOperand2(Immed_8r(0, 0))))
 }
 
 object GeqBO : CompBinOp() {
   override fun toString(): String = ">="
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + CMPInstr(None, dest, RegOperand2(r2))
+          + MOVInstr(GECond, false, dest, ImmOperand2(Immed_8r(1, 0)))
+          + MOVInstr(LTCond, false, dest, ImmOperand2(Immed_8r(0, 0))))
 }
 
 object LtBO : CompBinOp() {
   override fun toString(): String = "<"
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + CMPInstr(None, dest, RegOperand2(r2))
+          + MOVInstr(LTCond, false, dest, ImmOperand2(Immed_8r(1, 0)))
+          + MOVInstr(GECond, false, dest, ImmOperand2(Immed_8r(0, 0))))
 }
 
 object LeqBO : CompBinOp() {
   override fun toString(): String = ">="
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + CMPInstr(None, dest, RegOperand2(r2))
+          + MOVInstr(LECond, false, dest, ImmOperand2(Immed_8r(1, 0)))
+          + MOVInstr(GTCond, false, dest, ImmOperand2(Immed_8r(0, 0))))
 }
 
 sealed class EqualityBinOp : BinaryOper() {
@@ -390,20 +405,28 @@ sealed class EqualityBinOp : BinaryOper() {
 
 object EqBO : EqualityBinOp() {
   override fun toString(): String = "=="
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + CMPInstr(None, dest, RegOperand2(r2))
+          + MOVInstr(EQCond, false, dest, ImmOperand2(Immed_8r(1, 0)))
+          + MOVInstr(NECond, false, dest, ImmOperand2(Immed_8r(0, 0))))
 }
 
 object NeqBO : EqualityBinOp() {
   override fun toString(): String = "!="
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + CMPInstr(None, dest, RegOperand2(r2))
+          + MOVInstr(NECond, false, dest, ImmOperand2(Immed_8r(1, 0)))
+          + MOVInstr(EQCond, false, dest, ImmOperand2(Immed_8r(0, 0))))
 }
 
 object AndBO : BoolBinOp() {
   override fun toString(): String = "&&"
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + ANDInstr(None, false, dest, dest, RegOperand2(r2)))
 }
 
 object OrBO : BoolBinOp() {
   override fun toString(): String = "||"
-  override fun code(dest: Reg, r2: Reg) = TODO()
+  override fun code(dest: Reg, r2: Reg) = (Code.empty
+          + ORRInstr(None, false, dest, dest, RegOperand2(r2)))
 }

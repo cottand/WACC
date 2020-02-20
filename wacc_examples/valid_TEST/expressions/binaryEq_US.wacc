@@ -1,0 +1,12 @@
+# binary eq operator
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  bool x = 1 == 2;
+  bool y = 'a' == 'b';
+  bool z = false == true
+end

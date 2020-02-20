@@ -1,0 +1,10 @@
+# binary and operator
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  bool z = false && true
+end
