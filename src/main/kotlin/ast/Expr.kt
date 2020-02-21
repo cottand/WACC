@@ -92,15 +92,17 @@ data class ArrayElemExpr internal constructor(
   }, { (dst, nxt, _) ->
     if (exprs.size == 1) {
       exprs.head.code(rem).withFunction(CheckArrayBounds.body) +
-        MOVInstr(rd = nxt, op2 = Reg(1)) + // Compute expr and place in r1
+        MOVInstr(rd = Reg(0), op2 = dst) +
+        MOVInstr(rd = nxt, op2 = dst) + // Compute expr and place in r0 and nxt
         variable.get(scope, dst) + // Place ident pointer in dst
-        MOVInstr(rd = Reg(1), op2 = nxt) + // also place expr in nxt
-        MOVInstr(rd = Reg.first, op2 = dst) + // Place pointer in r0
+        MOVInstr(rd = Reg(1), op2 = dst) + // Place dst (ident) also in r1
         BLInstr(CheckArrayBounds.label) +
-        // Increment dst so we skip the actual first element, the array size
+        // Increment dst (ident) so we skip the actual first element, the array size
         ADDInstr(cond = None, s = false, rd = dst, rn = dst, int8b = Type.Sizes.Word.bytes) +
         // TODO check log2, and maybe just replace with an additional ADD instead of fancy LDR
         type.sizedLDR(rd = dst, addr = dst.withOffset(nxt, log2(type.size.bytes)))
+      // InlineARM(" ADD r4, r4, r5, LSL #2") +
+      //   LDRInstr(Reg(4), Reg(4).zeroOffsetAddr)
     } else {
       TODO()
     }

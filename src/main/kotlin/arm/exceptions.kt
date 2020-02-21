@@ -64,7 +64,7 @@ object CheckDivByZero : Exception() {
 }
 
 /**
- * First argument (r0) is array address (at which size is) and (r1) is array size
+ * First argument is array size/index and (r1) is array pointer (at which size is)
  */
 object CheckArrayBounds : Exception() {
   override val name = "p_check_array_bounds"
@@ -78,6 +78,7 @@ object CheckArrayBounds : Exception() {
   private val instructions by lazy {
     persistentListOf(
       label,
+      PUSHInstr(LR),
       CMPInstr(None, Reg(0), 0),
       LDRInstr(LTCond, Reg(0), ImmEqualLabel(msg0.label)),
       BLInstr(LTCond, RuntimeError.label),
