@@ -74,7 +74,10 @@ class TestPrograms {
       WACCCompiler(filename).compile(doCheckOnly)
     } catch (e: Throwable) {
       expRef?.cancel()
-      assumeFalse(e is NotImplementedError)
+      assumeFalse(e is NotImplementedError) {
+        "Hit a TODO() statement trying to compile ${program.file.name}:\n${program.file.readText()}\n" +
+          "The TODO statement was found at:\n${e.stackTrace.first()}"
+      }
       // If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
       // for some other reason. So fail the test case.
       System.err.println("Failed to compile $canonicalPath with exception.")
