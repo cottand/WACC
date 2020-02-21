@@ -106,7 +106,7 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
 data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
   override val type = PairT(expr1.type, expr2.type)
   override fun toString() = "newpair($expr1, $expr2)"
-  override fun code(rem: Regs) = TODO()
+  override fun code(rem: Regs) = Code.empty
 }
 
 data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {

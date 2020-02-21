@@ -65,7 +65,7 @@ data class StrLit(val value: String) : Expr() {
 }
 
 object NullPairLit : Expr() {
-  override val type = AnyPairTs() // TODO double check
+  override val type = AnyPairTs()
   override fun toString(): String = "null"
   // null is represented as 0
   override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(0))

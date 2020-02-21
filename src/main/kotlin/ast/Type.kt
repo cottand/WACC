@@ -50,7 +50,6 @@ class EmptyArrayT : AnyArrayT() {
   override fun hashCode() = 237371
 }
 
-// TODO Write more documentation comments for types
 /**
  * [depth] = 1 for 1-dimensional Array
  */

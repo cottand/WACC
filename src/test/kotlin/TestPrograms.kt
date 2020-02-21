@@ -85,7 +85,7 @@ class TestPrograms {
       fail(e)
     }
     assertEquals(program.expectedReturn, res.exitCode) {
-      "Bad exit code while comipiling\n $canonicalPath,\n compiler output: \n${res.msg}"
+      "Bad exit code while compiling\n $canonicalPath,\n compiler output: \n${res.msg}"
     }
     assumingThat(testOutputKeywords) {
       assertTrue(res.msg.containsAll(program.expectedKeyWords))
