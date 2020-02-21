@@ -1,0 +1,13 @@
+# create a simple pair
+
+# Output:
+# 3
+
+# Program:
+
+begin
+  pair(int, int) p = newpair(1, 2);
+  int f = fst p;
+  int s = snd p;
+  exit f + s
+end
