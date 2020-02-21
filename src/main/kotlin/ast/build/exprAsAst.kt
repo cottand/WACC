@@ -33,14 +33,9 @@ internal fun ExprContext.asAst(scope: Scope): Parsed<Expr> = when (this) {
 
   is NestedExprContext -> expr().asAst(scope)
 
-  is BinOpContext -> {
-    val e1 = expr(0).asAst(scope)
-    val e2 = expr(1).asAst(scope)
+  is BinOpContext -> flatCombine(expr(0).asAst(scope), expr(1).asAst(scope)) { e1, e2 ->
     val binOp = extractBinOp()
-    if (e1 is Valid && e2 is Valid)
-      BinaryOperExpr.build(e1.a, binOp, e2.a, startPosition)
-    else
-      (e1.errors + e2.errors).invalid()
+    BinaryOperExpr.build(e1, binOp, e2, startPosition)
   }
   else -> NOT_REACHED()
 }

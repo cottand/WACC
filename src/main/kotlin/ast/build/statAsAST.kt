@@ -66,7 +66,7 @@ internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
 
   is ExitStatContext -> expr().asAst(scp)
     .validate(
-      { it.type is IntT },
+      { it.type.matches(IntT) },
       { TypeError(expr().startPosition, IntT, "exit", it) })
     .map { Exit(it, scp, startPosition) }
 

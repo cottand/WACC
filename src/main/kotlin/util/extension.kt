@@ -52,7 +52,7 @@ fun String.containsAll(words: List<String>, ignoreCase: Boolean = true) =
 /**
  * Prints [this], while returning [this]. Useful for [println] debugging.
  */
-inline fun <reified T> T.print() = this.also { print(it) }
+inline fun <reified T> T.print() = this.also {  println("Printing ${T::class.java}: $it") }
 
 /**
  * Runs [run] on [this.t] if [this] is [Some]

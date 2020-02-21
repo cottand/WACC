@@ -7,6 +7,6 @@
 
 begin
   int[] a = [1, 1+1];
-  exit len(a) + a[1]
+  exit len a + a[1]
 end
 

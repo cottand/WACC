@@ -24,7 +24,9 @@ stat: SKP #Skip
 ;
 
 expr:
-expr WS* MUL WS* expr #BinOp
+ int_lit #IntLitExpr
+| unary_op WS* expr # UnOpExpr
+| expr WS* MUL WS* expr #BinOp
 | expr WS* DIV WS* expr #BinOp
 | expr WS* MOD WS* expr #BinOp
 | expr WS* PLUS WS* expr #BinOp
@@ -37,14 +39,12 @@ expr WS* MUL WS* expr #BinOp
 | expr WS* NOT_EQ WS* expr #BinOp
 | expr WS* AND WS* expr #BinOp
 | expr WS* OR WS* expr #BinOp
-| int_lit #IntLitExpr
 | BOOL_LIT #BoolLitExpr
 | CHAR_LIT #CharLitExpr
 | STRING_LIT #StrLitExpr
 | PAIR_LIT #PairLitExpr
 | ID #IdentExpr
 | array_elem #ArrayElemExpr
-| unary_op WS* expr # UnOpExpr
 | LBRACKET WS* expr WS* RBRACKET #NestedExpr
 ;
 
