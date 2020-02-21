@@ -13,8 +13,8 @@ sealed class Expr : Computable {
   abstract val weight: Int
 
   companion object Weights {
-    val stackAccess = 2
-    val heapAccess = 2
+    const val stackAccess = 2
+    const val heapAccess = 2
   }
 }
 

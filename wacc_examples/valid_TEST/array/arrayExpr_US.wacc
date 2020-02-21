@@ -1,4 +1,4 @@
-# array declaration with expressions
+# array declaration with expressions and access
 
 # Output:
 # #empty#
@@ -6,6 +6,7 @@
 # Program:
 
 begin
-  int[] a = [1, 1+1]
+  int[] a = [1, 1+1];
+  exit a[1]
 end
 
