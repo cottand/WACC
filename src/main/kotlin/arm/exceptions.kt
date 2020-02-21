@@ -3,6 +3,7 @@ package ic.org.arm
 import arrow.core.None
 import ic.org.util.Code
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.plus
 
 abstract class Exception {
   abstract val name: String
@@ -61,3 +62,34 @@ object CheckDivByZero : Exception() {
 
   override val body = Code(instructions, msg0.body).withFunction(RuntimeError.body)
 }
+
+/**
+ * First argument is array size/index and (r1) is array pointer (at which size is)
+ */
+object CheckArrayBounds : Exception() {
+  override val name = "p_check_array_bounds"
+
+  private const val negativeIndexErrorMsg = "ArrayIndexOutOfBoundsError: negative index\\n\\0"
+  private val msg0 = StringData(negativeIndexErrorMsg, negativeIndexErrorMsg.length - 2)
+
+  private const val indexTooLargeErrorMsg = "ArrayIndexOutOfBoundsError: index too large\\n\\0"
+  private val msg1 = StringData(indexTooLargeErrorMsg, indexTooLargeErrorMsg.length - 2)
+
+  private val instructions by lazy {
+    persistentListOf(
+      label,
+      PUSHInstr(LR),
+      CMPInstr(None, Reg(0), 0),
+      LDRInstr(LTCond, Reg(0), ImmEqualLabel(msg0.label)),
+      BLInstr(LTCond, RuntimeError.label),
+      LDRInstr(Reg(1), Reg(1).zeroOffsetAddr),
+      CMPInstr(None, Reg(0), RegOperand2(Reg(1))),
+      LDRInstr(CSCond, Reg(0), ImmEqualLabel(msg1.label)),
+      BLInstr(CSCond, RuntimeError.label),
+      POPInstr(PC)
+    )
+  }
+
+  override val body = Code(instructions, msg0.body + msg1.body).withFunction(RuntimeError.body)
+}
+

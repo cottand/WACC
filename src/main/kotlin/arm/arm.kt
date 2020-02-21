@@ -146,3 +146,6 @@ object Plus : Sign() {
 object Minus : Sign() {
   override val code = "-"
 }
+
+@Deprecated("Only for quick testing")
+data class InlineARM(override val code: String) : ARMInstr()

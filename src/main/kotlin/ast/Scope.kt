@@ -142,7 +142,7 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
   // Return whatever ident is found in this scope's varMap, and look in its parent's otherwise.
   override fun getVar(ident: Ident): Option<Variable> =
     variables[ident].toOption() or
-      parent.getVar(ident).map { it.copy(addrFromSP = it.addrFromSP + stackSizeSoFar()) }.print().print { this.variables.toString() }
+      parent.getVar(ident).map { it.copy(addrFromSP = it.addrFromSP + stackSizeSoFar()) }
 }
 
 /**
