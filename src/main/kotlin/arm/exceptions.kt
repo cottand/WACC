@@ -93,3 +93,22 @@ object CheckArrayBounds : Exception() {
   override val body = Code(instructions, msg0.body + msg1.body).withFunction(RuntimeError.body)
 }
 
+object CheckNullPointer : Exception() {
+  override val name = "p_check_null_pointer"
+
+  private const val errormsg = "NullReferenceError: dereference a null reference\\n\\0"
+  private val msg0 = StringData(errormsg, errormsg.length - 2)
+
+  private val instructions by lazy {
+    persistentListOf(
+      label,
+      PUSHInstr(LR),
+      CMPInstr(None, Reg(0), 0),
+      LDRInstr(EQCond, Reg(0), ImmEqualLabel(msg0.label)),
+      BLInstr(EQCond, RuntimeError.label),
+      POPInstr(PC)
+    )
+  }
+
+  override val body = Code(instructions, msg0.body).withFunction(RuntimeError.body)
+}
