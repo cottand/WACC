@@ -90,22 +90,25 @@ data class ArrayElemExpr internal constructor(
   override fun code(rem: Regs): Code = rem.take2OrNone.fold({
     TODO() as Code
   }, { (dst, nxt, _) ->
-    if (exprs.size == 1) {
-      exprs.head.code(rem).withFunction(CheckArrayBounds.body) +
-        MOVInstr(rd = Reg(0), op2 = dst) +
-        MOVInstr(rd = nxt, op2 = dst) + // Compute expr and place in r0 and nxt
-        variable.get(scope, dst) + // Place ident pointer in dst
-        MOVInstr(rd = Reg(1), op2 = dst) + // Place dst (ident) also in r1
-        BLInstr(CheckArrayBounds.label) +
-        // Increment dst (ident) so we skip the actual first element, the array size
-        ADDInstr(cond = None, s = false, rd = dst, rn = dst, int8b = Type.Sizes.Word.bytes) +
-        // TODO check log2, and maybe just replace with an additional ADD instead of fancy LDR
-        type.sizedLDR(rd = dst, addr = dst.withOffset(nxt, log2(type.size.bytes)))
-      // InlineARM(" ADD r4, r4, r5, LSL #2") +
-      //   LDRInstr(Reg(4), Reg(4).zeroOffsetAddr)
-    } else {
-      TODO()
-    }
+    val arrayAccessCode : Code =
+      Code.empty +
+      MOVInstr(rd = Reg(0), op2 = nxt) + // Place the evaluated expr for index in r0
+      MOVInstr(rd = Reg(1), op2 = dst) + // Place the array variable in r1
+      BLInstr(CheckArrayBounds.label) +
+      // Increment dst so we skip the actual first element, the array size
+      ADDInstr(cond = None, s = false, rd = dst, rn = dst, int8b = Type.Sizes.Word.bytes) +
+      // TODO check log2, and maybe just replace with an additional ADD instead of fancy LDR
+      ADDInstr(None, false, dst, dst, LSLImmOperand2(nxt, Immed_5(log2(type.size.bytes))))
+
+    exprs.head.code(rem.tail).withFunction(CheckArrayBounds.body) +
+    variable.get(scope, dst) + // Place ident pointer in dst
+    arrayAccessCode +
+    exprs.tail.map {
+      it.code(rem.tail) +
+      LDRInstr(dst, dst.zeroOffsetAddr) +
+      arrayAccessCode
+    }.flatten() +
+    LDRInstr(dst, dst.zeroOffsetAddr)
   })
 
   override val weight = Weights.heapAccess * exprs.size
