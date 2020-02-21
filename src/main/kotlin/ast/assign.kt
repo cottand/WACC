@@ -106,7 +106,29 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
 data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
   override val type = PairT(expr1.type, expr2.type)
   override fun toString() = "newpair($expr1, $expr2)"
-  override fun code(rem: Regs) = Code.empty
+  override fun code(rem: Regs) : Code {
+    val sizeFst = expr1.type.size.bytes
+    val sizeSnd = expr2.type.size.bytes
+
+    val dst = rem.head
+    val exprRem = rem.drop(1).toPersistentList()
+
+    // TODO check for null
+
+    return Code.empty.withFunction(CheckNullPointer.body) +
+      LDRInstr(Reg(0), sizeFst + sizeSnd) +
+    // Malloc and store addr in dst
+      BLInstr(MallocStdFunc.label) +
+      MOVInstr(None, false, dst, Reg(0)) +
+    // Compute the fst expr
+      expr1.code(exprRem) +
+    // Put result in pair fst slot
+      STRInstr(exprRem.head, ZeroOffsetAddrMode2(dst)) +
+    // Compute the snd expr
+      expr2.code(exprRem) +
+    // Put result in pair snd slot
+      STRInstr(exprRem.head, ImmOffsetAddrMode2(dst, Immed_12(sizeFst)))
+  }
 }
 
 data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
