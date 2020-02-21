@@ -34,10 +34,10 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
       is ArrayElemLHS -> TODO()
       is PairElemLHS ->
         rhs.eval(Reg(0)) + // Put RHS expr in r0
-      // TODO check for NULL pointers!
-      lhs.variable.get(scope, Reg(1)) + // Put Pair Ident in r1 (which is an addr)
-        // STR r0 [r1 + pairElemOffset]
-        rhs.type.sizedSTR(Reg(0), Reg(1).withOffset(lhs.pairElem.offsetFromAddr))
+          // TODO check for NULL pointers!
+          lhs.variable.get(scope, Reg(1)) + // Put Pair Ident in r1 (which is an addr)
+          // STR r0 [r1 + pairElemOffset]
+          rhs.type.sizedSTR(Reg(0), Reg(1).withOffset(lhs.pairElem.offsetFromAddr))
     }
 }
 
@@ -46,7 +46,13 @@ data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Po
 }
 
 data class Free(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = TODO()
+  override fun instr() = when (expr.type) {
+    is AnyPairTs -> Code.empty.withFunction(FreePairFunc.body) +
+      expr.code(Reg.fromExpr) +
+      MOVInstr(rd = Reg.first, op2 = Reg.firstExpr) +
+      BLInstr(FreePairFunc.label)
+    else -> TODO()
+  }
 }
 
 data class Return(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
