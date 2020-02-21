@@ -11,6 +11,11 @@ import java.lang.Integer.min
 // <expr>
 sealed class Expr : Computable {
   abstract val weight: Int
+
+  companion object Weights {
+    val stackAccess = 2
+    val heapAccess = 2
+  }
 }
 
 data class IntLit(val value: Int) : Expr() {
@@ -72,22 +77,41 @@ data class IdentExpr(val vari: Variable, val scope: Scope) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
   override fun code(rem: Regs): Code = Code.instr(vari.get(destReg = rem.head, currentScope = scope))
-  override val weight = 2 // Todo decide on a constant
+  override val weight = Weights.stackAccess
 }
 
 data class ArrayElemExpr internal constructor(
   val variable: Variable,
   val exprs: List<Expr>,
+  val scope: Scope,
   override val type: Type
 ) : Expr() {
   override fun toString(): String = variable.ident.name + exprs.indices.joinToString(separator = "") { "[]" }
-  override fun code(rem: Regs): Code = TODO("not implemented")
-  override val weight = TODO()
+  override fun code(rem: Regs): Code = rem.take2OrNone.fold({
+    TODO() as Code
+  }, { (dst, nxt, _) ->
+    if (exprs.size == 1) {
+      exprs.head.code(rem).withFunction(CheckArrayBounds.body) +
+        MOVInstr(rd = nxt, op2 = Reg(1)) + // Compute expr and place in r1
+        variable.get(scope, dst) + // Place ident pointer in dst
+        MOVInstr(rd = Reg(1), op2 = nxt) + // also place expr in nxt
+        MOVInstr(rd = Reg.first, op2 = dst) + // Place pointer in r0
+        BLInstr(CheckArrayBounds.label) +
+        // Increment dst so we skip the actual first element, the array size
+        ADDInstr(cond = None, s = false, rd = dst, rn = dst, int8b = Type.Sizes.Word.bytes) +
+        // TODO check log2, and maybe just replace with an additional ADD instead of fancy LDR
+        type.sizedLDR(rd = dst, addr = dst.withOffset(nxt, log2(type.size.bytes)))
+    } else {
+      TODO()
+    }
+  })
+
+  override val weight = Weights.heapAccess * exprs.size
 
   companion object {
     /**
      * Builds a type safe [ArrayElemExpr] from [variable]    */
-    fun make(pos: Position, variable: Variable, exprs: List<Expr>): Parsed<ArrayElemExpr> {
+    fun make(pos: Position, variable: Variable, exprs: List<Expr>, scope: Scope): Parsed<ArrayElemExpr> {
       val arrType = variable.type
       return when {
         // Array access indexes must evaluate to ints
@@ -101,6 +125,7 @@ data class ArrayElemExpr internal constructor(
         else -> ArrayElemExpr(
           variable,
           exprs,
+          scope,
           arrType.nthNestedType(exprs.size)
         ).valid()
       }

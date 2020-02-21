@@ -8,6 +8,7 @@ import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
+import kotlin.math.log2
 
 /**
  * Returns whether a [List] of [Either] contains any [Either.Left]
@@ -46,3 +47,6 @@ inline val ParserRuleContext.startPosition
  */
 inline val <reified E, reified V> List<Validated<E, V>>.valids
   get() = this.filterIsInstance<Valid<V>>().map { it.a }
+
+inline fun log2(i: Int) =
+  log2(i.toDouble()).also { if (it > Byte.MAX_VALUE) throw UnsupportedOperationException() }.toByte()

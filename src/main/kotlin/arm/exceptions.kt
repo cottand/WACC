@@ -61,3 +61,12 @@ object CheckDivByZero : Exception() {
 
   override val body = Code(instructions, msg0.body).withFunction(RuntimeError.body)
 }
+
+/**
+ * First argument (r0) is array address (at which size is) and (r1) is array size
+ */
+object CheckArrayBounds : Exception() {
+  override val name = "p_check_array_bounds"
+  override val body: Code = TODO()
+}
+

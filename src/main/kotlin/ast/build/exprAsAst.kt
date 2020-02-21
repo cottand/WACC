@@ -69,7 +69,7 @@ private fun Array_elemContext.asAst(scope: Scope): Parsed<ArrayElemExpr> {
     (exprs.errors + UndefinedIdentifier(startPosition, id)).invalid()
   }, {
     if (exprs.areAllValid)
-      ArrayElemExpr.make(startPosition, it, exprs.valids)
+      ArrayElemExpr.make(startPosition, it, exprs.valids, scope)
     else
       exprs.errors.invalid()
   })
