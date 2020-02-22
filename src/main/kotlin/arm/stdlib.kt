@@ -5,6 +5,7 @@ import arrow.core.some
 import ic.org.util.Code
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.plus
 
 abstract class StdFunc {
   abstract val name: String
@@ -56,6 +57,30 @@ object PrintLnStdFunc : IOFunc() {
   }
 }
 
+object PrintBoolStdFunc : IOFunc() {
+  override val name = "p_print_bool"
+  override val msgTemplate = "true\\0"
+
+  private const val msg2Template = "false\\0"
+  private val msg2 by lazy { StringData(msg2Template, msg2Template.length - 1) }
+
+  override val instructions by lazy {
+    persistentListOf(
+      label,
+      PUSHInstr(LR),
+      CMPInstr(Reg(0), 0),
+      LDRInstr(NECond, Reg(0), ImmEqualLabel(msg.label)),
+      LDRInstr(EQCond, Reg(0), ImmEqualLabel(msg2.label)),
+      ADDInstr(None, false, Reg(0), Reg(0), 4),
+      BLInstr("printf"),
+      LDRInstr(Reg.ret, 0),
+      BLInstr("fflush"),
+      POPInstr(PC)
+    )
+  }
+
+  override val body by lazy { Code(instructions, msg.body + msg2.body) }
+}
 object PrintStringStdFunc : IOFunc() {
   override val name = "p_print_string"
   override val msgTemplate = "%.*s\\0"
