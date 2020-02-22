@@ -2,7 +2,6 @@ package ic.org.arm
 
 import arrow.core.None
 import arrow.core.some
-import ic.org.ast.Type
 import ic.org.util.Code
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -13,14 +12,14 @@ abstract class StdFunc {
   internal val label by lazy { Label(name) }
 }
 
-abstract class PrintLn : StdFunc() {
+abstract class IOFunc : StdFunc() {
   abstract val msgTemplate: String
   internal val msg by lazy { StringData(msgTemplate, msgTemplate.length - 1) }
   override val body by lazy { Code(instructions, msg.body) }
   abstract val instructions: PersistentList<Instr>
 }
 
-object PrintIntStdFunc : PrintLn() {
+object PrintIntStdFunc : IOFunc() {
   override val name = "p_print_int"
   override val msgTemplate = "%d\\0"
 
@@ -39,7 +38,7 @@ object PrintIntStdFunc : PrintLn() {
   }
 }
 
-object PrintStringStdFunc : PrintLn() {
+object PrintStringStdFunc : IOFunc() {
   override val name = "p_print_string"
   override val msgTemplate = "%.*s\\0"
 
