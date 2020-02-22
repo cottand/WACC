@@ -1,0 +1,18 @@
+# create pairs with different sizes
+
+# Output:
+# 198
+
+# Program:
+
+begin
+  pair(char, int) p1 = newpair('a', 1);
+  pair(int, char) p2 = newpair(2, 'b');
+  char c1 = fst p1;
+  int i1 = ord c1;
+  int i2 = snd p1;
+  int i3 = fst p2;
+  char c2 = snd p2;
+  int i4 = ord c2;
+  exit i1 + i2 + i3 + i4
+end

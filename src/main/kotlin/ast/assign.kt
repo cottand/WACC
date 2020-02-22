@@ -106,28 +106,23 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
 data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
   override val type = PairT(expr1.type, expr2.type)
   override fun toString() = "newpair($expr1, $expr2)"
-  override fun code(rem: Regs) : Code {
-    val sizeFst = expr1.type.size.bytes
-    val sizeSnd = expr2.type.size.bytes
-
+  override fun code(rem: Regs): Code {
     val dst = rem.head
     val exprRem = rem.drop(1).toPersistentList()
 
-    // TODO check for null
-
-    return Code.empty.withFunction(CheckNullPointer.body) +
-      LDRInstr(Reg(0), sizeFst + sizeSnd) +
-    // Malloc and store addr in dst
-      BLInstr(MallocStdFunc.label) +
-      MOVInstr(None, false, dst, Reg(0)) +
-    // Compute the fst expr
-      expr1.code(exprRem) +
-    // Put result in pair fst slot
-      STRInstr(exprRem.head, ZeroOffsetAddrMode2(dst)) +
-    // Compute the snd expr
-      expr2.code(exprRem) +
-    // Put result in pair snd slot
-      STRInstr(exprRem.head, ImmOffsetAddrMode2(dst, Immed_12(sizeFst)))
+    return Code.empty +
+            LDRInstr(Reg(0), 8) +
+            // Malloc and store addr in dst
+            BLInstr(MallocStdFunc.label) +
+            MOVInstr(None, false, dst, Reg(0)) +
+            // Compute the fst expr
+            expr1.code(exprRem) +
+            // Put result in pair fst slot
+            STRInstr(exprRem.head, ZeroOffsetAddrMode2(dst)) +
+            // Compute the snd expr
+            expr2.code(exprRem) +
+            // Put result in pair snd slot
+            STRInstr(exprRem.head, ImmOffsetAddrMode2(dst, Immed_12(4)))
   }
 }
 
@@ -137,9 +132,10 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
     is Snd -> pairs.sndT
   }
 
-  override fun code(rem: Regs) =
-    pairElem.expr.code(rem) +
-      LDRInstr(rem.head, rem.head.withOffset(pairElem.offsetFromAddr))
+  override fun code(rem: Regs) = Code.empty.withFunction(CheckNullPointer.body) +
+          pairElem.expr.code(rem) +
+          BLInstr(None, CheckNullPointer.label) +
+          LDRInstr(rem.head, rem.head.withOffset(pairElem.offsetFromAddr))
 
   override fun toString() = pairElem.toString()
 }
@@ -150,18 +146,18 @@ data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
   // TODO this stat.code() has to do BL instr AND also add 4 to the stack pointer. See reference assembly code...
   override fun code(rem: Regs) = func.funcScope.makeInstrScope().let { (init, end, stackSize) ->
     Code.empty +
-      args.mapIndexed { i, expr ->
-        val param = func.params[i]
-        // Offset corresponds to pram's address, minues 4b (because the stack grows when calling a function
-        // minus the size of the function's stack (which will be compensated by when passing [init])
-        val dest = SP.withOffset(param.addrFromSP - Type.Sizes.Word.bytes - stackSize)
-        expr.code(rem) +
-          expr.type.sizedSTR(rem.head, dest)
-      }.flatten() +
-      init +
-      BLInstr(func.label) +
-      end +
-      MOVInstr(rd = rem.head, op2 = Reg.ret)
+            args.mapIndexed { i, expr ->
+              val param = func.params[i]
+              // Offset corresponds to pram's address, minues 4b (because the stack grows when calling a function
+              // minus the size of the function's stack (which will be compensated by when passing [init])
+              val dest = SP.withOffset(param.addrFromSP - Type.Sizes.Word.bytes - stackSize)
+              expr.code(rem) +
+                      expr.type.sizedSTR(rem.head, dest)
+            }.flatten() +
+            init +
+            BLInstr(func.label) +
+            end +
+            MOVInstr(rd = rem.head, op2 = Reg.ret)
   }
 
   override fun toString() = "call ${func.name.name} (..)"
