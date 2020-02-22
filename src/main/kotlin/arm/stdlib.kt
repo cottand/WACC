@@ -38,6 +38,24 @@ object PrintIntStdFunc : IOFunc() {
   }
 }
 
+object PrintLnStdFunc : IOFunc() {
+  override val name = "p_print_ln"
+  override val msgTemplate = "\\0"
+
+  override val instructions by lazy {
+    persistentListOf(
+      label,
+      PUSHInstr(LR),
+      LDRInstr(Reg(0), ImmEqualLabel(msg.label)),
+      ADDInstr(None, false, Reg(0), Reg(0), 4),
+      BLInstr("puts"),
+      LDRInstr(Reg(0), 0),
+      BLInstr("fflush"),
+      POPInstr(PC)
+    )
+  }
+}
+
 object PrintStringStdFunc : IOFunc() {
   override val name = "p_print_string"
   override val msgTemplate = "%.*s\\0"

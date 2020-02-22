@@ -73,7 +73,8 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
 }
 
 data class Println(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = TODO()
+  override fun instr() = Print(expr, scope, pos).instr().withFunction(PrintLnStdFunc.body) +
+      BLInstr(PrintLnStdFunc.label)
 }
 
 data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val scope: Scope, override val pos: Position) :
