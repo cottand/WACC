@@ -42,7 +42,14 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = TODO()
+  override fun instr() =
+    when(lhs.type) {
+      is IntT -> Code.empty.withFunction(ReadIntStdFunc.body) +
+          ADDInstr(None, false, Reg(4), SP, 0) +
+          MOVInstr(None, false, rd = Reg.ret, op2 = Reg(4)) +
+          BLInstr(ReadIntStdFunc.label)
+      else -> TODO()
+    }
 }
 
 data class Free(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
