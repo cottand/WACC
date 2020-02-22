@@ -68,6 +68,8 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
     when (expr.type) {
       is IntT -> expr.eval(Reg.ret).withFunction(PrintIntStdFunc.body) +
         BLInstr(PrintIntStdFunc.label)
+      is StringT -> expr.code(Reg.all).withFunction(PrintStringStdFunc.body) +
+          BLInstr(PrintStringStdFunc.label)
       else -> TODO()
     }
 }

@@ -57,12 +57,23 @@ data class StrLit(val value: String) : Expr() {
   override val type = StringT
   override fun toString(): String = value
   override fun code(rem: Regs): Code {
-    val s = StringData(value, value.length)
+    val s = StringData(value, value.length - countEscape())
     val instr = LDRInstr(rem.head, ImmEqualLabel(s.label))
     return Code(data = s.body) + instr
   }
 
   override val weight = 1
+
+  private fun countEscape() : Int {
+    var prev = value[0]
+    var counter = 0
+    for (c in value.drop(1)) {
+      if (prev != '\\' && c == '\\')
+        counter += 1
+      prev = c
+    }
+    return counter
+  }
 }
 
 object NullPairLit : Expr() {
