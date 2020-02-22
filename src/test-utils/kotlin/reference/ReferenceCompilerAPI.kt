@@ -12,7 +12,6 @@ import com.google.gson.Gson
 import ic.org.util.NOT_REACHED
 import ic.org.util.createWithDirs
 import ic.org.util.joinLines
-import ic.org.util.print
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import java.io.File
 
@@ -22,7 +21,7 @@ object ReferenceCompilerAPI {
 
   private const val delimiters = "==========================================================="
 
-  fun ask(prog: File, inp: String): RefAnswer {
+  fun ask(prog: File, input: String): RefAnswer {
     val emulatorUrl = "https://teaching.doc.ic.ac.uk/wacc_compiler/run.cgi"
     val cachedName = prog.absolutePath
       .replace("wacc_examples", ".test_cache")
@@ -33,7 +32,7 @@ object ReferenceCompilerAPI {
         cached.readLines()
           .also { println("Reading cached query...") }
       else
-        queryReference<CompilerReply>(prog, emulatorUrl, inp, "-x", "-a")
+        queryReference<CompilerReply>(prog, emulatorUrl, input, "-x", "-a")
           .getOrElse { System.err.println("Failed to reach the reference emulator"); assumeTrue(false); NOT_REACHED() }
           .compiler_out.split("\n")
           .filter { it.isNotEmpty() }.toList()
@@ -65,7 +64,7 @@ object ReferenceCompilerAPI {
     val reply = queryReference<EmulatorReply>(armFile, emulatorUrl, stdin = input)
       .getOrElse { System.err.println("Failed to reach the reference emulator"); assumeTrue(false); NOT_REACHED() }
     if (reply.assemble_out.isNotBlank()) {
-      val asmWithLines  = armProg.lines().mapIndexed { i, s ->
+      val asmWithLines = armProg.lines().mapIndexed { i, s ->
         val lNo = (i + 1).toString()
         lNo + "      ".drop(lNo.length) + s
       }.joinLines()

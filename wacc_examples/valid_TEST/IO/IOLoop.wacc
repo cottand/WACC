@@ -1,4 +1,8 @@
 # simple input/output loop
+#
+# Input_particular:
+# 1 Y 2 N
+# End of Input_particular
 
 # Output:
 # Please input an integer: #input#
