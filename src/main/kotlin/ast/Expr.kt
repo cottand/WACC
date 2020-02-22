@@ -366,15 +366,11 @@ object ModBO : IntBinOp() {
   override fun code(dest: Reg, r2: Reg): Code {
     val stdlibMod = Label("__aeabi_idivmod")
     return Code.empty.withFunction(CheckDivByZero.body) +
-      PUSHInstr(Reg(0)) +
-      PUSHInstr(Reg(1)) +
-      MOVInstr(None, false, dest, Reg(0)) +
-      MOVInstr(None, false, r2, Reg(1)) +
+      MOVInstr(None, false, Reg(0), Reg(4)) +
+      MOVInstr(None, false, Reg(1), Reg(5)) +
       BLInstr(None, CheckDivByZero.label) +
       BLInstr(None, stdlibMod) +
-      MOVInstr(None, false, dest, Reg(1)) +
-      POPInstr(Reg(1)) +
-      POPInstr(Reg(0))
+      MOVInstr(None, false, Reg(4), Reg(1))
   }
 }
 
