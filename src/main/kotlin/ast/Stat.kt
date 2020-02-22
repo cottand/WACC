@@ -46,7 +46,13 @@ data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Po
 }
 
 data class Free(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = TODO()
+  override fun instr() = when (expr.type) {
+    is AnyPairTs -> Code.empty.withFunction(FreePairFunc.body) +
+      expr.code(Reg.fromExpr) +
+      MOVInstr(rd = Reg.first, op2 = Reg.firstExpr) +
+      BLInstr(FreePairFunc.label)
+    else -> TODO()
+  }
 }
 
 data class Return(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {

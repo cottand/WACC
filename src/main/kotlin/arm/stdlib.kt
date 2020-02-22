@@ -1,6 +1,8 @@
 package ic.org.arm
 
 import arrow.core.None
+import arrow.core.some
+import ic.org.ast.Type
 import ic.org.util.Code
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -60,4 +62,34 @@ object PrintStringStdFunc : PrintLn() {
 object MallocStdFunc : StdFunc() {
   override val name = "malloc"
   override val body = Code.empty
+}
+
+/**
+ * C stdlib function. NOT FOR USE IN GENERATED CODE. Use [FreePairFunc] instead, for example.
+ */
+object FreeStdLibFunc : StdFunc() {
+  override val name = "free"
+  override val body = Code.empty
+}
+
+object FreePairFunc : StdFunc() {
+  override val name = "p_free_pair"
+
+  val msgText = "NullReferenceError: dereference a null reference\\n\\0"
+  val msg = StringData(msgText, msgText.length - 2) // TODO check length
+
+  override val body = Code.empty.withFunction(RuntimeError.body) +
+    PUSHInstr(LR) +
+    CMPInstr(cond = None, rn = Reg.first, int8b = 0) +
+    LDRInstr(cond = EQCond.some(), rd = Reg.first, addressing = ImmEqualLabel(msg.label)) +
+    BInstr(cond = EQCond.some(), label = RuntimeError.label) +
+    TODO("William pls pick thhis up to fit the structure of our pairs") as Code
+    // PUSHInstr(Reg.first) +
+    // LDRInstr(Reg.first, Reg.first.zeroOffsetAddr) +
+    // BLInstr(FreeStdLibFunc.label) +
+    // LDRInstr(Reg.first, SP.zeroOffsetAddr) +
+    // LDRInstr(Reg.first, Reg.first.withOffset(Type.Sizes.Word.bytes)) +
+
+
+
 }
