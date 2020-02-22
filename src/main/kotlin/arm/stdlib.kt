@@ -118,6 +118,23 @@ object ReadIntStdFunc : IOFunc() {
   }
 }
 
+object ReadCharStdFunc : IOFunc() {
+  override val name = "p_read_char"
+  override val msgTemplate = " %c\\0"
+
+  override val instructions by lazy {
+    persistentListOf(
+      label,
+      PUSHInstr(LR),
+      MOVInstr(rd = Reg(1), op2 = Reg(0)),
+      LDRInstr(Reg.ret, ImmEqualLabel(msg.label)),
+      ADDInstr(None, false, Reg(0), Reg(0), 4),
+      BLInstr("scanf"),
+      POPInstr(PC)
+    )
+  }
+}
+
 object MallocStdFunc : StdFunc() {
   override val name = "malloc"
   override val body = Code.empty

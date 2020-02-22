@@ -48,6 +48,10 @@ data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Po
           ADDInstr(None, false, Reg(4), SP, 0) +
           MOVInstr(None, false, rd = Reg.ret, op2 = Reg(4)) +
           BLInstr(ReadIntStdFunc.label)
+      is CharT -> Code.empty.withFunction(ReadCharStdFunc.body) +
+          ADDInstr(None, false, Reg(4), SP, 0) +
+          MOVInstr(None, false, rd = Reg.ret, op2 = Reg(4)) +
+          BLInstr(ReadCharStdFunc.label)
       else -> TODO()
     }
 }
