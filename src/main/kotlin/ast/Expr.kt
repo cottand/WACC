@@ -344,8 +344,8 @@ sealed class BoolBinOp : BinaryOper() {
 object MulBO : IntBinOp() {
   override fun toString(): String = "*"
   override fun code(dest: Reg, r2: Reg) = Code.empty.withFunction(OverflowException.body) +
-    SMULLInstr(None, false, r2, dest, r2, dest) +
-    CMPInstr(None, dest, ASRImmOperand2(r2, Immed_5(31))) +
+    SMULLInstr(None, false, dest, r2, dest, r2) +
+    CMPInstr(None, r2, ASRImmOperand2(dest, Immed_5(31))) +
     BLInstr(NECond, OverflowException.label)
 }
 
