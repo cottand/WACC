@@ -14,6 +14,6 @@ data class StringData(val msg: String, val length: Int) {
   val body = persistentListOf(
     label,
     Directive("word $length"),
-    Directive("ascii \"$msg\"")
+    Directive("ascii\t\"$msg\"")
   )
 }

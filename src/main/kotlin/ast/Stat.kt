@@ -42,7 +42,18 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = TODO()
+  override fun instr() =
+    when(lhs.type) {
+      is IntT -> Code.empty.withFunction(ReadIntStdFunc.body) +
+          ADDInstr(None, false, Reg(4), SP, 0) +
+          MOVInstr(None, false, rd = Reg.ret, op2 = Reg(4)) +
+          BLInstr(ReadIntStdFunc.label)
+      is CharT -> Code.empty.withFunction(ReadCharStdFunc.body) +
+          ADDInstr(None, false, Reg(4), SP, 0) +
+          MOVInstr(None, false, rd = Reg.ret, op2 = Reg(4)) +
+          BLInstr(ReadCharStdFunc.label)
+      else -> TODO()
+    }
 }
 
 data class Free(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
@@ -67,13 +78,20 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
   override fun instr() =
     when (expr.type) {
       is IntT -> expr.eval(Reg.ret).withFunction(PrintIntStdFunc.body) +
-              BLInstr(PrintIntStdFunc.label)
+        BLInstr(PrintIntStdFunc.label)
+      is BoolT -> expr.code(Reg.all).withFunction(PrintBoolStdFunc.body) +
+              BLInstr(PrintBoolStdFunc.label)
+      is CharT -> expr.code(Reg.all) +
+                BLInstr(Label("putchar"))
+      is StringT -> expr.code(Reg.all).withFunction(PrintStringStdFunc.body) +
+          BLInstr(PrintStringStdFunc.label)
       else -> TODO()
     }
 }
 
 data class Println(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = TODO()
+  override fun instr() = Print(expr, scope, pos).instr().withFunction(PrintLnStdFunc.body) +
+      BLInstr(PrintLnStdFunc.label)
 }
 
 data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val scope: Scope, override val pos: Position) :

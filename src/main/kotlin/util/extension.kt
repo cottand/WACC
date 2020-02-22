@@ -40,7 +40,8 @@ val <A> List<A>.head
 val <A> List<A>.tail
   get() = tail().toPersistentList()
 
-fun List<String>.joinLines() = joinToString(separator = "\n")
+fun Iterable<String>.joinLines() = joinToString(separator = "\n")
+fun Sequence<String>.joinLines() = joinToString(separator = "\n")
 fun Stream<String>.joinLines() = toList().joinToString(separator = "\n")
 
 /**

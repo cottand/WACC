@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import ic.org.CompileResult
 import ic.org.WACCCompiler
 import ic.org.util.containsAll
+import ic.org.util.print
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -47,7 +48,7 @@ class TestPrograms {
     private const val testingKeyword = "TEST"
     private const val ignoreKeyword = "IGNORE"
     private const val testSemanticsOnly = false
-    private const val input = "Hello"
+    private const val defaultInput = "Hello"
   }
 
   private val waccFiles =
@@ -69,7 +70,10 @@ class TestPrograms {
   private fun test(program: WACCProgram, doCheckOnly: Boolean) {
     val filename = program.file.absolutePath
     val canonicalPath = program.file.canonicalPath
-    val expRef = if (!doCheckOnly) CoroutineScope(Dispatchers.IO).async { Ref.ask(program.file, input) } else null
+    val input = program.specialInput().getOrElse { defaultInput }
+    val expRef = if (!doCheckOnly)
+      CoroutineScope(Dispatchers.IO).async { Ref.ask(program.file, input) }
+    else null
     val res: CompileResult = try {
       WACCCompiler(filename).compile(doCheckOnly)
     } catch (e: Throwable) {
@@ -97,7 +101,7 @@ class TestPrograms {
       if (expectedAss != actualAss) {
         val (actualOut, actualCode) = Ref.emulate(actualAss, filename, input)
         println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
-        println("Expected assembly:              Actual:\n")
+        println("Expected assembly:" + "Actual:\n".padStart(60))
         println(expectedAss.sideToSideWith(actualAss, pad = 60) + '\n')
         println("\nCompiled WACC:\n${program.file.readText()}")
         assertEquals(expectedOut, actualOut) { "Non matching program output for $canonicalPath" }

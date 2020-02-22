@@ -2,6 +2,7 @@ package ic.org.ast
 
 import arrow.core.None
 import arrow.core.extensions.list.foldable.forAll
+import arrow.core.some
 import arrow.core.valid
 import ic.org.arm.*
 import ic.org.util.*
@@ -56,12 +57,23 @@ data class StrLit(val value: String) : Expr() {
   override val type = StringT
   override fun toString(): String = value
   override fun code(rem: Regs): Code {
-    val s = StringData(value, value.length)
+    val s = StringData(value, value.length - countEscape())
     val instr = LDRInstr(rem.head, ImmEqualLabel(s.label))
     return Code(data = s.body) + instr
   }
 
   override val weight = 1
+
+  private fun countEscape(): Int {
+    var prev = value[0]
+    var counter = 0
+    for (c in value.drop(1)) {
+      if (prev != '\\' && c == '\\')
+        counter += 1
+      prev = c
+    }
+    return counter
+  }
 }
 
 object NullPairLit : Expr() {
@@ -89,8 +101,8 @@ data class ArrayElemExpr internal constructor(
   override fun toString(): String = variable.ident.name +
     exprs.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
-  override fun code(rem: Regs): Code = rem.take2OrNone.fold({
-    TODO() as Code
+  override fun code(rem: Regs): Code = rem.take2OrNone.fold<Code>({
+    TODO()
   }, { (dst, nxt, _) ->
     if (exprs.size == 1) {
       exprs.head.code(rem).withFunction(CheckArrayBounds.body) +
@@ -138,14 +150,15 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
 
   override fun toString(): String = "$unaryOper $expr"
   override fun code(rem: Regs) = when (unaryOper) {
-    NotUO -> Code.empty + EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r(1, 0)))
-    MinusUO -> (Code.empty
-      + RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r(0, 0)))
-      + BLInstr(None, OverflowException.label)
-      ).withFunction(OverflowException.body)
-    LenUO -> Code.empty + LDRInstr(rem.head, rem.head.zeroOffsetAddr)
-    OrdUO -> Code.empty
-    ChrUO -> Code.empty
+    NotUO -> expr.code(rem) +
+      EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r(1, 0)))
+    MinusUO -> expr.code(rem).withFunction(OverflowException.body) +
+      RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r(0, 0))) +
+      BLInstr(VSCond.some(), OverflowException.label)
+    LenUO -> expr.code(rem) +
+      LDRInstr(rem.head, rem.head.zeroOffsetAddr)
+    OrdUO -> expr.code(rem)
+    ChrUO -> expr.code(rem)
   }
 
   companion object {

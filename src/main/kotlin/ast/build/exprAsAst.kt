@@ -16,7 +16,10 @@ internal fun ExprContext.asAst(scope: Scope): Parsed<Expr> = when (this) {
   }
 
   is BoolLitExprContext -> BoolLit(BOOL_LIT().text!!.toBoolean()).valid()
-  is CharLitExprContext -> CharLit(CHAR_LIT().text.toCharArray()[1]).valid()
+  is CharLitExprContext -> {
+    val txt = CHAR_LIT().text.toCharArray()
+    CharLit(if (txt[1] == '\\') txt[2] else txt[1]).valid()
+  }
   is StrLitExprContext -> StrLit(STRING_LIT().text.drop(1).dropLast(1)).valid()
   is PairLitExprContext -> NullPairLit.valid()
   is IdentExprContext -> scope[ID().text].fold({
