@@ -2,7 +2,9 @@ package ic.org.arm
 
 import arrow.core.None
 import arrow.core.some
-import ic.org.ast.Type
+import ic.org.arm.addressing.ImmEqualLabel
+import ic.org.arm.addressing.zeroOffsetAddr
+import ic.org.arm.instr.*
 import ic.org.util.Code
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -81,7 +83,11 @@ object FreePairFunc : StdFunc() {
   override val body = Code.empty.withFunction(RuntimeError.body) +
     PUSHInstr(LR) +
     CMPInstr(cond = None, rn = Reg.first, int8b = 0) +
-    LDRInstr(cond = EQCond.some(), rd = Reg.first, addressing = ImmEqualLabel(msg.label)) +
+    LDRInstr(
+      cond = EQCond.some(), rd = Reg.first, addressing = ImmEqualLabel(
+        msg.label
+      )
+    ) +
     BInstr(cond = EQCond.some(), label = RuntimeError.label) +
     TODO("William pls pick thhis up to fit the structure of our pairs") as Code
     // PUSHInstr(Reg.first) +

@@ -1,6 +1,7 @@
-package ic.org.arm
+package ic.org.arm.instr
 
 import arrow.core.None
+import ic.org.arm.*
 
 interface ArithmeticInstr {
   val s: Boolean
@@ -27,7 +28,9 @@ data class ADDInstr(
     rd: Register,
     rn: Register,
     int8b: Int
-  ) : this(cond, s, rd, rn, ImmOperand2(Immed_8r(int8b.toByte(), 0)))
+  ) : this(cond, s, rd, rn,
+    ImmOperand2(Immed_8r(int8b.toByte(), 0))
+  )
 
   override val code = "${opcode("ADD")} ${rd.code}, ${rn.code}, ${op2.code}"
 }
@@ -63,7 +66,9 @@ data class SUBInstr(
     rd: Register,
     rn: Register,
     int8b: Int
-  ) : this(cond, s, rd, rn, ImmOperand2(Immed_8r(int8b.toByte(), 0)))
+  ) : this(cond, s, rd, rn,
+    ImmOperand2(Immed_8r(int8b.toByte(), 0))
+  )
 
   override val code = "${opcode("SUB")} ${rd.code}, ${rn.code}, ${op2.code}"
 }

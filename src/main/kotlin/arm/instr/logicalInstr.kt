@@ -1,7 +1,8 @@
-package ic.org.arm
+package ic.org.arm.instr
 
 import arrow.core.None
 import arrow.core.Some
+import ic.org.arm.*
 
 data class MOVInstr(
   override val cond: Flag,
@@ -9,7 +10,9 @@ data class MOVInstr(
   val rd: Register,
   val op2: Operand2
 ) : ARMCondSInstr() {
-  constructor(cond: Flag = None, s: Boolean = false, rd: Register, op2: Register) : this(cond, s, rd, RegOperand2(op2))
+  constructor(cond: Flag = None, s: Boolean = false, rd: Register, op2: Register) : this(cond, s, rd,
+    RegOperand2(op2)
+  )
   constructor(cond: CondFlag, s: Boolean = false, rd: Register, op2: Operand2) : this(Some(cond), s, rd, op2)
 
   override val code = "${opcode("MOV")} ${rd.code}, ${op2.code}"

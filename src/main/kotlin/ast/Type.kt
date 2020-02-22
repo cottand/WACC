@@ -1,6 +1,11 @@
 package ic.org.ast
 
 import ic.org.arm.*
+import ic.org.arm.addressing.AddrMode2
+import ic.org.arm.instr.LDRBInstr
+import ic.org.arm.instr.LDRInstr
+import ic.org.arm.instr.STRBInstr
+import ic.org.arm.instr.STRInstr
 
 /**
  * Class representing one of WACC's types.
@@ -50,10 +55,10 @@ class EmptyArrayT : AnyArrayT() {
   override fun hashCode() = 237371
 }
 
-// TODO Write more documentation comments for types
 /**
  * [depth] = 1 for 1-dimensional Array
  */
+@Suppress("DataClassPrivateConstructor")
 data class ArrayT private constructor(val type: Type) : AnyArrayT() {
 
   val depth: Int = if (type is ArrayT) type.depth + 1 else 1
@@ -80,7 +85,7 @@ data class ArrayT private constructor(val type: Type) : AnyArrayT() {
   }
 
   val nestedType: Type
-    get() = when (type) {
+   get() = when (type) {
       is ArrayT -> type.nestedType
       else -> type
     }

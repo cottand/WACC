@@ -1,16 +1,15 @@
-package ic.org.instr
+package ic.org.arm
 
-import ic.org.arm.*
-import ic.org.ast.Func
+import ic.org.arm.instr.LDRInstr
+import ic.org.arm.instr.POPInstr
+import ic.org.arm.instr.PUSHInstr
 import ic.org.ast.Prog
 import ic.org.util.Code
 import ic.org.util.Instructions
-import ic.org.util.print
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
-import kotlinx.collections.immutable.toPersistentList
 
-fun Prog.instr(): Instructions = body.instr()
+fun Prog.asm(): Instructions = body.instr()
   .withFunctions(funcs.map { it.instr() })
   .let {
     val allFuncs = it.funcs.fold(Code.empty, Code::combine)

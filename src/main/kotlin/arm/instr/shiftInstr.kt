@@ -1,4 +1,8 @@
-package ic.org.arm
+package ic.org.arm.instr
+
+import ic.org.arm.ARMInstr
+import ic.org.arm.Immed_5
+import ic.org.arm.Register
 
 data class LSLImmInstr(val rd: Register, val rm: Register, val imm: Immed_5) : ARMInstr() {
   override val code = "LSL ${rd.code}, ${rm.code}, #${imm.code}"

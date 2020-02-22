@@ -4,6 +4,7 @@ import antlr.WACCParser.*
 import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.valid
+import ic.org.arm.Ranges
 import ic.org.ast.*
 import ic.org.util.*
 import kotlinx.collections.immutable.plus
@@ -11,7 +12,7 @@ import kotlinx.collections.immutable.plus
 internal fun ExprContext.asAst(scope: Scope): Parsed<Expr> = when (this) {
   // Parse Int literal but check it is a valid size
   is IntLitExprContext -> when (val i = int_lit().text.toLong()) {
-    in IntLit.range -> IntLit(i.toInt()).valid()
+    in Ranges._32b -> IntLit(i.toInt()).valid()
     else -> IntegerOverflowError(startPosition, i).toInvalidParsed()
   }
 

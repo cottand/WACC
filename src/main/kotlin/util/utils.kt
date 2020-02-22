@@ -1,4 +1,4 @@
-@file:Suppress("DataClassPrivateConstructor", "NOTHING_TO_INLINE")
+@file:Suppress("DataClassPrivateConstructor", "NOTHING_TO_INLINE", "EXPERIMENTAL_API_USAGE")
 
 package ic.org.util
 
@@ -49,4 +49,4 @@ inline val <reified E, reified V> List<Validated<E, V>>.valids
   get() = this.filterIsInstance<Valid<V>>().map { it.a }
 
 inline fun log2(i: Int) =
-  log2(i.toDouble()).also { if (it > Byte.MAX_VALUE) throw UnsupportedOperationException() }.toByte()
+  log2(i.toDouble()).also { if (it > Byte.MAX_VALUE) throw UnsupportedOperationException() }.toInt().toUByte()

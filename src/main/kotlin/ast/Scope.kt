@@ -4,6 +4,10 @@ package ic.org.ast
 
 import arrow.core.*
 import ic.org.arm.*
+import ic.org.arm.addressing.withOffset
+import ic.org.arm.instr.ADDInstr
+import ic.org.arm.instr.LDRInstr
+import ic.org.arm.instr.SUBInstr
 import ic.org.util.*
 import kotlinx.collections.immutable.persistentListOf
 
@@ -78,8 +82,6 @@ sealed class Scope {
 
   /**
    * Returns the encapsulation of a scope in assembly instructions by growing the stack down to allocate local variables
-   *
-   * TODO make sure it is used by Prog.instr() (OK), Func.instr(), and BegEnd Stat.
    */
   fun makeInstrScope(offset: Int = 0) = stackSizeSoFar().plus(offset).let { size ->
     val auxReg = Reg.first
@@ -123,7 +125,7 @@ class GlobalScope : Scope() {
  * Scope created by a function. Does not see [GlobalScope] variables, and is parent of
  * [ControlFlowScope] defined inside the [Func].
  *
- * TODO remove ident which is for debuggin purposes
+ * TODO remove ident which is for debuggin purposes??
  */
 data class FuncScope(val ident: Ident, val gScope: GlobalScope) : Scope() {
 

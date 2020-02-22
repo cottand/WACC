@@ -3,6 +3,11 @@ package ic.org.ast
 import arrow.core.None
 import arrow.core.some
 import ic.org.arm.*
+import ic.org.arm.addressing.withOffset
+import ic.org.arm.instr.BInstr
+import ic.org.arm.instr.BLInstr
+import ic.org.arm.instr.CMPInstr
+import ic.org.arm.instr.MOVInstr
 import ic.org.util.*
 
 sealed class Stat {

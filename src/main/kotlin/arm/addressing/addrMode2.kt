@@ -1,4 +1,8 @@
-package ic.org.arm
+@file:Suppress("EXPERIMENTAL_API_USAGE")
+
+package ic.org.arm.addressing
+
+import ic.org.arm.*
 
 sealed class AddrMode2 : Printable
 
@@ -11,10 +15,17 @@ data class ImmOffsetAddrMode2(val rn: Register, val imm: Immed_12) : AddrMode2()
 val Register.zeroOffsetAddr
   get() = ZeroOffsetAddrMode2(this)
 
-fun Register.withOffset(int12b: Int) = ImmOffsetAddrMode2(this, Immed_12(int12b))
-fun Register.withOffset(regOffset: Register, sign: Sign = Plus) = RegOffsetAddrMode2(this, sign, regOffset)
-fun Register.withOffset(regOffset: Register, lsl5bit: Byte, sign: Sign = Plus) =
-  RegScaledOffsetLSL(this, sign, regOffset, Immed_5(lsl5bit))
+fun Register.withOffset(int12b: Int) =
+  ImmOffsetAddrMode2(this, Immed_12(int12b))
+fun Register.withOffset(regOffset: Register, sign: Sign = Plus) =
+  RegOffsetAddrMode2(this, sign, regOffset)
+fun Register.withOffset(regOffset: Register, lsl5bit: UByte, sign: Sign = Plus) =
+  RegScaledOffsetLSL(
+    this,
+    sign,
+    regOffset,
+    Immed_5(lsl5bit)
+  )
 
 val ImmOffsetAddrMode2.postIndexed
   get() = ImmPreOffsetAddrMode2(this.rn, this.imm)

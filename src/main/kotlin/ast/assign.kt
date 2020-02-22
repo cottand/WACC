@@ -3,6 +3,13 @@ package ic.org.ast
 import arrow.core.None
 import arrow.core.firstOrNone
 import ic.org.arm.*
+import ic.org.arm.addressing.ImmOffsetAddrMode2
+import ic.org.arm.addressing.ZeroOffsetAddrMode2
+import ic.org.arm.addressing.withOffset
+import ic.org.arm.instr.BLInstr
+import ic.org.arm.instr.LDRInstr
+import ic.org.arm.instr.MOVInstr
+import ic.org.arm.instr.STRInstr
 import ic.org.util.Code
 import ic.org.util.flatten
 import ic.org.util.head
@@ -76,11 +83,11 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
 
     var instrs = Code.empty.withFunction(MallocStdFunc.body) +
             // Load array size, add 4 bytes to store size
-            LDRInstr(Reg(0), arrSize + 4) +
+      LDRInstr(Reg(0), arrSize + 4) +
             // Malloc the array
-            BLInstr(MallocStdFunc.label) +
+      BLInstr(MallocStdFunc.label) +
             // Move the addr of the malloc (array) into the working reg
-            MOVInstr(None, false, dst, Reg(0))
+      MOVInstr(None, false, dst, Reg(0))
 
     // We start at 1 since first slot holds array size
     var index = 1
@@ -90,11 +97,20 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
     instrs = exprs.fold(instrs, { acc, expr ->
       acc +
               expr.code(exprRem) +
-              STRInstr(None, exprRem.head, ImmOffsetAddrMode2(dst, Immed_12(index++ * exprSize)))
+        STRInstr(
+          None, exprRem.head,
+          ImmOffsetAddrMode2(dst, Immed_12(index++ * exprSize))
+        )
     })
 
     // Add array size to first slot
-    instrs += LDRInstr(rem[1], exprs.size) + STRInstr(rem[1], ZeroOffsetAddrMode2(dst))
+    instrs += LDRInstr(
+      rem[1],
+      exprs.size
+    ) + STRInstr(
+      rem[1],
+      ZeroOffsetAddrMode2(dst)
+    )
 
     return instrs
   }

@@ -1,4 +1,7 @@
-package ic.org.arm
+package ic.org.arm.instr
+
+import ic.org.arm.ARMInstr
+import ic.org.arm.Register
 
 /* Push instructions */
 

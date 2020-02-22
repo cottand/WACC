@@ -1,4 +1,9 @@
-package ic.org.arm
+package ic.org.arm.addressing
+
+import ic.org.arm.Immed_8
+import ic.org.arm.Printable
+import ic.org.arm.Register
+import ic.org.arm.Sign
 
 sealed class AddrMode3 : Printable
 
