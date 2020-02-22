@@ -1,0 +1,12 @@
+# free a null pair
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  pair(int, int) p = null;
+  free p
+end
+

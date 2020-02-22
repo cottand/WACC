@@ -150,22 +150,20 @@ object FreeStdLibFunc : StdFunc() {
 
 object FreePairFunc : StdFunc() {
   override val name = "p_free_pair"
+  private const val errormsg = "NullReferenceError: dereference a null reference\\n\\0"
+  private val msg0 = StringData(errormsg, errormsg.length - 2)
 
-  val msgText = "NullReferenceError: dereference a null reference\\n\\0"
-  val msg = StringData(msgText, msgText.length - 2) // TODO check length
+  private val instructions by lazy {
+    persistentListOf(
+      label,
+      PUSHInstr(LR),
+      CMPInstr(None, Reg(0), 0),
+      LDRInstr(EQCond, Reg(0), ImmEqualLabel(msg0.label)),
+      BInstr(EQCond.some(), RuntimeError.label),
+      BLInstr(FreeStdLibFunc.label),
+      POPInstr(PC)
+    )
+  }
 
-  override val body = Code.empty.withFunction(RuntimeError.body) +
-    PUSHInstr(LR) +
-    CMPInstr(cond = None, rn = Reg.first, int8b = 0) +
-    LDRInstr(cond = EQCond.some(), rd = Reg.first, addressing = ImmEqualLabel(msg.label)) +
-    BInstr(cond = EQCond.some(), label = RuntimeError.label) +
-    TODO("William pls pick thhis up to fit the structure of our pairs") as Code
-    // PUSHInstr(Reg.first) +
-    // LDRInstr(Reg.first, Reg.first.zeroOffsetAddr) +
-    // BLInstr(FreeStdLibFunc.label) +
-    // LDRInstr(Reg.first, SP.zeroOffsetAddr) +
-    // LDRInstr(Reg.first, Reg.first.withOffset(Type.Sizes.Word.bytes)) +
-
-
-
+  override val body = Code(instructions, msg0.body).withFunction(RuntimeError.body)
 }
