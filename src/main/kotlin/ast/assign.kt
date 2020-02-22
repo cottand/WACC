@@ -134,6 +134,7 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
 
   override fun code(rem: Regs) = Code.empty.withFunction(CheckNullPointer.body) +
           pairElem.expr.code(rem) +
+          MOVInstr(None, false, Reg(0), rem.head) +
           BLInstr(None, CheckNullPointer.label) +
           LDRInstr(rem.head, rem.head.withOffset(pairElem.offsetFromAddr))
 

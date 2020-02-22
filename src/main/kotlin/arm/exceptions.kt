@@ -93,6 +93,9 @@ object CheckArrayBounds : Exception() {
   override val body = Code(instructions, msg0.body + msg1.body).withFunction(RuntimeError.body)
 }
 
+/**
+ * First and only argument is address of pair (r0).
+ */
 object CheckNullPointer : Exception() {
   override val name = "p_check_null_pointer"
 

@@ -1,0 +1,11 @@
+# uses a null pair on LHS
+
+# Output:
+# 100
+
+# Program:
+
+begin
+  pair(int, int) p = null;
+  fst p = 1
+end
