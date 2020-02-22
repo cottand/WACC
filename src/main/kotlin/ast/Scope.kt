@@ -159,7 +159,9 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
    */
   private fun addrWithScopeOffset(childScope: Scope): Int = when (childScope) {
     this.scope -> addrFromSP
-    is ControlFlowScope -> addrWithScopeOffset(childScope.parent) + childScope.parent.stackSizeSoFar()
+    is ControlFlowScope -> {
+      addrWithScopeOffset(childScope.parent) + childScope.stackSizeSoFar()
+    }
     else -> NOT_REACHED()
   }
 
