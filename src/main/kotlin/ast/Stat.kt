@@ -80,7 +80,9 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
       is IntT -> expr.eval(Reg.ret).withFunction(PrintIntStdFunc.body) +
         BLInstr(PrintIntStdFunc.label)
       is BoolT -> expr.code(Reg.all).withFunction(PrintBoolStdFunc.body) +
-          BLInstr(PrintBoolStdFunc.label)
+              BLInstr(PrintBoolStdFunc.label)
+      is CharT -> expr.code(Reg.all) +
+                BLInstr(Label("putchar"))
       is StringT -> expr.code(Reg.all).withFunction(PrintStringStdFunc.body) +
           BLInstr(PrintStringStdFunc.label)
       else -> TODO()
