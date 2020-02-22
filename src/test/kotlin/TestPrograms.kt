@@ -97,8 +97,10 @@ class TestPrograms {
       if (expectedAss != actualAss) {
         val (actualOut, actualCode) = Ref.emulate(actualAss, filename, input)
         println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
-        println("Expected assembly:              Actual:\n")
+        println("Expected assembly:" + "Actual:\n".padStart(60))
         println(expectedAss.sideToSideWith(actualAss, pad = 60) + '\n')
+        println("Expected:\n$expectedAss\n")
+        println("Actual:\n$actualAss\n")
         println("\nCompiled WACC:\n${program.file.readText()}")
         assertEquals(expectedOut, actualOut) { "Non matching program output for $canonicalPath" }
         assertEquals(expectedCode, actualCode) { "Non matching program output code for $canonicalPath" }
