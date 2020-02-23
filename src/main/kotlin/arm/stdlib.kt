@@ -28,7 +28,7 @@ object PrintIntStdFunc : IOFunc() {
     persistentListOf(
       label,
       PUSHInstr(LR),
-      MOVInstr(s = true, rd = Reg(1), op2 = Reg(0)),
+      MOVInstr(rd = Reg(1), op2 = Reg(0)),
       LDRInstr(Reg.ret, ImmEqualLabel(msg.label)),
       ADDInstr(None, false, Reg(0), Reg(0), 4),
       BLInstr("printf"),
