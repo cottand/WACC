@@ -4,6 +4,7 @@ import arrow.core.None
 import arrow.core.firstOrNone
 import ic.org.arm.*
 import ic.org.util.Code
+import ic.org.util.NOT_REACHED
 import ic.org.util.flatten
 import ic.org.util.head
 import kotlinx.collections.immutable.toPersistentList
@@ -54,6 +55,16 @@ interface Computable {
 }
 
 sealed class AssRHS : Computable
+
+data class ReadRHS(override val type: Type) : AssRHS() {
+  override fun code(rem: Regs): Code {
+    return when(type){
+      is IntT -> Code.empty.withFunction(ReadIntStdFunc.body) + BLInstr(ReadIntStdFunc.label)
+      is CharT -> Code.empty.withFunction(ReadCharStdFunc.body) + BLInstr(ReadCharStdFunc.label)
+      else -> NOT_REACHED()
+    }
+  }
+}
 
 data class ExprRHS(val expr: Expr) : AssRHS(), Computable by expr {
   override fun toString() = expr.toString()
