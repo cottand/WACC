@@ -36,11 +36,13 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
             is ArrayElemLHS -> Code.empty.withFunction(CheckArrayBounds.body) +
                     // TODO check for bounds
                     lhs.variable.get(scope, Reg(0)) + // Put array var in r0
+                    // Iteratively load array addresses into r0 for nested arrays
                     lhs.indices.dropLast(1).map {
                       it.eval(Reg(1)) + // Eval expr into r1
-                      //ADDInstr(None, false, Reg(0), Reg(0), 4) // Add 4 bytes offset since 1st slot is array size
+                      ADDInstr(None, false, Reg(0), Reg(0), 4) + // Add 4 bytes offset since 1st slot is array size
                       type.sizedLDR(Reg(0), Reg(0).withOffset(Reg(1), log2(type.size.bytes)))
                     }.flatten() +
+                    // Get address of array elem and store RHS into it
                     lhs.indices.last().eval(Reg(1)) +
                     ADDInstr(None, false, Reg(0), Reg(0), 4) + // Add 4 bytes offset since 1st slot is array size
                     rhs.eval(Reg(2)) + // eval rhs into r1
