@@ -1,5 +1,9 @@
 # basic input/output sequence
 
+# Input_particular:
+# 3
+# End of Input_particular
+
 # Output:
 # Please input an integer: #input#
 # You input: #output#
