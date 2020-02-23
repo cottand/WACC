@@ -87,8 +87,8 @@ data class ArrayT private constructor(val type: Type) : AnyArrayT() {
   fun nthNestedType(ndepth: Int): Type {
     require(ndepth in 0..this.depth)
     return when {
-      depth == 1 -> type
-      type is ArrayT -> type.nthNestedType(depth - 1)
+      ndepth == 1 -> type
+      type is ArrayT -> type.nthNestedType(ndepth - 1)
       else -> throw IllegalArgumentException("Bad depth: $ndepth, not in $depth for type $type")
     }
   }
