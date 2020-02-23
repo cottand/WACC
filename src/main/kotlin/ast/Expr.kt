@@ -140,7 +140,9 @@ data class ArrayElemExpr internal constructor(
         arrType !is ArrayT -> NOT_REACHED()
         exprs.size > arrType.depth ->
           TypeError(pos, AnyArrayT(), arrType, "Array access").toInvalidParsed()
-        else -> ArrayElemExpr(variable, exprs, scope, arrType.nthNestedType(exprs.size)).valid()
+        else -> {
+          ArrayElemExpr(variable, exprs, scope, arrType.nthNestedType(exprs.size)).valid()
+        }
       }
     }
   }

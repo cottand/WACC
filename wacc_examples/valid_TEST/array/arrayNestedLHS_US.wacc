@@ -1,0 +1,16 @@
+# assign to array LHS
+
+# Output:
+# 5
+
+# Program:
+
+begin
+  int[] a = [1, 2];
+  int[] b = [3, 4];
+  int[] c = [5, 6];
+  int[][] x = [a, b, c];
+  x[1][0] = 5;
+  int[] y = x[1];
+  exit y[0]
+end
