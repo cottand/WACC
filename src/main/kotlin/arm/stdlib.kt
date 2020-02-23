@@ -101,6 +101,25 @@ object PrintStringStdFunc : IOFunc() {
   }
 }
 
+object PrintReferenceStdFunc : IOFunc() {
+  override val name = "p_print_reference"
+  override val msgTemplate = "%p\\0"
+
+  override val instructions by lazy {
+    persistentListOf(
+      label,
+      PUSHInstr(LR),
+      MOVInstr(None, false, Reg(1), Reg(0)),
+      LDRInstr(Reg(0), ImmEqualLabel(msg.label)),
+      ADDInstr(None, false, Reg(0), Reg(0), 4),
+      BLInstr("printf"),
+      LDRInstr(Reg.ret, 0),
+      BLInstr("fflush"),
+      POPInstr(PC)
+    )
+  }
+}
+
 object ReadIntStdFunc : IOFunc() {
   override val name = "p_read_int"
   override val msgTemplate = "%d\\0"

@@ -75,7 +75,7 @@ data class Exit(val expr: Expr, override val scope: Scope, override val pos: Pos
 }
 
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() =
+  override fun instr() : Code =
     when (expr.type) {
       is IntT -> expr.eval(Reg.ret).withFunction(PrintIntStdFunc.body) +
         BLInstr(PrintIntStdFunc.label)
@@ -85,6 +85,13 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
                 BLInstr(Label("putchar"))
       is StringT -> expr.code(Reg.all).withFunction(PrintStringStdFunc.body) +
           BLInstr(PrintStringStdFunc.label)
+      is ArrayT -> if((expr.type as ArrayT).type is CharT) {
+        expr.code(Reg.all).withFunction(PrintStringStdFunc.body) +
+        BLInstr(PrintStringStdFunc.label)
+      } else {
+        expr.code(Reg.all).withFunction(PrintReferenceStdFunc.body) +
+        BLInstr(PrintReferenceStdFunc.label)
+      }
       else -> TODO()
     }
 }

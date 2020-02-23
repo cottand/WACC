@@ -83,15 +83,14 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
             // Move the addr of the malloc (array) into the working reg
             MOVInstr(None, false, dst, Reg(0))
 
-    // We start at 1 since first slot holds array size
-    var index = 1
+    var index = 0
     // regs to be used by expressions
     val exprRem = rem.drop(1).toPersistentList()
     // For each expr, evaluate and put in array at index + exprSize
     instrs = exprs.fold(instrs, { acc, expr ->
       acc +
               expr.code(exprRem) +
-              STRInstr(None, exprRem.head, ImmOffsetAddrMode2(dst, Immed_12(index++ * exprSize)))
+              STRInstr(None, exprRem.head, ImmOffsetAddrMode2(dst, Immed_12(4 + index++ * exprSize)))
     })
 
     // Add array size to first slot
