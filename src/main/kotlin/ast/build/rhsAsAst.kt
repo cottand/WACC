@@ -77,27 +77,18 @@ fun RHSFuncCallContext.asAst(scp: Scope): Parsed<Call> {
     // Validate the number of arguments passed
     .validate(
       { it.func.params.size == it.args.size },
-      {
-        UnexpectedNumberOfParamsError(
-          startPosition,
-          it.name,
-          it.func.params.size,
-          it.args.size
-        )
-      })
+      { UnexpectedNumberOfParamsError(startPosition, it.name, it.func.params.size, it.args.size) })
     // Make sure that for every type of the arguments passed, it matches the function's. We do this by zipping the two
     // lists, then comparing each element pair-waise.
     .flatMap { call ->
-      val argParamZip = call.args.zipWith(call.func.params) { a, p -> a to p }
-      val mismatches = argParamZip.filterMap { (a, p) ->
-        if (!p.type.matches(a.type))
-          TypeError(startPosition, p.type, a.type, "parameter passing").some()
-        else None
-      }.toPersistentList()
-
-      if (mismatches.isNotEmpty())
-        mismatches.invalid()
-      else
-        call.valid()
+      call.args.zip(call.func.params)
+        .filterNot { (a, p) -> p.type.matches(a.type) }
+        .map { (a, p) -> TypeError(startPosition, p.type, a.type, "parameter passing") }
+        .let { mismatches ->
+          if (mismatches.isNotEmpty())
+            mismatches.toPersistentList().invalid()
+          else
+            call.valid()
+        }
     }
 }

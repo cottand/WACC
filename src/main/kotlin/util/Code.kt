@@ -54,7 +54,8 @@ private constructor(
   operator fun component1() = instr
   operator fun component2() = data
 
-  override fun toString() = "Code(instr=\n$instr, data=\n$data, funcs=\n$funcs)"
+  override fun toString() =
+    "Code(instr=\n${instr.map { it.code }.joinLines()}, data=\n$data, funcs=\n$funcs)"
 
   companion object {
     val empty = Code(

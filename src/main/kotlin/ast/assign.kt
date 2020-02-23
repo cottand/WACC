@@ -6,6 +6,7 @@ import ic.org.arm.*
 import ic.org.util.Code
 import ic.org.util.flatten
 import ic.org.util.head
+import ic.org.util.print
 import kotlinx.collections.immutable.toPersistentList
 
 // <assign-lhs>
@@ -151,9 +152,9 @@ data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
               val param = func.params[i]
               // Offset corresponds to pram's address, minues 4b (because the stack grows when calling a function
               // minus the size of the function's stack (which will be compensated by when passing [init])
-              val dest = SP.withOffset(param.addrFromSP - Type.Sizes.Word.bytes - stackSize)
+              val dest = SP.withOffset(param.addrFromSP - stackSize - Type.Sizes.Word.bytes)
               expr.code(rem) +
-                      expr.type.sizedSTR(rem.head, dest)
+                      expr.type.sizedSTR(rem.head, dest).print()
             }.flatten() +
             init +
             BLInstr(func.label) +

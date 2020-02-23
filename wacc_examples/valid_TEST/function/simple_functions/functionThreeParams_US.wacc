@@ -1,0 +1,14 @@
+# define and call a function with simple params
+
+# Output:
+# 13
+
+# Program:
+
+begin
+  int f(int n, int m, int o) is
+    return n + m + o
+  end
+  int x = call f(10, 2, 1) ;
+  exit x
+end

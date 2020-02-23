@@ -10,6 +10,7 @@ package ic.org.ast.build
  */
 import antlr.WACCParser.*
 import arrow.core.Validated.Valid
+import arrow.core.extensions.list.zip.zipWith
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.ast.*
@@ -34,9 +35,10 @@ fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
       val ident = Ident(ctx.ID().text)
       val fScope = FuncScope(ident, gScope)
       val antlrParams = ctx.param_list()?.param() ?: emptyList()
-      val vars = ctx.paramsAsAst().mapIndexed { i, param ->
-        param.flatMap { fScope.addParameter(antlrParams[i].startPosition, it) }
-      }
+      val vars = ctx.paramsAsAst().zip(antlrParams)
+        .map { (param, antlrParam) ->
+          param.flatMap { fScope.addParameter(antlrParam.startPosition, it) }
+        }
       // TODO get those invalids
       val funcId = FuncIdent(t, ident, vars.valids, fScope)
       val validatedFuncId = gScope.addFunction(startPosition, funcId)
@@ -84,7 +86,7 @@ fun FuncContext.asAst(funcIdent: FuncIdent): Parsed<Func> {
   val type = type().asAst()
 
 
-  return stat().asAst(funcScope).map { body -> Func(type, ident, params, body) }
+  return stat().asAst(funcScope).map { body -> Func(type, ident, params, body, funcScope) }
 }
 
 private fun ParamContext.asAst(): Param = Param(type().asAst(), Ident(ID().text))

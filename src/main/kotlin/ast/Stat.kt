@@ -120,7 +120,8 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
   }
 }
 
-data class While(val cond: Expr, val stat: Stat, override val scope: Scope, override val pos: Position) : Stat() {
+data class While(val cond: Expr, val stat: Stat, override val pos: Position) : Stat() {
+  override val scope = stat.scope
   override fun instr(): Code {
     val uuid = shortRandomUUID()
     val (line, _) = pos

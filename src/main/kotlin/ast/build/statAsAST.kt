@@ -2,6 +2,7 @@ package ic.org.ast.build
 
 import antlr.WACCParser.*
 import arrow.core.Validated.Valid
+import arrow.core.combine
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.ast.*
@@ -86,17 +87,14 @@ internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
   else -> NOT_REACHED()
 }
 
-fun WhileDoContext.asAst(scope: Scope): Parsed<While> {
-  val newScope = ControlFlowScope(scope)
-  val cond = expr().asAst(scope)
+fun WhileDoContext.asAst(scope: Scope) = ControlFlowScope(scope).let { newScope ->
+  expr().asAst(scope)
     .validate(
       { it.type is BoolT },
       { TypeError(startPosition, BoolT, "While condition", it) })
-  val s = stat().asAst(newScope)
-  return if (cond is Valid && s is Valid)
-    While(cond.a, s.a, newScope, startPosition).valid()
-  else
-    (cond.errors + s.errors).invalid()
+    .combineWith(stat().asAst(newScope)) { cond, body ->
+      While(cond, body, startPosition)
+    }
 }
 
 fun IfElseContext.asAst(scope: Scope): Parsed<If> {

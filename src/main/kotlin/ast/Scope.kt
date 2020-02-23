@@ -21,11 +21,18 @@ sealed class Scope {
   internal val variables = LinkedHashMap<Ident, Variable>()
 
   /**
+   * Address at which this stack begins relative to the end of the parent scope's stack.
+   *
+   * Functions Push LR in their prelude so they have extra stuff in their stack
+   */
+  private val relativeStartingAddress = if (this is FuncScope) Type.Sizes.Word.bytes else 0
+
+  /**
    * How big the stack should be grown down upon starting a new stack. Determined by the variables that live on
    * this scope's stack. Value relative to the address of the parent's scope stack.
    * Grows as stuff is added to the stack!
    */
-  fun stackSizeSoFar() = variables.toList().fold(0) { stack, (_, v) -> stack + v.type.size.bytes }
+  fun stackSizeSoFar() = variables.toList().fold(relativeStartingAddress) { stack, (_, v) -> stack + v.type.size.bytes }
 
   /**
    * Returns the [Variable] associated with [ident]. If [ident] exists twice in this scope and/or
@@ -62,12 +69,8 @@ sealed class Scope {
 
   /**
    * Overloaded [addVariable] by using [param].
-   *
-   * Parameters live 4 bytes higher in the stack because they are offset by LR pushed to the stack as
-   * functions are called.
    */
-  fun addParameter(pos: Position, param: Param) =
-    addVariable(pos, param.type, param.ident, offsetBytes = Type.Sizes.Word.bytes)
+  fun addParameter(pos: Position, param: Param) = addVariable(pos, param.type, param.ident)
 
   val globalFuncs: Map<String, FuncIdent>
     get() = when (this) {
@@ -79,7 +82,7 @@ sealed class Scope {
   /**
    * Returns the encapsulation of a scope in assembly instructions by growing the stack down to allocate local variables
    *
-   * TODO make sure it is used by Prog.instr() (OK), Func.instr(), and BegEnd Stat.
+   * TODO make sure it is used by Prog.instr() (OK), Func.instr() (OK), and BegEnd Stat.
    */
   fun makeInstrScope(offset: Int = 0) = stackSizeSoFar().plus(offset).let { size ->
     val auxReg = Reg.first
@@ -159,9 +162,8 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
    */
   private fun addrWithScopeOffset(childScope: Scope): Int = when (childScope) {
     this.scope -> addrFromSP
-    is ControlFlowScope -> {
+    is ControlFlowScope ->
       addrWithScopeOffset(childScope.parent) + childScope.stackSizeSoFar()
-    }
     else -> NOT_REACHED()
   }
 

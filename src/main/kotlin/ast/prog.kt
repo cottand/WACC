@@ -9,7 +9,7 @@ import kotlinx.collections.immutable.plus
 data class Prog(val funcs: List<Func>, val body: Stat)
 
 // <func>
-data class Func(val retType: Type, val ident: Ident, val params: List<Variable>, val stat: Stat) {
+data class Func(val retType: Type, val ident: Ident, val params: List<Variable>, val stat: Stat, val scope: Scope) {
 
   val label = Label("f_" + ident.name)
 
