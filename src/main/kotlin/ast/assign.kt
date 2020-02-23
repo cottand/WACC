@@ -10,22 +10,23 @@ import ic.org.util.head
 import kotlinx.collections.immutable.toPersistentList
 
 // <assign-lhs>
-sealed class AssLHS {
+sealed class AssLHS() {
   abstract val type: Type
+  abstract val variable: Variable
 }
 
-data class IdentLHS(val variable: Variable) : AssLHS() {
+data class IdentLHS(override val variable: Variable) : AssLHS() {
   override val type = variable.type
 }
 
-data class ArrayElemLHS(val indices: List<Expr>, val variable: Variable) : AssLHS() {
+data class ArrayElemLHS(val indices: List<Expr>, override val variable: Variable) : AssLHS() {
   val ident = variable.ident
   override val type
     // Safe cast because caller validated that only arrays are accessed
     get() = (variable.type as ArrayT).nthNestedType(indices.size)
 }
 
-data class PairElemLHS(val pairElem: PairElem, val variable: Variable, val pairs: PairT) : AssLHS() {
+data class PairElemLHS(val pairElem: PairElem, override val variable: Variable, val pairs: PairT) : AssLHS() {
   override val type = when (pairElem) {
     is Fst -> pairs.fstT
     is Snd -> pairs.sndT
