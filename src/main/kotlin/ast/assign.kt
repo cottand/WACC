@@ -47,9 +47,9 @@ interface Computable {
   /**
    * Evaluates an expression in order to put it in [dest]. Should be used by [Stat]
    */
-  fun eval(dest: Register) = code(Reg.fromExpr).let {
-    if (dest != Reg.firstExpr)
-      it.plus(MOVInstr(rd = dest, op2 = Reg.firstExpr))
+  fun eval(dest: Register, usingRegs: List<Reg> = Reg.fromExpr) = code(usingRegs.toPersistentList()).let {
+    if (dest != usingRegs.head)
+      it.plus(MOVInstr(rd = dest, op2 = usingRegs.head))
     else it
   }
 }
