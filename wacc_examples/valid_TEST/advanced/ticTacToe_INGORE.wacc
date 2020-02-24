@@ -31,6 +31,9 @@
 # 
 # We call this structure Pair4Three.
 
+# Input_particular:
+# o 3 4 5 1 2 3
+# End of Input_particular
 # Program:
 
 begin
