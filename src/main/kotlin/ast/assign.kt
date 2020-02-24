@@ -5,7 +5,6 @@ import arrow.core.firstOrNone
 import ic.org.arm.*
 import ic.org.util.Code
 import ic.org.util.NOT_REACHED
-import ic.org.util.flatten
 import ic.org.util.head
 import kotlinx.collections.immutable.toPersistentList
 
@@ -160,22 +159,36 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
 data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
   override val type = func.retType
   val name = func.name
-  // TODO this stat.code() has to do BL instr AND also add 4 to the stack pointer. See reference assembly code...
-  override fun code(rem: Regs) = func.funcScope.makeInstrScope().let { (init, end, stackSize) ->
-    Code.empty +
-      args.mapIndexed { i, expr ->
-        val param = func.params[i]
-        // Offset corresponds to pram's address, minues 4b (because the stack grows when calling a function
-        // minus the size of the function's stack (which will be compensated by when passing [init])
-        val dest = SP.withOffset(param.addrFromSP - stackSize - Type.Sizes.Word.bytes)
-        expr.code(rem) +
-          expr.type.sizedSTR(rem.head, dest)
-      }.flatten() +
-      init +
-      BLInstr(func.label) +
-      end +
-      MOVInstr(rd = rem.head, op2 = Reg.ret)
+  override fun code(rem: Regs) = Code.write {
+    val (init, end, stackSize) = func.funcScope.makeInstrScope()
+    args.zip(func.params).forEach { (argExpr, paramVar) ->
+      // Offset corresponds to pram's address, minues 4b (because the stack grows when calling a function
+      // minus the size of the function's stack (which will be compensated by when passing [init])
+      val destAddr = SP.withOffset(paramVar.addrFromSP - stackSize - Type.Sizes.Word.bytes)
+      +argExpr.code(rem)
+      +argExpr.type.sizedSTR(rem.head, destAddr)
+    }
+    +init
+    +BLInstr(func.label)
+    +end
+    +MOVInstr(rd = rem.head, op2  = Reg.ret)
   }
+
+  //   func.funcScope.makeInstrScope().let { (init, end, stackSize) ->
+  //   Code.empty +
+  //     args.mapIndexed { i, expr ->
+  //       val param = func.params[i]
+  //       // Offset corresponds to pram's address, minues 4b (because the stack grows when calling a function
+  //       // minus the size of the function's stack (which will be compensated by when passing [init])
+  //       val dest = SP.withOffset(param.addrFromSP - stackSize - Type.Sizes.Word.bytes)
+  //       expr.code(rem) +
+  //         expr.type.sizedSTR(rem.head, dest)
+  //     }.flatten() +
+  //     init +
+  //     BLInstr(func.label) +
+  //     end +
+  //     MOVInstr(rd = rem.head, op2 = Reg.ret)
+  // }
 
   override fun toString() = "call ${func.name.name} (..)"
 }

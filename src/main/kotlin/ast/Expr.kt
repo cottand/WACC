@@ -101,30 +101,30 @@ data class ArrayElemExpr internal constructor(
   override val type: Type
 ) : Expr() {
   override fun toString(): String = variable.ident.name +
-          exprs.joinToString(separator = ", ", prefix = "[", postfix = "]")
+    exprs.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
   override fun code(rem: Regs): Code = rem.take2OrNone.fold<Code>({
     TODO()
   }, { (dst, nxt, _) ->
     val arrayAccessCode: Code =
       Code.empty +
-              MOVInstr(rd = Reg(0), op2 = nxt) + // Place the evaluated expr for index in r0
-              MOVInstr(rd = Reg(1), op2 = dst) + // Place the array variable in r1
-              BLInstr(CheckArrayBounds.label) +
-              // Increment dst so we skip the actual first element, the array size
-              ADDInstr(cond = None, s = false, rd = dst, rn = dst, int8b = Type.Sizes.Word.bytes) +
-              // TODO check log2, and maybe just replace with an additional ADD instead of fancy LDR
-              ADDInstr(None, false, dst, dst, LSLImmOperand2(nxt, Immed_5(log2(type.size.bytes))))
+        MOVInstr(rd = Reg(0), op2 = nxt) + // Place the evaluated expr for index in r0
+        MOVInstr(rd = Reg(1), op2 = dst) + // Place the array variable in r1
+        BLInstr(CheckArrayBounds.label) +
+        // Increment dst so we skip the actual first element, the array size
+        ADDInstr(cond = None, s = false, rd = dst, rn = dst, int8b = Type.Sizes.Word.bytes) +
+        // TODO check log2, and maybe just replace with an additional ADD instead of fancy LDR
+        ADDInstr(None, false, dst, dst, LSLImmOperand2(nxt, Immed_5(log2(type.size.bytes))))
 
     exprs.head.code(rem.tail).withFunction(CheckArrayBounds.body) +
-            variable.get(scope, dst) + // Place ident pointer in dst
-            arrayAccessCode +
-            exprs.tail.map {
-              it.code(rem.tail) +
-                      LDRInstr(dst, dst.zeroOffsetAddr) +
-                      arrayAccessCode
-            }.flatten() +
-            LDRInstr(dst, dst.zeroOffsetAddr)
+      variable.get(scope, dst) + // Place ident pointer in dst
+      arrayAccessCode +
+      exprs.tail.map {
+        it.code(rem.tail) +
+          LDRInstr(dst, dst.zeroOffsetAddr) +
+          arrayAccessCode
+      }.flatten() +
+      LDRInstr(dst, dst.zeroOffsetAddr)
   })
 
   override val weight = Weights.heapAccess * exprs.size
@@ -158,12 +158,12 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override fun toString(): String = "$unaryOper $expr"
   override fun code(rem: Regs) = when (unaryOper) {
     NotUO -> expr.code(rem) +
-            EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r(1, 0)))
+      EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r(1, 0)))
     MinusUO -> expr.code(rem).withFunction(OverflowException.body) +
-            RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r(0, 0))) +
-            BLInstr(VSCond.some(), OverflowException.label)
+      RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r(0, 0))) +
+      BLInstr(VSCond.some(), OverflowException.label)
     LenUO -> expr.code(rem) +
-            LDRInstr(rem.head, rem.head.zeroOffsetAddr)
+      LDRInstr(rem.head, rem.head.zeroOffsetAddr)
     OrdUO -> expr.code(rem)
     ChrUO -> expr.code(rem)
   }
@@ -200,20 +200,20 @@ data class BinaryOperExpr internal constructor(
     val dest = rem.head
     // No available registers, use stack machine! We can only use dest and Reg.last
     expr2.code(rem) +
-            PUSHInstr(dest) +
-            ADDInstr(s = false, rd = SP, rn = SP, int8b = Type.Sizes.Word.bytes) +
-            expr1.code(rem) +
-            SUBInstr(s = false, rd = SP, rn = SP, int8b = Type.Sizes.Word.bytes) +
-            POPInstr(Reg.last) +
-            binaryOper.code(dest, Reg.last)
+      PUSHInstr(dest) +
+      ADDInstr(s = false, rd = SP, rn = SP, int8b = Type.Sizes.Word.bytes) +
+      expr1.code(rem) +
+      SUBInstr(s = false, rd = SP, rn = SP, int8b = Type.Sizes.Word.bytes) +
+      POPInstr(Reg.last) +
+      binaryOper.code(dest, Reg.last)
   }, { (dest, next, rest) ->
     // We can use at least two registers, dest and next, but we know there's more
     if (expr1.weight > expr2.weight) {
       expr1.code(rem) +
-              expr2.code(next prepend rest)
+        expr2.code(next prepend rest)
     } else {
       expr2.code(next prepend (dest prepend rest)) +
-              expr1.code(dest prepend rest)
+        expr1.code(dest prepend rest)
     } + binaryOper.code(dest, next)
   })
 
@@ -351,91 +351,102 @@ sealed class BoolBinOp : BinaryOper() {
 object MulBO : IntBinOp() {
   override fun toString(): String = "*"
   override fun code(dest: Reg, r2: Reg) = Code.empty.withFunction(OverflowException.body) +
-          SMULLInstr(None, false, dest, r2, dest, r2) +
-          CMPInstr(None, r2, ASRImmOperand2(dest, Immed_5(31))) +
-          BLInstr(NECond, OverflowException.label)
+    SMULLInstr(None, false, dest, r2, dest, r2) +
+    CMPInstr(None, r2, ASRImmOperand2(dest, Immed_5(31))) +
+    BLInstr(NECond, OverflowException.label)
 }
 
 object DivBO : IntBinOp() {
   private val stdlibDiv = Label("__aeabi_idiv")
   override fun toString(): String = "/"
-  override fun code(dest: Reg, r2: Reg) =
-    Code.empty.withFunction(CheckDivByZero.body) +
-            MOVInstr(None, false, Reg(0), dest) +
-            MOVInstr(None, false, Reg(1), r2) +
-            BLInstr(None, CheckDivByZero.label) +
-            BLInstr(None, stdlibDiv) +
-            MOVInstr(None, false, dest, Reg(0))
+  override fun code(dest: Reg, r2: Reg) = Code.write {
+    +MOVInstr(None, false, Reg(0), dest)
+    +MOVInstr(None, false, Reg(1), r2)
+    +BLInstr(None, CheckDivByZero.label)
+    +BLInstr(None, stdlibDiv)
+    +MOVInstr(None, false, dest, Reg(0))
+
+    withFunction(CheckDivByZero)
+  }
 }
 
 object ModBO : IntBinOp() {
   override fun toString(): String = "%"
-  override fun code(dest: Reg, r2: Reg): Code {
+  override fun code(dest: Reg, r2: Reg) = Code.write {
     val stdlibMod = Label("__aeabi_idivmod")
-    return Code.empty.withFunction(CheckDivByZero.body) +
-            MOVInstr(None, false, Reg(0), Reg(4)) +
-            MOVInstr(None, false, Reg(1), Reg(5)) +
-            BLInstr(None, CheckDivByZero.label) +
-            BLInstr(None, stdlibMod) +
-            MOVInstr(None, false, Reg(4), Reg(1))
+    +MOVInstr(None, rd = Reg(0), op2 = Reg(4))
+    +MOVInstr(None, rd = Reg(1), op2 = Reg(5))
+    +BLInstr(None, CheckDivByZero.label)
+    +BLInstr(None, stdlibMod)
+    +MOVInstr(None, rd = Reg(4), op2 = Reg(1))
+
+    withFunction(CheckDivByZero.body)
   }
 }
 
 object PlusBO : IntBinOp() {
   override fun toString(): String = "+"
-  override fun code(dest: Reg, r2: Reg) = Code.empty.withFunction(OverflowException.body) +
-          ADDInstr(rd = dest, rn = dest, op2 = r2) +
-          BLInstr(VSCond, OverflowException.label)
+  override fun code(dest: Reg, r2: Reg) = Code.write {
+    +ADDInstr(rd = dest, rn = dest, op2 = r2)
+    +BLInstr(VSCond, OverflowException.label)
+    withFunction(OverflowException.body)
+  }
 }
 
 object MinusBO : IntBinOp() {
   override fun toString(): String = "-"
-  override fun code(dest: Reg, r2: Reg) = Code.empty.withFunction(OverflowException.body) +
-          SUBInstr(rd = dest, rn = dest, op2 = r2) +
-          BLInstr(VSCond, OverflowException.label)
+  override fun code(dest: Reg, r2: Reg) = Code.write {
+    +SUBInstr(rd = dest, rn = dest, op2 = r2)
+    +BLInstr(VSCond, OverflowException.label)
+    withFunction(OverflowException)
+  }
 }
 
 // (int, int) -> bool:
 object GtBO : CompBinOp() {
   override fun toString(): String = ">"
-  override fun code(dest: Reg, r2: Reg) = Code.empty +
-          CMPInstr(None, dest, RegOperand2(r2)) +
-          MOVInstr(GTCond, false, dest, ImmOperand2(Immed_8r(1, 0))) +
-          MOVInstr(LECond, false, dest, ImmOperand2(Immed_8r(0, 0)))
+  override fun code(dest: Reg, r2: Reg) = Code.write {
+    +CMPInstr(None, dest, RegOperand2(r2))
+    +MOVInstr(GTCond, rd = dest, imm8b = 1)
+    +MOVInstr(LECond, rd = dest, imm8b = 0)
+  }
 }
 
 object GeqBO : CompBinOp() {
   override fun toString(): String = ">="
-  override fun code(dest: Reg, r2: Reg) = Code.empty +
-          CMPInstr(None, dest, RegOperand2(r2)) +
-          MOVInstr(GECond, false, dest, ImmOperand2(Immed_8r(1, 0))) +
-          MOVInstr(LTCond, false, dest, ImmOperand2(Immed_8r(0, 0)))
+  override fun code(dest: Reg, r2: Reg) = Code.write {
+    +CMPInstr(None, dest, RegOperand2(r2))
+    +MOVInstr(GECond, rd = dest, imm8b = 1)
+    +MOVInstr(LTCond, rd = dest, imm8b = 0)
+  }
 }
 
 object LtBO : CompBinOp() {
   override fun toString(): String = "<"
-  override fun code(dest: Reg, r2: Reg) = Code.empty +
-          CMPInstr(None, dest, RegOperand2(r2)) +
-          MOVInstr(LTCond, false, dest, ImmOperand2(Immed_8r(1, 0))) +
-          MOVInstr(GECond, false, dest, ImmOperand2(Immed_8r(0, 0)))
+  override fun code(dest: Reg, r2: Reg) = Code.write {
+    +CMPInstr(None, dest, RegOperand2(r2))
+    +MOVInstr(LTCond, rd = dest, imm8b = 1)
+    +MOVInstr(GECond, rd = dest, imm8b = 0)
+  }
 }
 
 object LeqBO : CompBinOp() {
   override fun toString(): String = ">="
-  override fun code(dest: Reg, r2: Reg) = Code.empty +
-          CMPInstr(None, dest, RegOperand2(r2)) +
-          MOVInstr(LECond, false, dest, ImmOperand2(Immed_8r(1, 0))) +
-          MOVInstr(GTCond, false, dest, ImmOperand2(Immed_8r(0, 0)))
+  override fun code(dest: Reg, r2: Reg) = Code.write {
+    +CMPInstr(None, dest, RegOperand2(r2))
+    +MOVInstr(cond = LECond, rd = dest, imm8b = 1)
+    +MOVInstr(cond = GTCond, rd = dest, imm8b = 0)
+  }
 }
 
 sealed class EqualityBinOp : BinaryOper() {
   override val validArgs: (Type, Type) -> Boolean = { b1, b2 ->
     check<BoolT>(b1, b2) ||
-            check<IntT>(b1, b2) ||
-            check<CharT>(b1, b2) ||
-            check<StringT>(b1, b2) ||
-            check<AnyPairTs>(b1, b2) ||
-            check<ArrayT>(b1, b2)
+      check<IntT>(b1, b2) ||
+      check<CharT>(b1, b2) ||
+      check<StringT>(b1, b2) ||
+      check<AnyPairTs>(b1, b2) ||
+      check<ArrayT>(b1, b2)
   }
   override val validReturn: (Type) -> Boolean = { it is BoolT }
   override val inTypes = listOf(
@@ -451,28 +462,32 @@ sealed class EqualityBinOp : BinaryOper() {
 
 object EqBO : EqualityBinOp() {
   override fun toString(): String = "=="
-  override fun code(dest: Reg, r2: Reg) = Code.empty +
-          CMPInstr(None, dest, RegOperand2(r2)) +
-          MOVInstr(EQCond, false, dest, ImmOperand2(Immed_8r(1, 0))) +
-          MOVInstr(NECond, false, dest, ImmOperand2(Immed_8r(0, 0)))
+  override fun code(dest: Reg, r2: Reg) = Code.write {
+    +CMPInstr(None, dest, RegOperand2(r2))
+    +MOVInstr(cond = EQCond, rd = dest, imm8b = 1)
+    +MOVInstr(cond = NECond, rd = dest, imm8b = 0)
+  }
 }
 
 object NeqBO : EqualityBinOp() {
   override fun toString(): String = "!="
-  override fun code(dest: Reg, r2: Reg) = Code.empty +
-          CMPInstr(None, dest, RegOperand2(r2)) +
-          MOVInstr(NECond, false, dest, ImmOperand2(Immed_8r(1, 0))) +
-          MOVInstr(EQCond, false, dest, ImmOperand2(Immed_8r(0, 0)))
+  override fun code(dest: Reg, r2: Reg) = Code.write {
+    +CMPInstr(None, dest, RegOperand2(r2))
+    +MOVInstr(cond = NECond, rd = dest, imm8b = 1)
+    +MOVInstr(cond = EQCond, rd = dest, imm8b = 0)
+  }
 }
 
 object AndBO : BoolBinOp() {
   override fun toString(): String = "&&"
-  override fun code(dest: Reg, r2: Reg) = Code.empty +
-          ANDInstr(None, false, dest, dest, RegOperand2(r2))
+  override fun code(dest: Reg, r2: Reg) = Code.write {
+    +ANDInstr(None, false, dest, dest, RegOperand2(r2))
+  }
 }
 
 object OrBO : BoolBinOp() {
   override fun toString(): String = "||"
-  override fun code(dest: Reg, r2: Reg) = Code.empty +
-          ORRInstr(None, false, dest, dest, RegOperand2(r2))
+  override fun code(dest: Reg, r2: Reg) = Code.write {
+    +ORRInstr(None, false, dest, dest, RegOperand2(r2))
+  }
 }
