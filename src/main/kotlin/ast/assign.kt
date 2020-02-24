@@ -7,7 +7,6 @@ import ic.org.util.Code
 import ic.org.util.NOT_REACHED
 import ic.org.util.flatten
 import ic.org.util.head
-import ic.org.util.print
 import kotlinx.collections.immutable.toPersistentList
 
 // <assign-lhs>
