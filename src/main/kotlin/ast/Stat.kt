@@ -53,8 +53,8 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
                     BLInstr(CheckArrayBounds.label) +
 
                     ADDInstr(None, false, Reg(4), Reg(4), 4) + // Add 4 bytes offset since 1st slot is array size
-                    rhs.eval(Reg(6), Reg.fromExpr.drop(2)) + // eval rhs into r1
-                    STRInstr(Reg(6), Reg(4).withOffset(Reg(5), log2(type.size.bytes))) // Put rhs into addr pointed by r0
+                    rhs.eval(Reg(6), Reg.fromExpr.drop(2)) + // eval rhs into r6
+                    rhs.type.sizedSTR(Reg(6), Reg(4).withOffset(Reg(5), log2(type.size.bytes)))
             is PairElemLHS -> Code.empty.withFunction(CheckNullPointer.body) +
                     rhs.eval(Reg(1)) + // Put RHS expr in r1
                     lhs.variable.get(scope, Reg(0)) + // Put Pair Ident in r0 (which is an addr)

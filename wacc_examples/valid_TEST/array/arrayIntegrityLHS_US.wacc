@@ -1,0 +1,12 @@
+# test for array integrity after LHS access
+
+# Output:
+# 8
+
+# Program:
+
+begin
+  int[] a = [1, 2, 3];
+  a[1] = 4;
+  exit a[0] + a[1] + a[2]
+end
