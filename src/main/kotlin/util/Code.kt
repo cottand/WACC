@@ -1,8 +1,8 @@
 package ic.org.util
 
-import ic.org.arm.Data
-import ic.org.arm.Instr
+import ic.org.arm.*
 import kotlinx.collections.immutable.*
+import java.util.LinkedList
 
 typealias Instructions = PersistentList<Instr>
 typealias Datas = PersistentList<Data>
@@ -58,6 +58,10 @@ private constructor(
     "Code(instr=\n${instr.map { it.code }.joinLines()}, data=\n$data, funcs=\n$funcs)"
 
   companion object {
+
+    fun write(init: CodeBuilderScope.() -> Unit)  =
+      CodeBuilderScope().apply(init).codes.flatten()
+
     val empty = Code(
       persistentListOf<Nothing>(),
       persistentListOf<Nothing>()
@@ -67,6 +71,28 @@ private constructor(
       persistentListOf(instr),
       persistentListOf<Nothing>()
     )
+  }
+
+  class CodeBuilderScope {
+    internal val codes = LinkedList<Code>()
+    operator fun Code.unaryPlus() = codes.push(this)
+    operator fun Instr.unaryPlus() = codes.push(Code(instr = persistentListOf(this)))
+    operator fun List<Instr>.unaryPlus() = codes.push(Code(instr = toPersistentList()))
+    fun withFunction(other: Code) = codes.push(empty.withFunctions(other.funcs))
+    fun withFunction(exception: Exception) = withFunction(exception.body)
+    fun withFunction(func: StdFunc) = withFunction(func.body)
+    fun withFunctions(others: Collection<Code>) = codes.push(empty.withFunctions(others))
+    fun data(init: CodeBuilderDataScope.() -> Unit) {
+      val d = CodeBuilderDataScope().apply(init)
+      codes.push(Code(data = d.instrs.toPersistentList()))
+    }
+  }
+
+  class CodeBuilderDataScope {
+    internal val instrs = LinkedList<Data>()
+    operator fun Data.unaryPlus() = instrs.push(this)
+    operator fun StringData.unaryPlus() = body.forEach { instrs.push(it) }
+    operator fun List<Data>.unaryPlus() = forEach { instrs.push(it) }
   }
 }
 

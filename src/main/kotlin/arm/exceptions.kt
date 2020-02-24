@@ -47,20 +47,20 @@ object CheckDivByZero : Exception() {
   override val name = "p_check_divide_by_zero"
 
   private const val errormsg = "DivideByZeroError: divide or modulo by zero\\n\\0"
-  private val msg0 = StringData(errormsg, errormsg.length - 1)
+  private val msgData = StringData(errormsg, errormsg.length - 1)
 
-  private val instructions by lazy {
-    persistentListOf(
-      label,
-      PUSHInstr(LR),
-      CMPInstr(None, Reg(1), ImmOperand2(Immed_8r(0, 0))),
-      LDRInstr(EQCond, Reg(0), ImmEqualLabel(msg0.label)),
-      BLInstr(EQCond, RuntimeError.label),
-      POPInstr(PC)
-    )
+  override val body = Code.write {
+    data { +msgData }
+
+    +label
+    +PUSHInstr(LR)
+    +CMPInstr(None, Reg(1),  0)
+    +LDRInstr(EQCond, Reg(0), ImmEqualLabel(msgData.label))
+    +BLInstr(EQCond, RuntimeError.label)
+    +POPInstr(PC)
+
+    withFunction(RuntimeError)
   }
-
-  override val body = Code(instructions, msg0.body).withFunction(RuntimeError.body)
 }
 
 /**
