@@ -103,6 +103,8 @@ data class Reg(val id: Int) : Register() {
     val first = Reg(0)
     val firstExpr = Reg(4)
     val ret = first
+    val fstArg = first
+    val sndArg = Reg(1)
     /**
      * All registers available by default, excluding [Reg.last]
      */

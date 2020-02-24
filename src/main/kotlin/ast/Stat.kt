@@ -64,16 +64,17 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr(): Code =
-  when(lhs.type) {
-    is IntT -> Code.empty.withFunction(ReadIntStdFunc.body) +
-        ADDInstr(None, false, Reg.ret, SP, lhs.variable.addrFromSP) +
-        BLInstr(ReadIntStdFunc.label)
-    is CharT -> Code.empty.withFunction(ReadCharStdFunc.body) +
-        ADDInstr(None, false, Reg.ret, SP, lhs.variable.addrFromSP) +
-        BLInstr(ReadCharStdFunc.label)
-    else -> NOT_REACHED()
-  }
+  override fun instr(): Code = Assign(lhs, ReadRHS(lhs.type), scope, pos).instr()
+//  override fun instr(): Code =
+//  when(lhs.type) {
+//    is IntT -> Code.empty.withFunction(ReadIntStdFunc.body) +
+//        ADDInstr(None, false, Reg.ret, SP, lhs.variable.addrFromSP) +
+//        BLInstr(ReadIntStdFunc.label)
+//    is CharT -> Code.empty.withFunction(ReadCharStdFunc.body) +
+//        ADDInstr(None, false, Reg.ret, SP, lhs.variable.addrFromSP) +
+//        BLInstr(ReadCharStdFunc.label)
+//    else -> NOT_REACHED()
+//  }
 }
 
 data class Free(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
