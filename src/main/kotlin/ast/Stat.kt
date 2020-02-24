@@ -78,10 +78,13 @@ data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Po
 
 data class Free(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() = when (expr.type) {
-    is AnyPairTs -> Code.empty.withFunction(FreePairFunc.body) +
-      expr.code(Reg.fromExpr) +
-      MOVInstr(rd = Reg.first, op2 = Reg.firstExpr) +
-      BLInstr(FreePairFunc.label)
+    is AnyPairTs -> Code.write {
+      +expr.code(Reg.fromExpr)
+      +MOVInstr(rd = Reg.first, op2 = Reg.firstExpr)
+      +BLInstr(FreePairFunc.label)
+
+      withFunction(FreePairFunc)
+    }
     else -> TODO()
   }
 }
@@ -119,8 +122,11 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
 }
 
 data class Println(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = Print(expr, scope, pos).instr().withFunction(PrintLnStdFunc.body) +
-    BLInstr(PrintLnStdFunc.label)
+  override fun instr() = Code.write {
+    +Print(expr, scope, pos).instr()
+    +BLInstr(PrintLnStdFunc.label)
+    withFunction(PrintLnStdFunc)
+  }
 }
 
 data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val scope: Scope, override val pos: Position) :
@@ -171,12 +177,11 @@ data class While(val cond: Expr, val stat: Stat, override val pos: Position) : S
 }
 
 data class BegEnd(val stat: Stat, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = scope.makeInstrScope().let { (init, end) ->
-    Code.write {
-      +init
-      +stat.instr()
-      +end
-    }
+  override fun instr() = Code.write {
+    val (init, end) = scope.makeInstrScope()
+    +init
+    +stat.instr()
+    +end
   }
 }
 
