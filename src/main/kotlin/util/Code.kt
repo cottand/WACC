@@ -22,7 +22,7 @@ private constructor(
   constructor(instr: Instructions = persistentListOf(), data: Datas = persistentListOf())
     : this(instr, data, persistentSetOf())
 
-  fun combine(other: Code) = Code(instr + other.instr, data + other.data, funcs + other.funcs)
+  fun combine(other: Code) = Code(instr + other.instr, data + other.data, funcs.addAll(other.funcs))
 
   operator fun plus(other: Code) = combine(other)
   operator fun plus(other: Instructions) = combine(Code(other))

@@ -17,7 +17,7 @@ begin
 	int y = 0 ;
 	int z = 0 ;
   println "enter an 3 integers to echo";
-	read x ; 
+	read x;
 	read y;
 	read z;
 	println x;
