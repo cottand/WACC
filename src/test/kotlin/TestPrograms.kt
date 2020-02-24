@@ -13,8 +13,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assumptions.assumeFalse
-import org.junit.jupiter.api.Assumptions.assumingThat
+import org.junit.jupiter.api.Assumptions.*
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.fail
@@ -51,11 +50,13 @@ class TestPrograms {
     private const val defaultInput = "Hello"
   }
 
+  private fun skipIfIgnored(prog: WACCProgram) =
+      assumeTrue(ignoreKeyword !in prog.file.absolutePath) {"File path contains '$ignoreKeyword', skipping test"}
+
   private val waccFiles =
     File(waccExamplesPath).walk()
       .filter { it.isFile && ".wacc" in it.path }
-      .filter { "TEST" in it.canonicalPath }
-      .filterNot { "IGNORE" in it.canonicalPath }
+      .filter { testingKeyword in it.canonicalPath }
       .map { it.asProgram() }
       .toList()
 
@@ -68,6 +69,7 @@ class TestPrograms {
    */
   @ExperimentalTime
   private fun test(program: WACCProgram, doCheckOnly: Boolean) {
+    skipIfIgnored(program)
     val filename = program.file.absolutePath
     val canonicalPath = program.file.canonicalPath
     val input = program.specialInput().getOrElse { defaultInput }
