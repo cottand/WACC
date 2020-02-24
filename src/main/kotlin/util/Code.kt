@@ -75,24 +75,24 @@ private constructor(
 
   class CodeBuilderScope {
     internal val codes = LinkedList<Code>()
-    operator fun Code.unaryPlus() = codes.push(this)
-    operator fun Instr.unaryPlus() = codes.push(Code(instr = persistentListOf(this)))
-    operator fun List<Instr>.unaryPlus() = codes.push(Code(instr = toPersistentList()))
-    fun withFunction(other: Code) = codes.push(empty.withFunctions(other.funcs))
+    operator fun Code.unaryPlus() = codes.addLast(this)
+    operator fun Instr.unaryPlus() = codes.addLast(Code(instr = persistentListOf(this)))
+    operator fun List<Instr>.unaryPlus() = codes.addLast(Code(instr = toPersistentList()))
+    fun withFunction(other: Code) = codes.addLast(empty.withFunction(other))
     fun withFunction(exception: Exception) = withFunction(exception.body)
     fun withFunction(func: StdFunc) = withFunction(func.body)
-    fun withFunctions(others: Collection<Code>) = codes.push(empty.withFunctions(others))
+    fun withFunctions(others: Collection<Code>) = codes.addLast(empty.withFunctions(others))
     fun data(init: CodeBuilderDataScope.() -> Unit) {
       val d = CodeBuilderDataScope().apply(init)
-      codes.push(Code(data = d.instrs.toPersistentList()))
+      codes.addLast(Code(data = d.instrs.toPersistentList()))
     }
   }
 
   class CodeBuilderDataScope {
     internal val instrs = LinkedList<Data>()
-    operator fun Data.unaryPlus() = instrs.push(this)
-    operator fun StringData.unaryPlus() = body.forEach { instrs.push(it) }
-    operator fun List<Data>.unaryPlus() = forEach { instrs.push(it) }
+    operator fun Data.unaryPlus() = instrs.addLast(this)
+    operator fun StringData.unaryPlus() = body.forEach { instrs.addLast(it) }
+    operator fun List<Data>.unaryPlus() = forEach { instrs.addLast(it) }
   }
 }
 
