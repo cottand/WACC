@@ -55,6 +55,17 @@ interface Computable {
 
 sealed class AssRHS : Computable
 
+data class ReadRHS(override val type: Type) : AssRHS() {
+  override fun code(rem: Regs): Code = Code.write {
+    val readFunc = ReadStdFunc(type)
+
+    +BLInstr(readFunc.label)
+    +MOVInstr(rd = rem.head, op2 = Reg.ret)
+
+    withFunction(readFunc)
+  }
+}
+
 data class ExprRHS(val expr: Expr) : AssRHS(), Computable by expr {
   override fun toString() = expr.toString()
 }
@@ -110,18 +121,18 @@ data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
     val exprRem = rem.drop(1).toPersistentList()
 
     return Code.empty +
-      LDRInstr(Reg(0), 8) +
-      // Malloc and store addr in dst
-      BLInstr(MallocStdFunc.label) +
-      MOVInstr(None, false, dst, Reg(0)) +
-      // Compute the fst expr
-      expr1.code(exprRem) +
-      // Put result in pair fst slot
-      STRInstr(exprRem.head, ZeroOffsetAddrMode2(dst)) +
-      // Compute the snd expr
-      expr2.code(exprRem) +
-      // Put result in pair snd slot
-      STRInstr(exprRem.head, ImmOffsetAddrMode2(dst, Immed_12(4)))
+        LDRInstr(Reg(0), 8) +
+        // Malloc and store addr in dst
+        BLInstr(MallocStdFunc.label) +
+        MOVInstr(None, false, dst, Reg(0)) +
+        // Compute the fst expr
+        expr1.code(exprRem) +
+        // Put result in pair fst slot
+        STRInstr(exprRem.head, ZeroOffsetAddrMode2(dst)) +
+        // Compute the snd expr
+        expr2.code(exprRem) +
+        // Put result in pair snd slot
+        STRInstr(exprRem.head, ImmOffsetAddrMode2(dst, Immed_12(4)))
   }
 }
 
@@ -132,10 +143,10 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
   }
 
   override fun code(rem: Regs) = Code.empty.withFunction(CheckNullPointer.body) +
-    pairElem.expr.code(rem) +
-    MOVInstr(None, false, Reg(0), rem.head) +
-    BLInstr(None, CheckNullPointer.label) +
-    LDRInstr(rem.head, rem.head.withOffset(pairElem.offsetFromAddr))
+      pairElem.expr.code(rem) +
+      MOVInstr(None, false, Reg(0), rem.head) +
+      BLInstr(None, CheckNullPointer.label) +
+      LDRInstr(rem.head, rem.head.withOffset(pairElem.offsetFromAddr))
 
   override fun toString() = pairElem.toString()
 }

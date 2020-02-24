@@ -2,6 +2,9 @@ package ic.org.arm
 
 import arrow.core.None
 import arrow.core.some
+import ic.org.ast.CharT
+import ic.org.ast.IntT
+import ic.org.ast.Type
 import ic.org.util.Code
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -81,6 +84,7 @@ object PrintBoolStdFunc : IOFunc() {
 
   override val body by lazy { Code(instructions, msg.body + msg2.body) }
 }
+
 object PrintStringStdFunc : IOFunc() {
   override val name = "p_print_string"
   override val msgTemplate = "%.*s\\0"
@@ -120,39 +124,35 @@ object PrintReferenceStdFunc : IOFunc() {
   }
 }
 
-object ReadIntStdFunc : IOFunc() {
-  override val name = "p_read_int"
-  override val msgTemplate = "%d\\0"
-
+class ReadStdFunc(type: Type) : IOFunc() {
+  init {
+    require(type.matches(CharT) || type.matches(IntT))
+  }
+  private val size = type.size
+  override val msgTemplate = when(size) {
+    Type.Sizes.Word -> "%d\\0"
+    Type.Sizes.Char -> " %c\\0"
+  }
+  override val name = when(size) {
+    Type.Sizes.Word ->"p_read_int"
+    Type.Sizes.Char -> "p_read_char"
+  }
   override val instructions by lazy {
     persistentListOf(
       label,
       PUSHInstr(LR),
-      MOVInstr(rd = Reg(1), op2 = Reg(0)),
-      LDRInstr(Reg.ret, ImmEqualLabel(msg.label)),
-      ADDInstr(None, false, Reg(0), Reg(0), 4),
+      ADDInstr(rd = SP, s = false, rn = SP, int8b = -size.bytes),
+      MOVInstr(rd = Reg.sndArg, op2 =  SP), // Place Stack - 4 addr in r1
+      LDRInstr(Reg.fstArg, ImmEqualLabel(msg.label)),
+      ADDInstr(s = false, rd = Reg.fstArg, rn = Reg.fstArg, int8b = Type.Sizes.Word.bytes),
       BLInstr("scanf"),
+      type.sizedLDR(Reg.ret, SP.zeroOffsetAddr),
+      ADDInstr(rd = SP, s = false, rn = SP, int8b = size.bytes),
       POPInstr(PC)
     )
   }
 }
 
-object ReadCharStdFunc : IOFunc() {
-  override val name = "p_read_char"
-  override val msgTemplate = " %c\\0"
-
-  override val instructions by lazy {
-    persistentListOf(
-      label,
-      PUSHInstr(LR),
-      MOVInstr(rd = Reg(1), op2 = Reg(0)),
-      LDRInstr(Reg.ret, ImmEqualLabel(msg.label)),
-      ADDInstr(None, false, Reg(0), Reg(0), 4),
-      BLInstr("scanf"),
-      POPInstr(PC)
-    )
-  }
-}
 
 object MallocStdFunc : StdFunc() {
   override val name = "malloc"
