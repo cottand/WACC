@@ -1,0 +1,10 @@
+# create and free an array
+
+# Output:
+# #error#
+
+begin
+  int[] x = [1, 2, 3, 4];
+  free x;
+  exit x[0]
+end
