@@ -124,35 +124,44 @@ object PrintReferenceStdFunc : IOFunc() {
   }
 }
 
-class ReadStdFunc(type: Type) : IOFunc() {
-  init {
-    require(type.matches(CharT) || type.matches(IntT))
-  }
-  private val size = type.size
-  override val msgTemplate = when(size) {
-    Type.Sizes.Word -> "%d\\0"
-    Type.Sizes.Char -> " %c\\0"
-  }
-  override val name = when(size) {
-    Type.Sizes.Word ->"p_read_int"
-    Type.Sizes.Char -> "p_read_char"
-  }
-  override val instructions by lazy {
-    persistentListOf(
-      label,
-      PUSHInstr(LR),
-      ADDInstr(rd = SP, s = false, rn = SP, int8b = -size.bytes),
-      MOVInstr(rd = Reg.sndArg, op2 =  SP), // Place Stack - 4 addr in r1
-      LDRInstr(Reg.fstArg, ImmEqualLabel(msg.label)),
-      ADDInstr(s = false, rd = Reg.fstArg, rn = Reg.fstArg, int8b = Type.Sizes.Word.bytes),
-      BLInstr("scanf"),
-      type.sizedLDR(Reg.ret, SP.zeroOffsetAddr),
-      ADDInstr(rd = SP, s = false, rn = SP, int8b = size.bytes),
-      POPInstr(PC)
-    )
+/**
+ * Returns the read value in r0, takes no arguments.
+ */
+sealed class ReadStdFunc : StdFunc() {
+  abstract val type: Type
+  abstract val template: StringData
+
+  override val body by lazy {
+    Code.write {
+      data { +template }
+
+      +label
+      +PUSHInstr(LR)
+      +ADDInstr(rd = SP, s = false, rn = SP, int8b = -type.size.bytes)
+      +MOVInstr(rd = Reg.sndArg, op2 = SP) // Place Stack - 4 addr in r1
+      +LDRInstr(Reg.fstArg, ImmEqualLabel(template.label))
+      +ADDInstr(s = false, rd = Reg.fstArg, rn = Reg.fstArg, int8b = Type.Sizes.Word.bytes)
+      +BLInstr("scanf")
+      +type.sizedLDR(Reg.ret, SP.zeroOffsetAddr)
+      +ADDInstr(rd = SP, s = false, rn = SP, int8b = type.size.bytes)
+      +POPInstr(PC)
+    }
   }
 }
 
+object ReadInt : ReadStdFunc() {
+  override val name = "p_read_int"
+  override val type: Type = IntT
+  private const val templateStr = "%d\\0"
+  override val template = StringData(templateStr, templateStr.length - 1)
+}
+
+object ReadChar : ReadStdFunc() {
+  override val name = "p_read_char"
+  override val type = CharT
+  private const val templateStr = "%c\\0"
+  override val template = StringData(templateStr, templateStr.length - 1)
+}
 
 object MallocStdFunc : StdFunc() {
   override val name = "malloc"
