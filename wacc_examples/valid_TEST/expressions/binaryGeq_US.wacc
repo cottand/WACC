@@ -6,5 +6,10 @@
 # Program:
 
 begin
-  bool x = 1 >= 2
+  bool x = 1 >= 2;
+  if x then
+    exit 0
+  else
+    exit 1
+  fi
 end

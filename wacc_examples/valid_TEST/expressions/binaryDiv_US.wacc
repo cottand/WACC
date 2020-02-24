@@ -6,5 +6,6 @@
 # Program:
 
 begin
-  int x = 1 / 2
+  int x = 10 / 2;
+  exit x
 end

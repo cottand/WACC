@@ -6,5 +6,10 @@
 # Program:
 
 begin
-  bool z = false && true
+  bool x = false && true;
+  if x then
+    exit 0
+  else
+    exit 1
+fi
 end

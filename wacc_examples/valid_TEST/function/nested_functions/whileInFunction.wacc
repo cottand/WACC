@@ -1,0 +1,19 @@
+# has a while inside a function
+
+# Output:
+# #empty#
+
+# Program:
+
+begin
+  int f(int x) is
+      int z = 0;
+      while x > z do
+        z = z + 1
+      done;
+      return z
+  end
+
+  int s = call f(8);
+  exit s
+end

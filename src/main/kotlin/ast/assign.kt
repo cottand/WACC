@@ -153,7 +153,7 @@ data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
               // minus the size of the function's stack (which will be compensated by when passing [init])
               val dest = SP.withOffset(param.addrFromSP - stackSize - Type.Sizes.Word.bytes)
               expr.code(rem) +
-                      expr.type.sizedSTR(rem.head, dest).print()
+                      expr.type.sizedSTR(rem.head, dest)
             }.flatten() +
             init +
             BLInstr(func.label) +

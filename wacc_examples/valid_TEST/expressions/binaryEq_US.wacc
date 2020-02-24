@@ -8,5 +8,10 @@
 begin
   bool x = 1 == 2;
   bool y = 'a' == 'b';
-  bool z = false == true
+  bool z = false == true;
+  if x && y && z then
+    exit 0
+  else
+    exit 1
+fi
 end
