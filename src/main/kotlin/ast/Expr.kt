@@ -65,6 +65,8 @@ data class StrLit(val value: String) : Expr() {
   override val weight = 1
 
   private fun countEscape(): Int {
+    if (value.length < 2)
+      return 0
     var prev = value[0]
     var counter = 0
     for (c in value.drop(1)) {
