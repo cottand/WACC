@@ -1,0 +1,21 @@
+# simple print empty strings
+
+# Output:
+# some nothings
+
+# Program:
+
+begin
+  print "Hello World!\n";
+  print "";
+  println "";
+  println "";
+  println "";
+  print "a";
+  println "";
+  print " s ";
+  println "";
+  print "";
+  println "";
+  print "Hello World!\n"
+end

@@ -12,6 +12,7 @@ import com.google.gson.Gson
 import ic.org.util.NOT_REACHED
 import ic.org.util.createWithDirs
 import ic.org.util.joinLines
+import ic.org.util.print
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import java.io.File
 
@@ -35,7 +36,7 @@ object ReferenceCompilerAPI {
         queryReference<CompilerReply>(prog, emulatorUrl, input, "-x", "-a")
           .getOrElse { System.err.println("Failed to reach the reference emulator"); assumeTrue(false); NOT_REACHED() }
           .compiler_out.split("\n")
-          .filter { it.isNotEmpty() }.toList()
+          .toList()
           .also { cached.createWithDirs() }
           .also { cached.writeText(it.joinLines()) }
     val assembly = out
