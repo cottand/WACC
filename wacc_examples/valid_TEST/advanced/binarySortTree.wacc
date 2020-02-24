@@ -7,6 +7,9 @@
 # first element has a type <int, pair>, the int is the integer stored in the 
 # node, the pair is the pointer to the second pair element. The second pair 
 # element has a type <pair, pair> which is the pointer to the two children 
+# Input_particular:
+# 5 12 8 54 2 100
+# End of Input_particular
 # nodes in the binary search tree.
 
 begin

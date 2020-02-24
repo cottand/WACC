@@ -159,7 +159,7 @@ object ReadInt : ReadStdFunc() {
 object ReadChar : ReadStdFunc() {
   override val name = "p_read_char"
   override val type = CharT
-  private const val templateStr = "%c\\0"
+  private const val templateStr = " %c\\0"
   override val template = StringData(templateStr, templateStr.length - 1)
 }
 

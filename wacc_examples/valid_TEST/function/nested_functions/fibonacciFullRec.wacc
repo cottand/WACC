@@ -5,6 +5,9 @@
 # Please enter n (should not be too large): #input#
 # The input n is #output#
 # The nth fibonacci number is #output#
+# Input_particular:
+# 3
+# End of Input_particular
 
 # Program:
 
