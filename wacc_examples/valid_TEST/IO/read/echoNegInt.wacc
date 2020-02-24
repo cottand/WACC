@@ -2,7 +2,7 @@
 
 # Note currently, reference compiler can't handle negative inputs...
 # Input_particular:
-# 13
+# -13
 # End of Input_particular
 
 # Output:

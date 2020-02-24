@@ -53,7 +53,12 @@ object ReferenceCompilerAPI {
       .takeWhile { "The exit code is" !in it }
       .map { if (delimiters in it) it.replace(delimiters, "") else it }
       .joinLines()
-    val code = out.last { "The exit code is" in it }.filter { str -> str.isDigit() }.toInt()
+    val code = try {
+      out.last { "The exit code is" in it }.filter { str -> str.isDigit() }.toInt()
+    } catch (e: Exception) {
+      System.err.println("Could not parse exit code from reference compiler. Output:\n${out.joinLines()}\n")
+      -1
+    }
     return RefAnswer(assembly, runtimeOut, code)
   }
 
