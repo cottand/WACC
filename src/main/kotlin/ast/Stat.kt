@@ -65,18 +65,16 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() =
-    when (lhs.type) {
-      is IntT -> Code.empty.withFunction(ReadIntStdFunc.body) +
-              ADDInstr(None, false, Reg(4), SP, 0) +
-              MOVInstr(None, false, rd = Reg.ret, op2 = Reg(4)) +
-              BLInstr(ReadIntStdFunc.label)
-      is CharT -> Code.empty.withFunction(ReadCharStdFunc.body) +
-              ADDInstr(None, false, Reg(4), SP, 0) +
-              MOVInstr(None, false, rd = Reg.ret, op2 = Reg(4)) +
-              BLInstr(ReadCharStdFunc.label)
-      else -> TODO()
-    }
+  override fun instr(): Code =
+  when(lhs.type) {
+    is IntT -> Code.empty.withFunction(ReadIntStdFunc.body) +
+        ADDInstr(None, false, Reg.ret, SP, lhs.variable.addrFromSP) +
+        BLInstr(ReadIntStdFunc.label)
+    is CharT -> Code.empty.withFunction(ReadCharStdFunc.body) +
+        ADDInstr(None, false, Reg.ret, SP, lhs.variable.addrFromSP) +
+        BLInstr(ReadCharStdFunc.label)
+    else -> NOT_REACHED()
+  }
 }
 
 data class Free(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
@@ -103,7 +101,7 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
       is IntT -> expr.eval(Reg.ret).withFunction(PrintIntStdFunc.body) +
               BLInstr(PrintIntStdFunc.label)
       is BoolT -> expr.code(Reg.all).withFunction(PrintBoolStdFunc.body) +
-              BLInstr(PrintBoolStdFunc.label)
+          BLInstr(PrintBoolStdFunc.label)
       is CharT -> expr.code(Reg.all) +
               BLInstr(Label("putchar"))
       is StringT -> expr.code(Reg.all).withFunction(PrintStringStdFunc.body) +
@@ -138,17 +136,17 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
 
     // This assumes cond.code will have made the actual comparison...
     return cond.code(Reg.fromExpr) +
-            CMPInstr(cond = None, rn = Reg.firstExpr, int8b = 0) + // Test whether cond == 0
-            BInstr(cond = EQCond.some(), label = jumpElse) + /// If so, jump to the else (cond was false!)
-            initThen + // init the scope stack
-            then.instr() +
-            endThen + // end the scope stack
-            BInstr(cond = None, label = jumpContinue) + // exit the if
-            jumpElse + // begin `else`
-            initElse + // same as the `then` branch
-            `else`.instr() +
-            endElse +
-            jumpContinue
+        CMPInstr(cond = None, rn = Reg.firstExpr, int8b = 0) + // Test whether cond == 0
+        BInstr(cond = EQCond.some(), label = jumpElse) + /// If so, jump to the else (cond was false!)
+        initThen + // init the scope stack
+        then.instr() +
+        endThen + // end the scope stack
+        BInstr(cond = None, label = jumpContinue) + // exit the if
+        jumpElse + // begin `else`
+        initElse + // same as the `then` branch
+        `else`.instr() +
+        endElse +
+        jumpContinue
   }
 }
 
@@ -162,15 +160,15 @@ data class While(val cond: Expr, val stat: Stat, override val pos: Position) : S
     val condLabel = Label("while_cond_${uuid}_at_line_$line")
 
     return Code.empty +
-            BInstr(cond = None, label = condLabel) +
-            bodyLabel +
-            initScope +
-            stat.instr() +
-            endScope +
-            condLabel +
-            cond.eval(Reg(4)) +
-            CMPInstr(cond = None, rn = Reg(4), int8b = 1) + // Test whether cond == 1
-            BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
+        BInstr(cond = None, label = condLabel) +
+        bodyLabel +
+        initScope +
+        stat.instr() +
+        endScope +
+        condLabel +
+        cond.eval(Reg(4)) +
+        CMPInstr(cond = None, rn = Reg(4), int8b = 1) + // Test whether cond == 1
+        BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
   }
 }
 

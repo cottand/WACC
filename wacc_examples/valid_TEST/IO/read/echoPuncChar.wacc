@@ -1,5 +1,9 @@
 # echo the user's input char
 
+# Input_particular:
+# \"
+# End of Input_particular
+
 # Output:
 # enter a character to echo
 # #input#
