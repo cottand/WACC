@@ -1,0 +1,26 @@
+# echo the user's input int
+
+# Input_particular:
+# 5 6 7
+# End of Input_particular
+
+
+# Output:
+# enter an integer to echo
+# #input#
+# #output#
+
+# Program:
+
+begin
+	int x = 0 ;
+	int y = 0 ;
+	int z = 0 ;
+  println "enter an 3 integers to echo";
+	read x ; 
+	read y;
+	read z;
+	println x;
+	println y;
+	println z 
+end
