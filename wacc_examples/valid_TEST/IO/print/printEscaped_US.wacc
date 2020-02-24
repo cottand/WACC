@@ -1,0 +1,11 @@
+# print escaped char
+
+# Output:
+# '
+
+# Program
+
+begin
+  char c = '\n';
+  print c
+end
