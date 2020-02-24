@@ -112,6 +112,7 @@ data class ArrayElemExpr internal constructor(
         MOVInstr(rd = nxt, op2 = dst) + // Compute expr and place in r0 and nxt
         variable.get(scope, dst) + // Place ident pointer in dst
         MOVInstr(rd = Reg(1), op2 = dst) + // Place dst (ident) also in r1
+
         BLInstr(CheckArrayBounds.label) +
         // Increment dst (ident) so we skip the actual first element, the array size
         ADDInstr(cond = None, s = false, rd = dst, rn = dst, int8b = Type.Sizes.Word.bytes) +
@@ -140,7 +141,9 @@ data class ArrayElemExpr internal constructor(
         arrType !is ArrayT -> NOT_REACHED()
         exprs.size > arrType.depth ->
           TypeError(pos, AnyArrayT(), arrType, "Array access").toInvalidParsed()
-        else -> ArrayElemExpr(variable, exprs, scope, arrType.nthNestedType(exprs.size)).valid()
+        else -> {
+          ArrayElemExpr(variable, exprs, scope, arrType.nthNestedType(exprs.size)).valid()
+        }
       }
     }
   }

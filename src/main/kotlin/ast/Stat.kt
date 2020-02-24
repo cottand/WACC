@@ -3,7 +3,9 @@ package ic.org.ast
 import arrow.core.None
 import arrow.core.some
 import ic.org.arm.*
+import ic.org.ast.NullPairLit.type
 import ic.org.util.*
+import kotlinx.collections.immutable.toPersistentList
 
 sealed class Stat {
   abstract val scope: Scope
@@ -31,7 +33,28 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
   override fun instr() = Code.empty +
           when (lhs) {
             is IdentLHS -> lhs.variable.set(rhs, scope)
-            is ArrayElemLHS -> TODO()
+            is ArrayElemLHS -> Code.empty.withFunction(CheckArrayBounds.body) +
+                    lhs.variable.get(scope, Reg(4)) + // Put array var in r4
+                    // Iteratively load array addresses into r0 for nested arrays
+                    lhs.indices.dropLast(1).map {
+                      it.code(Reg.fromExpr.tail) + // Load index into r5
+
+                      MOVInstr(None, false, Reg(1), Reg(4)) +
+                      MOVInstr(None, false, Reg(0), Reg(5)) +
+                      BLInstr(CheckArrayBounds.label) +
+                      ADDInstr(None, false, Reg(4), Reg(4), 4) + // Add 4 bytes offset since 1st slot is array size
+                      type.sizedLDR(Reg(4), Reg(4).withOffset(Reg(5), log2(type.size.bytes)))
+                    }.flatten() +
+
+                    // Get index of array elem by evaluating the last expression
+                    lhs.indices.last().code(Reg.fromExpr.tail) + // Load index into r5
+                    MOVInstr(None, false, Reg(1), Reg(4)) +
+                    MOVInstr(None, false, Reg(0), Reg(5)) +
+                    BLInstr(CheckArrayBounds.label) +
+
+                    ADDInstr(None, false, Reg(4), Reg(4), 4) + // Add 4 bytes offset since 1st slot is array size
+                    rhs.eval(Reg(6), Reg.fromExpr.drop(2)) + // eval rhs into r1
+                    STRInstr(Reg(6), Reg(4).withOffset(Reg(5), log2(type.size.bytes))) // Put rhs into addr pointed by r0
             is PairElemLHS -> Code.empty.withFunction(CheckNullPointer.body) +
                     rhs.eval(Reg(1)) + // Put RHS expr in r1
                     lhs.variable.get(scope, Reg(0)) + // Put Pair Ident in r0 (which is an addr)

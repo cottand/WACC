@@ -1,0 +1,12 @@
+# assign to array LHS
+
+# Output:
+# 5
+
+# Program:
+
+begin
+  int[] a = [1, 2, 3];
+  a[1] = 5;
+  exit a[1]
+end

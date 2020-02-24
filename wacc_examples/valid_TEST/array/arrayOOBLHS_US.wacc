@@ -1,0 +1,12 @@
+# OOB error for array on LHS
+
+# Output:
+# #error#
+
+# Program:
+
+begin
+  int[] a = [1, 2];
+  a[100] = 3;
+  exit a[0]
+end
