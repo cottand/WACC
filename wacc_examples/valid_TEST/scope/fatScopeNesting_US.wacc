@@ -1,0 +1,24 @@
+# simple scoping test
+
+# Output:
+# 18
+
+# Program:
+
+begin
+  begin
+  int a = 3;
+    begin
+      begin
+      int b = 4 + a;
+        begin
+        int c = 4 + a + b;
+        println c
+        end
+      end;
+      int j = 1 + a
+    end;
+    exit a
+  end
+end
+
