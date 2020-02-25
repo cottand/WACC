@@ -17,8 +17,10 @@ val Register.zeroOffsetAddr
 
 fun Register.withOffset(int12b: Int) =
   ImmOffsetAddrMode2(this, Immed_12(int12b))
+
 fun Register.withOffset(regOffset: Register, sign: Sign = Plus) =
   RegOffsetAddrMode2(this, sign, regOffset)
+
 fun Register.withOffset(regOffset: Register, lsl5bit: UByte, sign: Sign = Plus) =
   RegScaledOffsetLSL(
     this,

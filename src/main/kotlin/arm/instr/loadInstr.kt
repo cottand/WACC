@@ -7,8 +7,6 @@ import ic.org.arm.CondFlag
 import ic.org.arm.Flag
 import ic.org.arm.Register
 import ic.org.arm.addressing.AddrMode2
-import ic.org.arm.addressing.AddrMode2P
-import ic.org.arm.addressing.AddrMode3
 import ic.org.arm.addressing.ImmEquals32b
 
 data class LDRInstr(override val cond: Flag = None, val rd: Register, val addressing: AddrMode2) : ARMCondInstr() {

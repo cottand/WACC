@@ -10,9 +10,9 @@ import arrow.core.valid
 import ast.graph.asGraph
 import ic.org.arm.Directive
 import ic.org.arm.Label
+import ic.org.arm.asm
 import ic.org.ast.Prog
 import ic.org.ast.build.asAst
-import ic.org.arm.asm
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
 import ic.org.util.*

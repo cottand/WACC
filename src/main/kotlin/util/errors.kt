@@ -9,7 +9,10 @@ import arrow.core.extensions.list.foldable.forAll
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.arm.Ranges
-import ic.org.ast.*
+import ic.org.ast.AssRHS
+import ic.org.ast.Expr
+import ic.org.ast.Ident
+import ic.org.ast.Type
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
@@ -94,10 +97,10 @@ data class NullPairError(val pos: Position) : SemanticError() {
 
 data class IfElseNextTypeMismatchError(override val msg: String) : SemanticError() {
   constructor(pos: Position, t1: Type, t2: Type) :
-      this(
-        "$pos, differing returning types in if-else-next branching.\n" +
-            "    Got `$t1` in a one path and `$t2` in another"
-      )
+    this(
+      "$pos, differing returning types in if-else-next branching.\n" +
+        "    Got `$t1` in a one path and `$t2` in another"
+    )
 }
 
 data class ControlFlowTypeError(override val msg: String) : SyntacticError(msg) {

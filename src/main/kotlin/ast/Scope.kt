@@ -8,7 +8,10 @@ import ic.org.arm.addressing.withOffset
 import ic.org.arm.instr.ADDInstr
 import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.SUBInstr
-import ic.org.util.*
+import ic.org.util.NOT_REACHED
+import ic.org.util.Position
+import ic.org.util.RedeclarationError
+import ic.org.util.head
 import kotlinx.collections.immutable.persistentListOf
 
 /**

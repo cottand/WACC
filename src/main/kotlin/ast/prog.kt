@@ -1,11 +1,14 @@
 package ic.org.ast
 
-import ic.org.arm.*
+import ic.org.arm.Directive
+import ic.org.arm.LR
+import ic.org.arm.Label
+import ic.org.arm.PC
 import ic.org.arm.instr.POPInstr
 import ic.org.arm.instr.PUSHInstr
 import ic.org.util.Code
-import org.antlr.v4.runtime.tree.TerminalNode
 import kotlinx.collections.immutable.plus
+import org.antlr.v4.runtime.tree.TerminalNode
 
 // <program>
 data class Prog(val funcs: List<Func>, val body: Stat, val globalScope: GlobalScope)

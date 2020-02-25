@@ -31,41 +31,41 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
   // See Decl.instr()
   override fun instr() = Code.empty +
-          when (lhs) {
-            is IdentLHS -> lhs.variable.set(rhs, scope)
-            is ArrayElemLHS -> Code.empty.withFunction(CheckArrayBounds.body) +
-                    lhs.variable.get(scope, Reg(4)) + // Put array var in r4
-                    // Iteratively load array addresses into r0 for nested arrays
-                    lhs.indices.dropLast(1).map {
-                      it.code(Reg.fromExpr.tail) + // Load index into r5
-                              MOVInstr(None, false, Reg(1), Reg(4)) +
-                              MOVInstr(None, false, Reg(0), Reg(5)) +
-                              BLInstr(CheckArrayBounds.label) +
-                              ADDInstr(
-                                None,
-                                false,
-                                Reg(4),
-                                Reg(4),
-                                4
-                              ) + // Add 4 bytes offset since 1st slot is array size
-                              rhs.type.sizedLDR(Reg(4), Reg(4).withOffset(Reg(5), log2(rhs.type.size.bytes)))
-                    }.flatten() +
-                    // Get index of array elem by evaluating the last expression
-                    lhs.indices.last().code(Reg.fromExpr.tail) + // Load index into r5
-                    MOVInstr(None, false, Reg(1), Reg(4)) +
-                    MOVInstr(None, false, Reg(0), Reg(5)) +
-                    BLInstr(CheckArrayBounds.label) +
+    when (lhs) {
+      is IdentLHS -> lhs.variable.set(rhs, scope)
+      is ArrayElemLHS -> Code.empty.withFunction(CheckArrayBounds.body) +
+        lhs.variable.get(scope, Reg(4)) + // Put array var in r4
+        // Iteratively load array addresses into r0 for nested arrays
+        lhs.indices.dropLast(1).map {
+          it.code(Reg.fromExpr.tail) + // Load index into r5
+            MOVInstr(None, false, Reg(1), Reg(4)) +
+            MOVInstr(None, false, Reg(0), Reg(5)) +
+            BLInstr(CheckArrayBounds.label) +
+            ADDInstr(
+              None,
+              false,
+              Reg(4),
+              Reg(4),
+              4
+            ) + // Add 4 bytes offset since 1st slot is array size
+            rhs.type.sizedLDR(Reg(4), Reg(4).withOffset(Reg(5), log2(rhs.type.size.bytes)))
+        }.flatten() +
+        // Get index of array elem by evaluating the last expression
+        lhs.indices.last().code(Reg.fromExpr.tail) + // Load index into r5
+        MOVInstr(None, false, Reg(1), Reg(4)) +
+        MOVInstr(None, false, Reg(0), Reg(5)) +
+        BLInstr(CheckArrayBounds.label) +
 
-                    ADDInstr(None, false, Reg(4), Reg(4), 4) + // Add 4 bytes offset since 1st slot is array size
-                    rhs.eval(Reg(6), Reg.fromExpr.drop(2)) + // eval rhs into r6
-                    rhs.type.sizedSTR(Reg(6), Reg(4).withOffset(Reg(5), log2(rhs.type.size.bytes)))
-            is PairElemLHS -> Code.empty.withFunction(CheckNullPointer.body) +
-                    rhs.eval(Reg(1)) + // Put RHS expr in r1
-                    lhs.variable.get(scope, Reg(0)) + // Put Pair Ident in r0 (which is an addr)
-                    BLInstr(None, CheckNullPointer.label) +
-                    // STR r1 [r0 + pairElemOffset]
-                    rhs.type.sizedSTR(Reg(1), Reg(0).withOffset(lhs.pairElem.offsetFromAddr))
-          }
+        ADDInstr(None, false, Reg(4), Reg(4), 4) + // Add 4 bytes offset since 1st slot is array size
+        rhs.eval(Reg(6), Reg.fromExpr.drop(2)) + // eval rhs into r6
+        rhs.type.sizedSTR(Reg(6), Reg(4).withOffset(Reg(5), log2(rhs.type.size.bytes)))
+      is PairElemLHS -> Code.empty.withFunction(CheckNullPointer.body) +
+        rhs.eval(Reg(1)) + // Put RHS expr in r1
+        lhs.variable.get(scope, Reg(0)) + // Put Pair Ident in r0 (which is an addr)
+        BLInstr(None, CheckNullPointer.label) +
+        // STR r1 [r0 + pairElemOffset]
+        rhs.type.sizedSTR(Reg(1), Reg(0).withOffset(lhs.pairElem.offsetFromAddr))
+    }
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
@@ -105,29 +105,29 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
   override fun instr(): Code =
     when (expr.type) {
       is IntT -> expr.code(Reg.fromExpr).withFunction(PrintIntStdFunc.body) +
-              MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-              BLInstr(PrintIntStdFunc.label)
+        MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
+        BLInstr(PrintIntStdFunc.label)
       is BoolT -> expr.code(Reg.fromExpr).withFunction(PrintBoolStdFunc.body) +
-              MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-              BLInstr(PrintBoolStdFunc.label)
+        MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
+        BLInstr(PrintBoolStdFunc.label)
       is CharT -> expr.code(Reg.fromExpr) +
-              MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-              BLInstr(Label("putchar"))
+        MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
+        BLInstr(Label("putchar"))
       is StringT -> expr.code(Reg.fromExpr).withFunction(PrintStringStdFunc.body) +
-              MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-              BLInstr(PrintStringStdFunc.label)
+        MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
+        BLInstr(PrintStringStdFunc.label)
       is ArrayT -> if ((expr.type as ArrayT).type is CharT) {
         expr.code(Reg.fromExpr).withFunction(PrintStringStdFunc.body) +
-                MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-                BLInstr(PrintStringStdFunc.label)
+          MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
+          BLInstr(PrintStringStdFunc.label)
       } else {
         expr.code(Reg.fromExpr).withFunction(PrintReferenceStdFunc.body) +
-                MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-                BLInstr(PrintReferenceStdFunc.label)
+          MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
+          BLInstr(PrintReferenceStdFunc.label)
       }
       is AnyPairTs -> expr.code(Reg.fromExpr).withFunction(PrintReferenceStdFunc.body) +
-              MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-              BLInstr(PrintReferenceStdFunc.label)
+        MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
+        BLInstr(PrintReferenceStdFunc.label)
       else -> NOT_REACHED()
     }
 }
@@ -174,15 +174,15 @@ data class While(val cond: Expr, val body: Stat, override val scope: Scope, over
     val condLabel = Label("while_cond_${uuid}_at_line_$line")
 
     return Code.empty +
-            BInstr(cond = None, label = condLabel) +
-            bodyLabel +
-            initScope +
-            body.instr() +
-            endScope +
-            condLabel +
-            cond.eval(Reg(4)) +
-            CMPInstr(cond = None, rn = Reg(4), int8b = 1) + // Test whether cond == 1
-            BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
+      BInstr(cond = None, label = condLabel) +
+      bodyLabel +
+      initScope +
+      body.instr() +
+      endScope +
+      condLabel +
+      cond.eval(Reg(4)) +
+      CMPInstr(cond = None, rn = Reg(4), int8b = 1) + // Test whether cond == 1
+      BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
   }
 }
 

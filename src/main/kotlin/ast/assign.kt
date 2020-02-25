@@ -185,7 +185,7 @@ data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
     +init
     +BLInstr(func.label)
     +end
-    +MOVInstr(rd = rem.head, op2  = Reg.ret)
+    +MOVInstr(rd = rem.head, op2 = Reg.ret)
   }
 
   //   func.funcScope.makeInstrScope().let { (init, end, stackSize) ->

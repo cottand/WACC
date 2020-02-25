@@ -1,6 +1,6 @@
 package ic.org.ast
 
-import ic.org.arm.*
+import ic.org.arm.Register
 import ic.org.arm.addressing.AddrMode2
 import ic.org.arm.instr.LDRBInstr
 import ic.org.arm.instr.LDRInstr
@@ -34,7 +34,6 @@ sealed class Type {
     Char(1);
   }
 }
-
 
 sealed class BaseT : Type() {
   override fun matches(other: Type) = this == other
@@ -83,7 +82,7 @@ data class ArrayT private constructor(val type: Type) : AnyArrayT() {
   }
 
   val nestedType: Type
-   get() = when (type) {
+    get() = when (type) {
       is ArrayT -> type.nestedType
       else -> type
     }

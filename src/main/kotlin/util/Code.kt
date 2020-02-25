@@ -59,7 +59,7 @@ private constructor(
 
   companion object {
 
-    fun write(init: CodeBuilderScope.() -> Unit)  =
+    fun write(init: CodeBuilderScope.() -> Unit) =
       CodeBuilderScope().apply(init).codes.flatten()
 
     val empty = Code(

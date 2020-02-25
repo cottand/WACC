@@ -56,7 +56,7 @@ data class SUBInstr(
     rd: Register,
     rn: Register,
     op2: Register
-  ) :  this(cond, s, rd, rn, RegOperand2(op2))
+  ) : this(cond, s, rd, rn, RegOperand2(op2))
 
   constructor(
     cond: Flag = None,

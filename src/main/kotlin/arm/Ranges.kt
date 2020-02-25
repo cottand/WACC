@@ -2,7 +2,6 @@
 
 package ic.org.arm
 
-import java.lang.Math.pow
 import kotlin.math.pow
 
 /**

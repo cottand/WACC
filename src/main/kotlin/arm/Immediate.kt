@@ -16,9 +16,11 @@ data class Immed_8(val v: Byte) : Printable {
  */
 data class Immed_5(val v: UByte) : Printable {
   constructor(v: Int) : this(v.toUByte())
+
   init {
     require(v.toUInt() in Ranges._5b.positive)
   }
+
   override val code = v.toString()
 }
 
@@ -42,5 +44,6 @@ data class Immed_12(val v: Int) : Printable {
   init {
     require(v in Ranges._12b)
   }
+
   override val code = v.toString()
 }

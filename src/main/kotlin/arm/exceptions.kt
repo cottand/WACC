@@ -57,7 +57,7 @@ object CheckDivByZero : Exception() {
 
     +label
     +PUSHInstr(LR)
-    +CMPInstr(None, Reg(1),  0)
+    +CMPInstr(None, Reg(1), 0)
     +LDRInstr(EQCond, Reg(0), ImmEqualLabel(msgData.label))
     +BLInstr(EQCond, RuntimeError.label)
     +POPInstr(PC)

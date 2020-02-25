@@ -2,7 +2,6 @@ package ic.org.ast.build
 
 import antlr.WACCParser.*
 import arrow.core.Validated.Valid
-import arrow.core.combine
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.ast.*

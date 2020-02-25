@@ -1,9 +1,10 @@
 package ic.org.ast.build
 
 import antlr.WACCParser.*
-import arrow.core.*
-import arrow.core.extensions.list.monadFilter.filterMap
-import arrow.core.extensions.list.zip.zipWith
+import arrow.core.getOrElse
+import arrow.core.invalid
+import arrow.core.toOption
+import arrow.core.valid
 import ic.org.ast.*
 import ic.org.util.*
 import kotlinx.collections.immutable.toPersistentList
