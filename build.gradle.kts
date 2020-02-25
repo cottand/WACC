@@ -2,13 +2,9 @@
 
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.util.stream.Stream
-import kotlin.streams.toList
 
 plugins {
   kotlin("jvm") version "1.3.61"
-  // Serialization
-  kotlin("plugin.serialization") version "1.3.61"
   // Gradle Shadow plugin for building a fat jar
   id("com.github.johnrengelman.shadow") version "5.2.0"
   antlr
@@ -27,7 +23,7 @@ repositories {
 
 val arrowVer = "0.10.4"
 val antlrVer = "4.7"
-val ktorVer = "1.3.1"
+val fuelVer = "2.2.1"
 dependencies {
 
   // Kotlin standard library
@@ -40,21 +36,10 @@ dependencies {
   implementation("io.arrow-kt:arrow-optics:$arrowVer")
   implementation("io.arrow-kt:arrow-syntax:$arrowVer")
 
-  // Ktor http client to query the reference compiler
-  testImplementation("io.ktor:ktor-client-core:$ktorVer")
-  testImplementation("io.ktor:ktor-client-cio:$ktorVer")
-  testImplementation("io.ktor:ktor-client-serialization-jvm:$ktorVer")
-  testImplementation("io.ktor:ktor-gson:$ktorVer")
-  testImplementation("io.ktor:ktor-client-gson:$ktorVer")
+  // Http client Fuel and serialisation lib Gson in order to call the ref compiler
   testImplementation("com.google.code.gson:gson:2.8.5")
-
-  val fuelVer = "2.2.1"
-
   testImplementation("com.github.kittinunf.fuel:fuel:$fuelVer")
   testImplementation("com.github.kittinunf.fuel:fuel-gson:$fuelVer")
-
-  // TODO can it be removed
-  implementation("org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.14.0")
 
   antlr("org.antlr:antlr4:$antlrVer")
 
