@@ -67,12 +67,7 @@ data class CompileResult(val success: Boolean, val exitCode: Int, val msg: Strin
       msg = "Compiled in ${duration.inMilliseconds.toLong()}ms"
     )
 
-    fun success(duration: Duration, output: String) = CompileResult(
-      success = true,
-      exitCode = 0,
-      msg = "Compiled in ${duration.inMilliseconds.toLong()}ms",
-      out = output.some()
-    )
+    fun success(duration: Duration, output: String) = checkSuccess(duration).copy(out = output.some())
   }
 }
 
