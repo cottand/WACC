@@ -60,7 +60,7 @@ sealed class Scope {
    * @see Scope.stackSizeSoFar
    */
   fun addVariable(pos: Position, t: Type, i: Ident, offsetBytes: Int = 0) =
-    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar() + offsetBytes /* + t.size.byte needed? */).let {
+    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar() + offsetBytes).let {
       if (variables.put(it.ident, it) == null)
         it.valid()
       else
@@ -120,6 +120,8 @@ class GlobalScope : Scope() {
       f.valid()
     else
       RedeclarationError(pos, f.name).toInvalidParsed()
+
+  override fun toString() = "GlobalScope(vars=$variables, stackS=${stackSizeSoFar()})"
 }
 
 /**
@@ -146,6 +148,8 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
   override fun getVar(ident: Ident): Option<Variable> =
     variables[ident].toOption() or
       parent.getVar(ident).map { it.copy(addrFromSP = it.addrFromSP + stackSizeSoFar()) }
+
+  override fun toString() = "CFScope(vars=${variables} stackS=${stackSizeSoFar()})"
 }
 
 /**
@@ -162,10 +166,9 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
    */
   private fun addrWithScopeOffset(childScope: Scope): Int = when (childScope) {
     this.scope -> addrFromSP
-    is ControlFlowScope ->
-      addrWithScopeOffset(childScope.parent) + childScope.stackSizeSoFar()
+    is ControlFlowScope -> addrWithScopeOffset(childScope.parent) + childScope.stackSizeSoFar()
     else -> NOT_REACHED()
-  }
+  }.print { "Fetched $ident's addr, $it, from scope of stack: $childScope, of stack $scope" }
 
   /**
    * Sets this [Variable] to [rhs], allowing itself to use [availableRegs] remaining registers
@@ -179,6 +182,8 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
    */
   fun get(currentScope: Scope, destReg: Register = Reg.firstExpr) =
     type.sizedLDR(destReg, SP.withOffset(addrWithScopeOffset(currentScope)))
+
+  override fun toString() = "($type $ident)"
 }
 
 data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variable>, val funcScope: FuncScope) {

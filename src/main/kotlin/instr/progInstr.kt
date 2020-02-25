@@ -16,7 +16,7 @@ fun Prog.instr(): Instructions = body.instr()
     val allFuncs = it.funcs.fold(Code.empty, Code::combine)
     val allData = it.data + allFuncs.data
     val dataSegment = if (allData.isNotEmpty()) Directive.data + allData else persistentListOf<Nothing>()
-    val (initScope, endScope) = body.scope.makeInstrScope()
+    val (initScope, endScope) = globalScope.makeInstrScope()
     dataSegment +
       Directive.text +
       Directive.main +

@@ -159,12 +159,11 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
   }
 }
 
-data class While(val cond: Expr, val stat: Stat, override val pos: Position) : Stat() {
-  override val scope = stat.scope
+data class While(val cond: Expr, val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr(): Code {
     val uuid = shortRandomUUID()
     val (line, _) = pos
-    val (initScope, endScope) = scope.makeInstrScope()
+    val (initScope, endScope) = body.scope.makeInstrScope()
     val bodyLabel = Label("while_body_${uuid}_at_line_$line")
     val condLabel = Label("while_cond_${uuid}_at_line_$line")
 
@@ -172,7 +171,7 @@ data class While(val cond: Expr, val stat: Stat, override val pos: Position) : S
             BInstr(cond = None, label = condLabel) +
             bodyLabel +
             initScope +
-            stat.instr() +
+            body.instr() +
             endScope +
             condLabel +
             cond.eval(Reg(4)) +
@@ -181,11 +180,11 @@ data class While(val cond: Expr, val stat: Stat, override val pos: Position) : S
   }
 }
 
-data class BegEnd(val stat: Stat, override val scope: Scope, override val pos: Position) : Stat() {
+data class BegEnd(val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() = Code.write {
-    val (init, end) = scope.makeInstrScope()
+    val (init, end) = body.scope.makeInstrScope()
     +init
-    +stat.instr()
+    +body.instr()
     +end
   }
 }
