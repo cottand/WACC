@@ -37,7 +37,6 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
                     // Iteratively load array addresses into r0 for nested arrays
                     lhs.indices.dropLast(1).map {
                       it.code(Reg.fromExpr.tail) + // Load index into r5
-
                               MOVInstr(None, false, Reg(1), Reg(4)) +
                               MOVInstr(None, false, Reg(0), Reg(5)) +
                               BLInstr(CheckArrayBounds.label) +
@@ -50,7 +49,6 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
                               ) + // Add 4 bytes offset since 1st slot is array size
                               type.sizedLDR(Reg(4), Reg(4).withOffset(Reg(5), log2(type.size.bytes)))
                     }.flatten() +
-
                     // Get index of array elem by evaluating the last expression
                     lhs.indices.last().code(Reg.fromExpr.tail) + // Load index into r5
                     MOVInstr(None, false, Reg(1), Reg(4)) +
@@ -105,22 +103,29 @@ data class Exit(val expr: Expr, override val scope: Scope, override val pos: Pos
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr(): Code =
     when (expr.type) {
-      is IntT -> expr.eval(Reg.ret).withFunction(PrintIntStdFunc.body) +
+      is IntT -> expr.code(Reg.fromExpr).withFunction(PrintIntStdFunc.body) +
+              MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
               BLInstr(PrintIntStdFunc.label)
-      is BoolT -> expr.code(Reg.all).withFunction(PrintBoolStdFunc.body) +
+      is BoolT -> expr.code(Reg.fromExpr).withFunction(PrintBoolStdFunc.body) +
+              MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
               BLInstr(PrintBoolStdFunc.label)
-      is CharT -> expr.code(Reg.all) +
+      is CharT -> expr.code(Reg.fromExpr) +
+              MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
               BLInstr(Label("putchar"))
-      is StringT -> expr.code(Reg.all).withFunction(PrintStringStdFunc.body) +
+      is StringT -> expr.code(Reg.fromExpr).withFunction(PrintStringStdFunc.body) +
+              MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
               BLInstr(PrintStringStdFunc.label)
       is ArrayT -> if ((expr.type as ArrayT).type is CharT) {
-        expr.code(Reg.all).withFunction(PrintStringStdFunc.body) +
+        expr.code(Reg.fromExpr).withFunction(PrintStringStdFunc.body) +
+                MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
                 BLInstr(PrintStringStdFunc.label)
       } else {
-        expr.code(Reg.all).withFunction(PrintReferenceStdFunc.body) +
+        expr.code(Reg.fromExpr).withFunction(PrintReferenceStdFunc.body) +
+                MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
                 BLInstr(PrintReferenceStdFunc.label)
       }
-      is AnyPairTs -> expr.code(Reg.all).withFunction(PrintReferenceStdFunc.body) +
+      is AnyPairTs -> expr.code(Reg.fromExpr).withFunction(PrintReferenceStdFunc.body) +
+              MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
               BLInstr(PrintReferenceStdFunc.label)
       else -> NOT_REACHED()
     }
