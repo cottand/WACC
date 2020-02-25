@@ -9,12 +9,15 @@ import ic.org.util.*
 import kotlinx.collections.immutable.plus
 
 private val escapeCharMap = mapOf(
-  '0' to 0.toChar(),
-  'f' to 12.toChar(),
-  'b' to '\b',
-  't' to '\t',
-  'n' to '\n',
-  'r' to '\r'
+  "\\0" to 0.toChar(),
+  "\\f" to 12.toChar(),
+  "\\b" to '\b',
+  "\\t" to '\t',
+  "\\n" to '\n',
+  "\\r" to '\r',
+  "\\\"" to '\"',
+  "\\\'" to '\'',
+  "\\\\" to '\\'
 )
 
 internal fun ExprContext.asAst(scope: Scope): Parsed<Expr> = when (this) {
@@ -26,11 +29,8 @@ internal fun ExprContext.asAst(scope: Scope): Parsed<Expr> = when (this) {
 
   is BoolLitExprContext -> BoolLit(BOOL_LIT().text!!.toBoolean()).valid()
   is CharLitExprContext -> {
-    val txt = CHAR_LIT().text.toCharArray()
-    if (txt.contentEquals("\'\\0\'".toCharArray()))
-      CharLit(0.toChar()).valid()
-    else
-      CharLit(if (txt[1] == '\\') escapeCharMap[txt[2]] ?: txt[1] else txt[1]).valid()
+    val txt = CHAR_LIT().text.drop(1).dropLast(1)
+    CharLit(escapeCharMap[txt] ?: txt[0]).valid()
   }
   is StrLitExprContext -> StrLit(STRING_LIT().text.drop(1).dropLast(1)).valid()
   is PairLitExprContext -> NullPairLit.valid()
