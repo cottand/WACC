@@ -39,7 +39,11 @@ data class BoolLit(val value: Boolean) : Expr() {
   override val type = BoolT
   override fun toString(): String = value.toString()
   // Booleans are represented as a 1 for true, and 0 for false
-  override fun code(rem: Regs) = Code.empty + LDRBInstr(rem.head, if (value) 1 else 0)
+  override fun code(rem: Regs) =
+    // Code.empty + LDRBInstr(rem.head, if (value) 1 else 0)
+    Code.write { 
+      +MOVInstr(rem.head, if (value) 1.toByte() else 0.toByte())
+    }
 
   override val weight = 1
 }
@@ -48,7 +52,11 @@ data class CharLit(val value: Char) : Expr() {
   override val type = CharT
   override fun toString(): String = "$value"
   // Chars are represented as their ASCII value
-  override fun code(rem: Regs) = Code.empty + LDRBInstr(rem.head, ImmEquals32b(value.toInt()))
+  override fun code(rem: Regs) =
+    // Code.empty + LDRBInstr(rem.head, ImmEquals32b(value.toInt()))
+    Code.write {
+      +MOVInstr(rem.head, value)
+    }
 
   override val weight = 1
 }
@@ -158,9 +166,9 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override fun toString(): String = "$unaryOper $expr"
   override fun code(rem: Regs) = when (unaryOper) {
     NotUO -> expr.code(rem) +
-      EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r(1, 0)))
+      EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r_bs(1, 0)))
     MinusUO -> expr.code(rem).withFunction(OverflowException.body) +
-      RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r(0, 0))) +
+      RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r_bs(0, 0))) +
       BLInstr(VSCond.some(), OverflowException.label)
     LenUO -> expr.code(rem) +
       LDRInstr(rem.head, rem.head.zeroOffsetAddr)

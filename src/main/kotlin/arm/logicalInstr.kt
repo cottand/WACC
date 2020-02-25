@@ -12,7 +12,9 @@ data class MOVInstr(
   constructor(cond: Flag = None, s: Boolean = false, rd: Register, op2: Register) : this(cond, s, rd, RegOperand2(op2))
   constructor(cond: CondFlag, s: Boolean = false, rd: Register, op2: Operand2) : this(Some(cond), s, rd, op2)
   constructor(cond: CondFlag, s: Boolean = false, rd: Register, imm8b: Byte)
-    : this(cond, s, rd, ImmOperand2(Immed_8r(imm8b, 0)))
+    : this(cond, s, rd, ImmOperand2(Immed_8r_bs(imm8b, 0)))
+  constructor(rd: Register, char: Char) : this(None, false, rd, ImmOperand2(Immed_8r_char(char)))
+  constructor(rd: Register, imm8b: Byte) : this(None, false, rd, ImmOperand2(Immed_8r_bs(imm8b, 0)))
 
   override val code = "${opcode("MOV")} ${rd.code}, ${op2.code}"
 }
