@@ -8,6 +8,7 @@ import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.invalid
 import arrow.core.valid
+import ic.org.arm.Ranges
 import ic.org.ast.*
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -121,7 +122,7 @@ data class InvalidReturn(override val msg: String) : SemanticError() {
 
 data class IntegerOverflowError(override val msg: String) : SyntacticError(msg) {
   constructor(pos: Position, i: Number) :
-    this("$pos, invalid integer `$i`. Not in ${IntLit.range}")
+    this("$pos, invalid integer `$i`. Not in ${Ranges._32b}")
 }
 
 data class IllegalFunctionReturnTypeError(override val msg: String) : SemanticError() {

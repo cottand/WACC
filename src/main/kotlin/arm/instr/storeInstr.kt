@@ -1,7 +1,12 @@
-package ic.org.arm
+package ic.org.arm.instr
 
 import arrow.core.None
-import arrow.core.Option
+import ic.org.arm.ARMCondInstr
+import ic.org.arm.Flag
+import ic.org.arm.Register
+import ic.org.arm.addressing.AddrMode2
+import ic.org.arm.addressing.AddrMode2P
+import ic.org.arm.addressing.AddrMode3
 
 data class STRInstr(override val cond: Flag, val rd: Register, val addressing: AddrMode2) : ARMCondInstr() {
   constructor(rd: Register, addressing: AddrMode2) : this(None, rd, addressing)

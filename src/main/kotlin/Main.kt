@@ -7,14 +7,12 @@ import arrow.core.extensions.option.align.empty
 import arrow.core.invalid
 import arrow.core.some
 import arrow.core.valid
-import arrow.syntax.collections.tail
 import ast.graph.asGraph
-import ic.org.arm.ARMInstr
 import ic.org.arm.Directive
 import ic.org.arm.Label
 import ic.org.ast.Prog
 import ic.org.ast.build.asAst
-import ic.org.instr.instr
+import ic.org.arm.asm
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
 import ic.org.util.*
@@ -101,7 +99,7 @@ class WACCCompiler(private val filename: String) {
       .flatMap { it.checkControlFlow() }
   }
 
-  private fun Prog.toAssembly(): String = instr().joinToString(separator = "\n") {
+  private fun Prog.toAssembly(): String = asm().joinToString(separator = "\n") {
     val margin = when (it) {
       is Directive, is Label -> "  "
       else -> "    "

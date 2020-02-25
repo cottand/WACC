@@ -3,7 +3,8 @@ package ic.org.ast
 import arrow.core.None
 import arrow.core.some
 import ic.org.arm.*
-import ic.org.ast.NullPairLit.type
+import ic.org.arm.addressing.withOffset
+import ic.org.arm.instr.*
 import ic.org.util.*
 
 sealed class Stat {
@@ -48,7 +49,7 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
                                 Reg(4),
                                 4
                               ) + // Add 4 bytes offset since 1st slot is array size
-                              type.sizedLDR(Reg(4), Reg(4).withOffset(Reg(5), log2(type.size.bytes)))
+                              rhs.type.sizedLDR(Reg(4), Reg(4).withOffset(Reg(5), log2(rhs.type.size.bytes)))
                     }.flatten() +
 
                     // Get index of array elem by evaluating the last expression
@@ -59,7 +60,7 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
 
                     ADDInstr(None, false, Reg(4), Reg(4), 4) + // Add 4 bytes offset since 1st slot is array size
                     rhs.eval(Reg(6), Reg.fromExpr.drop(2)) + // eval rhs into r6
-                    rhs.type.sizedSTR(Reg(6), Reg(4).withOffset(Reg(5), log2(type.size.bytes)))
+                    rhs.type.sizedSTR(Reg(6), Reg(4).withOffset(Reg(5), log2(rhs.type.size.bytes)))
             is PairElemLHS -> Code.empty.withFunction(CheckNullPointer.body) +
                     rhs.eval(Reg(1)) + // Put RHS expr in r1
                     lhs.variable.get(scope, Reg(0)) + // Put Pair Ident in r0 (which is an addr)

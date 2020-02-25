@@ -1,7 +1,11 @@
-package ic.org.arm
+package ic.org.arm.instr
 
 import arrow.core.None
 import arrow.core.some
+import ic.org.arm.ARMCondInstr
+import ic.org.arm.CondFlag
+import ic.org.arm.Flag
+import ic.org.arm.Label
 
 data class BInstr(override val cond: Flag = None, val label: Label) : ARMCondInstr() {
   constructor(label: Label) : this(None, label)

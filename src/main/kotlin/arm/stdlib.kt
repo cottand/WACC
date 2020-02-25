@@ -5,6 +5,9 @@ import arrow.core.some
 import ic.org.ast.CharT
 import ic.org.ast.IntT
 import ic.org.ast.Type
+import ic.org.arm.addressing.ImmEqualLabel
+import ic.org.arm.addressing.zeroOffsetAddr
+import ic.org.arm.instr.*
 import ic.org.util.Code
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf

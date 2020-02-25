@@ -5,6 +5,11 @@ import arrow.core.extensions.list.foldable.forAll
 import arrow.core.some
 import arrow.core.valid
 import ic.org.arm.*
+import ic.org.arm.addressing.ImmEqualLabel
+import ic.org.arm.addressing.ImmEquals32b
+import ic.org.arm.addressing.withOffset
+import ic.org.arm.addressing.zeroOffsetAddr
+import ic.org.arm.instr.*
 import ic.org.util.*
 import java.lang.Integer.max
 import java.lang.Integer.min
@@ -21,25 +26,23 @@ sealed class Expr : Computable {
 
 data class IntLit(val value: Int) : Expr() {
   override val type = IntT
-  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(value))
+  override fun code(rem: Regs) = Code.empty + LDRInstr(
+    rem.head,
+    ImmEquals32b(value)
+  )
   override val weight = 1
 
   override fun toString(): String = value.toString()
-
-  companion object {
-    /**
-     * Range which a WACC Int can represent. Beacuse its implementation is a 32 bit signed number,
-     * it is the same range as the JVM Int primitive.
-     */
-    val range = Int.MIN_VALUE..Int.MAX_VALUE
-  }
 }
 
 data class BoolLit(val value: Boolean) : Expr() {
   override val type = BoolT
   override fun toString(): String = value.toString()
   // Booleans are represented as a 1 for true, and 0 for false
-  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(if (value) 1 else 0))
+  override fun code(rem: Regs) = Code.empty + LDRInstr(
+    rem.head,
+    ImmEquals32b(if (value) 1 else 0)
+  )
 
   override val weight = 1
 }
@@ -48,7 +51,10 @@ data class CharLit(val value: Char) : Expr() {
   override val type = CharT
   override fun toString(): String = "$value"
   // Chars are represented as their ASCII value
-  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(value.toInt()))
+  override fun code(rem: Regs) = Code.empty + LDRInstr(
+    rem.head,
+    ImmEquals32b(value.toInt())
+  )
 
   override val weight = 1
 }
@@ -82,7 +88,10 @@ object NullPairLit : Expr() {
   override val type = AnyPairTs()
   override fun toString(): String = "null"
   // null is represented as 0
-  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(0))
+  override fun code(rem: Regs) = Code.empty + LDRInstr(
+    rem.head,
+    ImmEquals32b(0)
+  )
 
   override val weight = 1
 }
@@ -111,8 +120,8 @@ data class ArrayElemExpr internal constructor(
         MOVInstr(rd = Reg(0), op2 = nxt) + // Place the evaluated expr for index in r0
         MOVInstr(rd = Reg(1), op2 = dst) + // Place the array variable in r1
         BLInstr(CheckArrayBounds.label) +
-        // Increment dst so we skip the actual first element, the array size
-        ADDInstr(cond = None, s = false, rd = dst, rn = dst, int8b = Type.Sizes.Word.bytes) +
+        // Increment dst (ident) so we skip the actual first element, the array size
+        ADDInstr(s = false, rd = dst, rn = dst, int8b = Type.Sizes.Word.bytes) +
         // TODO check log2, and maybe just replace with an additional ADD instead of fancy LDR
         ADDInstr(None, false, dst, dst, LSLImmOperand2(nxt, Immed_5(log2(type.size.bytes))))
 
