@@ -132,7 +132,7 @@ data class ArrayElemExpr internal constructor(
           LDRInstr(dst, dst.zeroOffsetAddr) +
           arrayAccessCode
       }.flatten() +
-      LDRInstr(dst, dst.zeroOffsetAddr)
+      type.sizedLDR(dst, dst.zeroOffsetAddr)
   })
 
   override val weight = Weights.heapAccess * exprs.size

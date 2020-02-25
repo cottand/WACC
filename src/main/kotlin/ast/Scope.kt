@@ -166,7 +166,7 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
     this.scope -> addrFromSP
     is ControlFlowScope -> addrWithScopeOffset(childScope.parent) + childScope.stackSizeSoFar()
     else -> NOT_REACHED()
-  }.print { "Fetched $this for child $childScope" }
+  }
 
   /**
    * Sets this [Variable] to [rhs], allowing itself to use [availableRegs] remaining registers
