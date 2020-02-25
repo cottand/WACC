@@ -168,7 +168,7 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
     this.scope -> addrFromSP
     is ControlFlowScope -> addrWithScopeOffset(childScope.parent) + childScope.stackSizeSoFar()
     else -> NOT_REACHED()
-  }.print { "Fetched $ident's addr, $it, from scope of stack: $childScope, of stack $scope" }
+  }
 
   /**
    * Sets this [Variable] to [rhs], allowing itself to use [availableRegs] remaining registers
@@ -183,7 +183,7 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
   fun get(currentScope: Scope, destReg: Register = Reg.firstExpr) =
     type.sizedLDR(destReg, SP.withOffset(addrWithScopeOffset(currentScope)))
 
-  override fun toString() = "($type $ident)"
+  override fun toString() = "($type $ident at stack+$addrFromSP)"
 }
 
 data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variable>, val funcScope: FuncScope) {
