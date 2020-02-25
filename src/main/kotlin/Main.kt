@@ -38,7 +38,7 @@ fun main(args: Array<String>) {
 
   val cmds = args.toMutableList()
   val printAssembly = cmds.remove("-a")
-  val saveToFile = cmds.remove("-save")
+  val saveToFile = !cmds.remove("-nosave")
   if (cmds.size != 1) {
     println("Proceeding with unrecognised arguments:")
     println("  " + cmds.tail.joinToString() + '\n')
