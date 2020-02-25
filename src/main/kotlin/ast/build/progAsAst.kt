@@ -10,7 +10,6 @@ package ic.org.ast.build
  */
 import antlr.WACCParser.*
 import arrow.core.Validated.Valid
-import arrow.core.extensions.list.zip.zipWith
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.ast.*
@@ -50,7 +49,7 @@ fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
   val stat = stat().asAst(gScope)
 
   return if (funcs.areAllValid && stat is Valid)
-    Prog(funcs.valids, stat.a).valid()
+    Prog(funcs.valids, stat.a, gScope).valid()
   else
     (funcs.errors + stat.errors).invalid()
 }

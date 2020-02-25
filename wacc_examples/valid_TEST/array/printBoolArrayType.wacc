@@ -1,0 +1,12 @@
+# Tests scoping with some variable types
+
+# Output:
+# true
+
+# Program:
+begin
+  bool[] x = [false, false, true];
+  println x[0];
+  println x[1];
+  println x[2]
+end

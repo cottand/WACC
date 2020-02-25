@@ -185,7 +185,7 @@ fun Stat.asGraph(expectedType: Type): Node {
           pos = pos
         )
         is BegEnd -> BegEndNode(
-          scopeBody = thisStat.stat.asGraphHelper(),
+          scopeBody = thisStat.body.asGraphHelper(),
           next = nextStat.asGraphHelper(),
           pos = pos
         )
@@ -205,7 +205,7 @@ fun Stat.asGraph(expectedType: Type): Node {
       pos = pos
     )
 
-    is BegEnd -> TerminalBegEndNode(stat.asGraphHelper(), pos)
+    is BegEnd -> TerminalBegEndNode(body.asGraphHelper(), pos)
     else -> LeafExit(pos)
   }
   return asGraphHelper()

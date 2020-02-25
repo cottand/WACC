@@ -64,7 +64,7 @@ sealed class Scope {
    * @see Scope.stackSizeSoFar
    */
   fun addVariable(pos: Position, t: Type, i: Ident, offsetBytes: Int = 0) =
-    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar() + offsetBytes /* + t.size.byte needed? */).let {
+    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar() + offsetBytes).let {
       if (variables.put(it.ident, it) == null)
         it.valid()
       else
@@ -85,8 +85,6 @@ sealed class Scope {
 
   /**
    * Returns the encapsulation of a scope in assembly instructions by growing the stack down to allocate local variables
-   *
-   * TODO make sure it is used by Prog.instr() (OK), Func.instr() (OK), and BegEnd Stat.
    */
   fun makeInstrScope(offset: Int = 0) = stackSizeSoFar().plus(offset).let { size ->
     val auxReg = Reg.first
@@ -124,6 +122,8 @@ class GlobalScope : Scope() {
       f.valid()
     else
       RedeclarationError(pos, f.name).toInvalidParsed()
+
+  override fun toString() = "GlobalScope(vars=$variables, stackS=${stackSizeSoFar()})"
 }
 
 /**
@@ -149,7 +149,9 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
   // Return whatever ident is found in this scope's varMap, and look in its parent's otherwise.
   override fun getVar(ident: Ident): Option<Variable> =
     variables[ident].toOption() or
-      parent.getVar(ident).map { it.copy(addrFromSP = it.addrFromSP + stackSizeSoFar()) }
+      parent.getVar(ident)
+
+  override fun toString() = "CFScope(vars=${variables} stackS=${stackSizeSoFar()} parent=$parent)"
 }
 
 /**
@@ -166,8 +168,7 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
    */
   private fun addrWithScopeOffset(childScope: Scope): Int = when (childScope) {
     this.scope -> addrFromSP
-    is ControlFlowScope ->
-      addrWithScopeOffset(childScope.parent) + childScope.stackSizeSoFar()
+    is ControlFlowScope -> addrWithScopeOffset(childScope.parent) + childScope.stackSizeSoFar()
     else -> NOT_REACHED()
   }
 
@@ -183,6 +184,8 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
    */
   fun get(currentScope: Scope, destReg: Register = Reg.firstExpr) =
     type.sizedLDR(destReg, SP.withOffset(addrWithScopeOffset(currentScope)))
+
+  override fun toString() = "($type $ident at stack+$addrFromSP)"
 }
 
 data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variable>, val funcScope: FuncScope) {

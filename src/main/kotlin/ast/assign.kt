@@ -94,6 +94,7 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
 
     val dst = rem[0]
 
+    val exprType = exprs.firstOrNone().fold({ arrT }, { it.type })
     val exprSize = exprs.firstOrNone().fold({ 0 }, { it.type.size.bytes })
     val arrSize = exprs.size * exprSize
 
@@ -112,10 +113,7 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
     instrs = exprs.fold(instrs, { acc, expr ->
       acc +
         expr.code(exprRem) +
-        STRInstr(
-          None, exprRem.head,
-          ImmOffsetAddrMode2(dst, Immed_12(4 + index++ * exprSize))
-        )
+        exprType.sizedSTR(exprRem.head, ImmOffsetAddrMode2(dst, Immed_12(4 + index++ * exprSize)))
     })
 
     // Add array size to first slot

@@ -1,0 +1,20 @@
+# simple scoping test
+
+# Output:
+# 5
+
+# Program:
+
+begin
+      int a = 3;
+            begin
+                  int m = a + 2;
+                            begin
+                              int b = 2 + a;
+                              println b
+                            end;
+                  exit a + 0
+            end
+end
+
+

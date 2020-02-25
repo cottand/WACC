@@ -80,7 +80,7 @@ internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
   is WhileDoContext -> asAst(scp)
 
   is NewScopeContext -> ControlFlowScope(scp).let { newScope ->
-    stat().asAst(newScope).map { BegEnd(it, newScope, startPosition) }
+    stat().asAst(newScope).map { BegEnd(it, scp, startPosition) }
   }
 
   is SemiColonContext -> asAst(scp)
@@ -93,7 +93,7 @@ fun WhileDoContext.asAst(scope: Scope) = ControlFlowScope(scope).let { newScope 
       { it.type is BoolT },
       { TypeError(startPosition, BoolT, "While condition", it) })
     .combineWith(stat().asAst(newScope)) { cond, body ->
-      While(cond, body, startPosition)
+      While(cond, body, scope, startPosition)
     }
 }
 

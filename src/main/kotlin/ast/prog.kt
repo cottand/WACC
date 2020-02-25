@@ -8,7 +8,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 import kotlinx.collections.immutable.plus
 
 // <program>
-data class Prog(val funcs: List<Func>, val body: Stat)
+data class Prog(val funcs: List<Func>, val body: Stat, val globalScope: GlobalScope)
 
 // <func>
 data class Func(val retType: Type, val ident: Ident, val params: List<Variable>, val stat: Stat, val scope: Scope) {

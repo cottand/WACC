@@ -1,0 +1,10 @@
+# Tests scoping with some variable types
+
+# Output:
+# true
+
+# Program:
+begin
+  bool[] x = [true, false, true];
+  print x[0]
+end
