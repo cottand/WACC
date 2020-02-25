@@ -1,0 +1,21 @@
+# Tests scoping with most variable types
+
+# Output:
+# ( [1, 2, 3] , [a, b, c] )
+# [ #addrs# = (a, true), #addrs# = (b, false) ]
+# 1, 2
+# array, of, strings
+# true, false, true
+# xyz
+# 1, 2, 3
+# this is a string
+# true
+# x
+# 5
+
+# Program:
+
+begin
+    char[] x = ['x', 'y', 'z'];
+      print x[0]
+end
