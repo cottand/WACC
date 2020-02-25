@@ -8,6 +8,15 @@ import ic.org.ast.*
 import ic.org.util.*
 import kotlinx.collections.immutable.plus
 
+private val escapeCharMap = mapOf(
+  '0' to 0.toChar(),
+  'f' to 12.toChar(),
+  'b' to '\b',
+  't' to '\t',
+  'n' to '\n',
+  'r' to '\r'
+)
+
 internal fun ExprContext.asAst(scope: Scope): Parsed<Expr> = when (this) {
   // Parse Int literal but check it is a valid size
   is IntLitExprContext -> when (val i = int_lit().text.toLong()) {
@@ -21,7 +30,7 @@ internal fun ExprContext.asAst(scope: Scope): Parsed<Expr> = when (this) {
     if (txt.contentEquals("\'\\0\'".toCharArray()))
       CharLit(0.toChar()).valid()
     else
-      CharLit(if (txt[1] == '\\') txt[2] else txt[1]).valid()
+      CharLit(if (txt[1] == '\\') escapeCharMap[txt[2]] ?: txt[1] else txt[1]).valid()
   }
   is StrLitExprContext -> StrLit(STRING_LIT().text.drop(1).dropLast(1)).valid()
   is PairLitExprContext -> NullPairLit.valid()

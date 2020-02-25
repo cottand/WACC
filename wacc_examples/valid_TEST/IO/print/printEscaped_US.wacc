@@ -1,11 +1,11 @@
 # print escaped char
 
 # Output:
-# '
+# \t
 
 # Program
 
 begin
-  char c = '\n';
+  char c = '\t';
   print c
 end
