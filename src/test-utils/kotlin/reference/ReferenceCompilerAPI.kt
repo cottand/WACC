@@ -19,6 +19,7 @@ import java.io.File
 object ReferenceCompilerAPI {
 
   private val gson by lazy { Gson() }
+  private const val noCacheToken = "NO_CACHE"
 
   private const val delimiters = "==========================================================="
 
@@ -29,7 +30,7 @@ object ReferenceCompilerAPI {
       .replace(".wacc", ".temp")
     val cached = File(cachedName)
     val out =
-      if (cached.exists() && cached.readText().isNotBlank())
+      if (noCacheToken !in prog.path && cached.exists() && cached.readText().isNotBlank())
         cached.readLines()
           .also { println("Reading cached query...") }
       else

@@ -7,7 +7,6 @@ import arrow.core.valid
 import ic.org.arm.*
 import ic.org.arm.addressing.ImmEqualLabel
 import ic.org.arm.addressing.ImmEquals32b
-import ic.org.arm.addressing.withOffset
 import ic.org.arm.addressing.zeroOffsetAddr
 import ic.org.arm.instr.*
 import ic.org.util.*
@@ -30,6 +29,7 @@ data class IntLit(val value: Int) : Expr() {
     rem.head,
     ImmEquals32b(value)
   )
+
   override val weight = 1
 
   override fun toString(): String = value.toString()
@@ -113,25 +113,27 @@ data class ArrayElemExpr internal constructor(
   override fun code(rem: Regs): Code = rem.take2OrNone.fold<Code>({
     TODO()
   }, { (dst, nxt, _) ->
-    val arrayAccessCode: Code =
-      Code.empty +
-        MOVInstr(rd = Reg(0), op2 = nxt) + // Place the evaluated expr for index in r0
-        MOVInstr(rd = Reg(1), op2 = dst) + // Place the array variable in r1
-        BLInstr(CheckArrayBounds.label) +
-        // Increment dst (ident) so we skip the actual first element, the array size
-        ADDInstr(s = false, rd = dst, rn = dst, int8b = Type.Sizes.Word.bytes) +
-        // TODO check log2, and maybe just replace with an additional ADD instead of fancy LDR
-        ADDInstr(None, false, dst, dst, LSLImmOperand2(nxt, Immed_5(log2(type.size.bytes))))
+    val arrayAccessCode = Code.write {
+      +MOVInstr(rd = Reg(0), op2 = nxt)  // Place the evaluated expr for index in r0
+      +MOVInstr(rd = Reg(1), op2 = dst)  // Place the array variable in r1
+      +BLInstr(CheckArrayBounds.label)
+      // Increment dst (ident) so we skip the actual first element, the array size
+      +ADDInstr(s = false, rd = dst, rn = dst, int8b = Type.Sizes.Word.bytes)
+      +ADDInstr(None, false, dst, dst, LSLImmOperand2(nxt, Immed_5(log2(type.size.bytes))))
+    }
+    Code.write {
+      +exprs.head.code(rem.tail)
+      +variable.get(scope, dst)  // Place ident pointer in dst
+      +arrayAccessCode
+      exprs.tail.forEach { expr ->
+        +expr.code(rem.tail)
+        +LDRInstr(dst, dst.zeroOffsetAddr)
+        +arrayAccessCode
+      }
+      +type.sizedLDR(dst, dst.zeroOffsetAddr)
 
-    exprs.head.code(rem.tail).withFunction(CheckArrayBounds.body) +
-      variable.get(scope, dst) + // Place ident pointer in dst
-      arrayAccessCode +
-      exprs.tail.map {
-        it.code(rem.tail) +
-          LDRInstr(dst, dst.zeroOffsetAddr) +
-          arrayAccessCode
-      }.flatten() +
-      type.sizedLDR(dst, dst.zeroOffsetAddr)
+      withFunction(CheckArrayBounds)
+    }
   })
 
   override val weight = Weights.heapAccess * exprs.size
@@ -150,9 +152,8 @@ data class ArrayElemExpr internal constructor(
         arrType !is ArrayT -> NOT_REACHED()
         exprs.size > arrType.depth ->
           TypeError(pos, AnyArrayT(), arrType, "Array access").toInvalidParsed()
-        else -> {
+        else ->
           ArrayElemExpr(variable, exprs, scope, arrType.nthNestedType(exprs.size)).valid()
-        }
       }
     }
   }
@@ -164,13 +165,20 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
 
   override fun toString(): String = "$unaryOper $expr"
   override fun code(rem: Regs) = when (unaryOper) {
-    NotUO -> expr.code(rem) +
-      EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r_bs(1, 0)))
-    MinusUO -> expr.code(rem).withFunction(OverflowException.body) +
-      RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r_bs(0, 0))) +
-      BLInstr(VSCond.some(), OverflowException.label)
-    LenUO -> expr.code(rem) +
-      LDRInstr(rem.head, rem.head.zeroOffsetAddr)
+    NotUO -> Code.write {
+      +expr.code(rem)
+      +EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r_bs(1, 0)))
+    }
+    MinusUO -> Code.write {
+      +expr.code(rem)
+      +RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r_bs(0, 0)))
+      +BLInstr(VSCond.some(), OverflowException.label)
+      withFunction(OverflowException)
+    }
+    LenUO -> Code.write {
+      +expr.code(rem)
+      +LDRInstr(rem.head, rem.head.zeroOffsetAddr)
+    }
     OrdUO -> expr.code(rem)
     ChrUO -> expr.code(rem)
   }
