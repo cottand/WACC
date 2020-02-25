@@ -81,8 +81,6 @@ sealed class Scope {
 
   /**
    * Returns the encapsulation of a scope in assembly instructions by growing the stack down to allocate local variables
-   *
-   * TODO make sure it is used by Prog.instr() (OK), Func.instr() (OK), and BegEnd Stat.
    */
   fun makeInstrScope(offset: Int = 0) = stackSizeSoFar().plus(offset).let { size ->
     val auxReg = Reg.first

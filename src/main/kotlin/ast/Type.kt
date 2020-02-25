@@ -26,12 +26,10 @@ sealed class Type {
 
   enum class Sizes(val bytes: Int) {
     Word(4),
-    Char(1)
+    Char(1);
   }
 }
 
-val Type.Sizes.Pointer
-  get() = Type.Sizes.Word
 
 sealed class BaseT : Type() {
   override fun matches(other: Type) = this == other
