@@ -6,18 +6,15 @@
 # Program:
 
 begin
-          begin
-                  int a = 3;
+      int a = 3;
+            begin
+                  int m = a + 2;
                             begin
-                                  int m = a + 2;
-                                            begin
-                                              int b = 2 + a;
-                                              println b
-                                            end;
-                                  int j = 1 + a + m;
-                                  exit a + j
-                            end
-          end
+                              int b = 2 + a;
+                              println b
+                            end;
+                  exit a + 0
+            end
 end
 
 
