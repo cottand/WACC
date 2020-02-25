@@ -39,7 +39,7 @@ data class BoolLit(val value: Boolean) : Expr() {
   override val type = BoolT
   override fun toString(): String = value.toString()
   // Booleans are represented as a 1 for true, and 0 for false
-  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(if (value) 1 else 0))
+  override fun code(rem: Regs) = Code.empty + LDRBInstr(rem.head, if (value) 1 else 0)
 
   override val weight = 1
 }
@@ -48,7 +48,7 @@ data class CharLit(val value: Char) : Expr() {
   override val type = CharT
   override fun toString(): String = "$value"
   // Chars are represented as their ASCII value
-  override fun code(rem: Regs) = Code.empty + LDRInstr(rem.head, ImmEquals32b(value.toInt()))
+  override fun code(rem: Regs) = Code.empty + LDRBInstr(rem.head, ImmEquals32b(value.toInt()))
 
   override val weight = 1
 }
