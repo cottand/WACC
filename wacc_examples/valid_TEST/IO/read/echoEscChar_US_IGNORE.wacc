@@ -1,7 +1,7 @@
 # echo the user's input char
 
 # Input_particular:
-# !
+# \"
 # End of Input_particular
 
 # Output:
@@ -12,7 +12,7 @@
 # Program:
 
 begin
-  char c = '\0' ;
+  char c = 'a' ;
   println "enter a character to echo";
   read c ;
   println c 
