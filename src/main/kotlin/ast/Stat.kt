@@ -166,23 +166,22 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
 }
 
 data class While(val cond: Expr, val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr(): Code {
+  override fun instr() = Code.write {
     val uuid = shortRandomUUID()
     val (line, _) = pos
     val (initScope, endScope) = body.scope.makeInstrScope()
     val bodyLabel = Label("while_body_${uuid}_at_line_$line")
     val condLabel = Label("while_cond_${uuid}_at_line_$line")
 
-    return Code.empty +
-      BInstr(cond = None, label = condLabel) +
-      bodyLabel +
-      initScope +
-      body.instr() +
-      endScope +
-      condLabel +
-      cond.eval(Reg(4)) +
-      CMPInstr(cond = None, rn = Reg(4), int8b = 1) + // Test whether cond == 1
-      BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
+    +BInstr(cond = None, label = condLabel)
+    +bodyLabel
+    +initScope
+    +body.instr()
+    +endScope
+    +condLabel
+    +cond.eval(Reg(4))
+    +CMPInstr(cond = None, rn = Reg(4), int8b = 1)// Test whether cond == 1
+    +BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
   }
 }
 
