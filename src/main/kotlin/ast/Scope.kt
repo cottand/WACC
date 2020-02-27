@@ -185,8 +185,8 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
   /**
    * Puts this [Variable] into the register [destReg] (usually an expression register like [Reg.firstExpr])
    */
-  fun get(currentScope: Scope, destReg: Register = Reg.firstExpr) =
-    type.sizedLDR(destReg, SP.withOffset(addrWithScopeOffset(currentScope)))
+  fun get(currentScope: Scope, destReg: Register = Reg.firstExpr, offsetBytes: Int = 0) =
+    type.sizedLDR(destReg, SP.withOffset(addrWithScopeOffset(currentScope) + offsetBytes))
 
   override fun toString() = "($type $ident at stack+$addrFromSP)"
 }

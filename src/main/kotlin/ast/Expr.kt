@@ -110,7 +110,7 @@ data class ArrayElemExpr internal constructor(
   override fun toString(): String = variable.ident.name +
     exprs.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
-  override fun code(rem: Regs): Code = rem.take2OrNone.fold<Code>({
+  override fun code(rem: Regs): Code = rem.take2OrNone.fold({
     TODO()
   }, { (dst, nxt, _) ->
     val arrayAccessCode = Code.write {
@@ -131,10 +131,8 @@ data class ArrayElemExpr internal constructor(
         +arrayAccessCode
       }
       +type.sizedLDR(dst, dst.zeroOffsetAddr)
-
-      withFunction(CheckArrayBounds)
     }
-  })
+  }).withFunction(CheckArrayBounds.body)
 
   override val weight = Weights.heapAccess * exprs.size
 
