@@ -102,34 +102,37 @@ data class Exit(val expr: Expr, override val scope: Scope, override val pos: Pos
 }
 
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr(): Code =
-    when (expr.type) {
-      is IntT -> expr.code(Reg.fromExpr).withFunction(PrintIntStdFunc.body) +
-        MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-        BLInstr(PrintIntStdFunc.label)
-      is BoolT -> expr.code(Reg.fromExpr).withFunction(PrintBoolStdFunc.body) +
-        MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-        BLInstr(PrintBoolStdFunc.label)
-      is CharT -> expr.code(Reg.fromExpr) +
-        MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-        BLInstr(Label("putchar"))
-      is StringT -> expr.code(Reg.fromExpr).withFunction(PrintStringStdFunc.body) +
-        MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-        BLInstr(PrintStringStdFunc.label)
-      is ArrayT -> if ((expr.type as ArrayT).type is CharT) {
-        expr.code(Reg.fromExpr).withFunction(PrintStringStdFunc.body) +
-          MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-          BLInstr(PrintStringStdFunc.label)
-      } else {
-        expr.code(Reg.fromExpr).withFunction(PrintReferenceStdFunc.body) +
-          MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-          BLInstr(PrintReferenceStdFunc.label)
+  override fun instr() = Code.write {
+    val type = expr.type
+    +expr.eval(Reg.first)
+    when (type) {
+      is IntT -> {
+        withFunction(PrintIntStdFunc.body)
+        +BLInstr(PrintIntStdFunc.label)
       }
-      is AnyPairTs -> expr.code(Reg.fromExpr).withFunction(PrintReferenceStdFunc.body) +
-        MOVInstr(None, false, Reg(0), Reg.fromExpr.head) +
-        BLInstr(PrintReferenceStdFunc.label)
+      is BoolT -> {
+        withFunction(PrintBoolStdFunc.body)
+        +BLInstr(PrintBoolStdFunc.label)
+      }
+      is CharT -> +BLInstr(Label("putchar"))
+      is StringT -> {
+        withFunction(PrintStringStdFunc.body)
+        +BLInstr(PrintStringStdFunc.label)
+      }
+      is AnyPairTs -> {
+        withFunction(PrintReferenceStdFunc.body)
+        +BLInstr(PrintReferenceStdFunc.label)
+      }
+      is ArrayT -> if (type.type is CharT) {
+        withFunction(PrintStringStdFunc.body)
+        +BLInstr(PrintStringStdFunc.label)
+      } else {
+        withFunction(PrintReferenceStdFunc.body)
+        +BLInstr(PrintReferenceStdFunc.label)
+      }
       else -> NOT_REACHED()
     }
+  }
 }
 
 data class Println(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
