@@ -15,6 +15,8 @@ data class MOVInstr(
     RegOperand2(op2)
   )
 
+  constructor(rd: Register, op2: Register) : this(None, false, rd, RegOperand2(op2))
+
   constructor(cond: CondFlag, s: Boolean = false, rd: Register, op2: Operand2) : this(Some(cond), s, rd, op2)
   constructor(cond: CondFlag, s: Boolean = false, rd: Register, imm8b: Byte)
     : this(cond, s, rd, ImmOperand2(Immed_8r_bs(imm8b, 0)))

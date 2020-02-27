@@ -2,6 +2,7 @@ package ic.org.ast
 
 import arrow.core.None
 import arrow.core.some
+import ast.Sizes
 import ic.org.arm.*
 import ic.org.arm.addressing.withOffset
 import ic.org.arm.instr.*
@@ -30,42 +31,39 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
 
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
   // See Decl.instr()
-  override fun instr() = Code.empty +
-    when (lhs) {
-      is IdentLHS -> lhs.variable.set(rhs, scope)
-      is ArrayElemLHS -> Code.empty.withFunction(CheckArrayBounds.body) +
-        lhs.variable.get(scope, Reg(4)) + // Put array var in r4
-        // Iteratively load array addresses into r0 for nested arrays
-        lhs.indices.dropLast(1).map {
-          it.code(Reg.fromExpr.tail) + // Load index into r5
-            MOVInstr(None, false, Reg(1), Reg(4)) +
-            MOVInstr(None, false, Reg(0), Reg(5)) +
-            BLInstr(CheckArrayBounds.label) +
-            ADDInstr(
-              None,
-              false,
-              Reg(4),
-              Reg(4),
-              4
-            ) + // Add 4 bytes offset since 1st slot is array size
-            rhs.type.sizedLDR(Reg(4), Reg(4).withOffset(Reg(5), log2(rhs.type.size.bytes)))
-        }.flatten() +
-        // Get index of array elem by evaluating the last expression
-        lhs.indices.last().code(Reg.fromExpr.tail) + // Load index into r5
-        MOVInstr(None, false, Reg(1), Reg(4)) +
-        MOVInstr(None, false, Reg(0), Reg(5)) +
-        BLInstr(CheckArrayBounds.label) +
+  override fun instr() = when (lhs) {
+    is IdentLHS -> lhs.variable.set(rhs, scope)
+    is ArrayElemLHS -> Code.write {
+      +lhs.variable.get(scope, Reg(4))  // Put array var in r4
+      // Iteratively load array addresses into r0 for nested arrays
+      lhs.indices.dropLast(1).forEach {
+        +it.code(Reg.fromExpr.tail)  // Load index into r5
+        +MOVInstr(rd = Reg.sndArg, op2 = Reg(4))
+        +MOVInstr(None, false, Reg.fstArg, Reg(5))
+        +BLInstr(CheckArrayBounds.label)
+        +ADDInstr(None, false, Reg(4), Reg(4), Sizes.Word.bytes) // Add 4 bytes offset since 1st slot is array size
+        +rhs.type.sizedLDR(Reg(4), Reg(4).withOffset(Reg(5), log2(rhs.type.size.bytes)))
+      }
+      // Get index of array elem by evaluating the last expression
+      +lhs.indices.last().code(Reg.fromExpr.tail) // Load index into r5
+      +MOVInstr(None, false, Reg.sndArg, Reg(4))
+      +MOVInstr(None, false, Reg.fstArg, Reg(5))
+      +BLInstr(CheckArrayBounds.label)
 
-        ADDInstr(None, false, Reg(4), Reg(4), 4) + // Add 4 bytes offset since 1st slot is array size
-        rhs.eval(Reg(6), Reg.fromExpr.drop(2)) + // eval rhs into r6
-        rhs.type.sizedSTR(Reg(6), Reg(4).withOffset(Reg(5), log2(rhs.type.size.bytes)))
-      is PairElemLHS -> Code.empty.withFunction(CheckNullPointer.body) +
-        rhs.eval(Reg(1)) + // Put RHS expr in r1
-        lhs.variable.get(scope, Reg(0)) + // Put Pair Ident in r0 (which is an addr)
-        BLInstr(None, CheckNullPointer.label) +
-        // STR r1 [r0 + pairElemOffset]
-        rhs.type.sizedSTR(Reg(1), Reg(0).withOffset(lhs.pairElem.offsetFromAddr))
+      +ADDInstr(None, false, Reg(4), Reg(4), 4)  // Add 4 bytes offset since 1st slot is array size
+      +rhs.eval(Reg(6), Reg.fromExpr.drop(2))  // eval rhs into r6
+      +rhs.type.sizedSTR(Reg(6), Reg(4).withOffset(Reg(5), log2(rhs.type.size.bytes)))
+      withFunction(CheckArrayBounds)
     }
+    is PairElemLHS -> Code.write {
+      +rhs.eval(Reg(1))  // Put RHS expr in r1
+      +lhs.variable.get(scope, Reg(0))  // Put Pair Ident in r0 (which is an addr)
+      +BLInstr(None, CheckNullPointer.label)
+      // STR r1 [r0 + pairElemOffset]
+      +rhs.type.sizedSTR(Reg(1), Reg(0).withOffset(lhs.pairElem.offsetFromAddr))
+      withFunction(CheckNullPointer)
+    }
+  }
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
