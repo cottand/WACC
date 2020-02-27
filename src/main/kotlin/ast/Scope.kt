@@ -3,6 +3,7 @@
 package ic.org.ast
 
 import arrow.core.*
+import ast.Sizes
 import ic.org.arm.*
 import ic.org.arm.addressing.withOffset
 import ic.org.arm.instr.ADDInstr
@@ -32,7 +33,7 @@ sealed class Scope {
    *
    * Functions Push LR in their prelude so they have extra stuff in their stack
    */
-  private val relativeStartingAddress = if (this is FuncScope) Type.Sizes.Word.bytes else 0
+  private val relativeStartingAddress = if (this is FuncScope) Sizes.Word.bytes else 0
 
   /**
    * How big the stack should be grown down upon starting a new stack. Determined by the variables that live on
@@ -50,7 +51,7 @@ sealed class Scope {
    */
   abstract fun getVar(ident: Ident): Option<Variable>
 
-  fun getVar(identName: String) = getVar(Ident(identName))
+  private fun getVar(identName: String) = getVar(Ident(identName))
 
   // Some syntactic sugar
   operator fun get(ident: Ident) = getVar(ident)
@@ -133,7 +134,8 @@ class GlobalScope : Scope() {
  * Scope created by a function. Does not see [GlobalScope] variables, and is parent of
  * [ControlFlowScope] defined inside the [Func].
  *
- * TODO remove ident which is for debuggin purposes??
+ * [ident] is there so that two different Funcscopes have different equality.
+ *
  */
 data class FuncScope(val ident: Ident, val gScope: GlobalScope) : Scope() {
 
@@ -151,7 +153,7 @@ data class FuncScope(val ident: Ident, val gScope: GlobalScope) : Scope() {
 data class ControlFlowScope(val parent: Scope) : Scope() {
   // Return whatever ident is found in this scope's varMap, and look in its parent's otherwise.
   override fun getVar(ident: Ident): Option<Variable> =
-    variables[ident].toOption() or
+    variables.getOption(ident) or
       parent.getVar(ident)
 
   override fun toString() = "CFScope(vars=${variables} stackS=${stackSizeSoFar()} parent=$parent)"

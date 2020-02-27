@@ -38,10 +38,13 @@ fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
         .map { (param, antlrParam) ->
           param.flatMap { fScope.addParameter(antlrParam.startPosition, it) }
         }
-      // TODO get those invalids
-      val funcId = FuncIdent(t, ident, vars.valids, fScope)
-      val validatedFuncId = gScope.addFunction(startPosition, funcId)
-      Triple(ctx, funcId, validatedFuncId)
+      val functionIdent = FuncIdent(t, ident, vars.valids, fScope)
+      val funcId = if (vars.areAllValid) functionIdent.valid()
+      else vars.errors.invalid()
+      val validatedFuncId = funcId.flatMap { fIdent ->
+        gScope.addFunction(startPosition, fIdent)
+      }
+      Triple(ctx, functionIdent, validatedFuncId)
     } // Build the Function's AST and combine its errors with the possible errors from duplicate function definition errors.
     .map { (ctx, fId, alreadyDefinedErrors: Parsed<FuncIdent>) ->
       ctx.asAst(fId).combineWith(alreadyDefinedErrors) { ast, _ -> ast }

@@ -1,5 +1,6 @@
 package ic.org.ast
 
+import ast.Sizes
 import ic.org.arm.Register
 import ic.org.arm.addressing.AddrMode2
 import ic.org.arm.instr.LDRBInstr
@@ -28,11 +29,6 @@ sealed class Type {
   abstract fun matches(other: Type): Boolean
 
   abstract val size: Sizes
-
-  enum class Sizes(val bytes: Int) {
-    Word(4),
-    Char(1);
-  }
 }
 
 sealed class BaseT : Type() {

@@ -1,5 +1,6 @@
 package ic.org.ast
 
+import ast.Sizes
 import ic.org.arm.Directive
 import ic.org.arm.LR
 import ic.org.arm.Label
@@ -52,7 +53,7 @@ data class Fst internal constructor(override val expr: Expr) : PairElem() {
 
 data class Snd internal constructor(override val expr: Expr) : PairElem() {
   override fun toString() = "snd $expr"
-  override val offsetFromAddr = Type.Sizes.Word.bytes
+  override val offsetFromAddr = Sizes.Word.bytes
 }
 
 @Suppress("EXPERIMENTAL_FEATURE_WARNING")

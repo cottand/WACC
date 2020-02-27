@@ -2,6 +2,7 @@ package ic.org.arm
 
 import arrow.core.None
 import arrow.core.some
+import ast.Sizes
 import ic.org.arm.addressing.ImmEqualLabel
 import ic.org.arm.addressing.zeroOffsetAddr
 import ic.org.arm.instr.*
@@ -143,7 +144,7 @@ sealed class ReadStdFunc : StdFunc() {
       +ADDInstr(rd = SP, s = false, rn = SP, int8b = -type.size.bytes)
       +MOVInstr(rd = Reg.sndArg, op2 = SP) // Place Stack - 4 addr in r1
       +LDRInstr(Reg.fstArg, ImmEqualLabel(template.label))
-      +ADDInstr(s = false, rd = Reg.fstArg, rn = Reg.fstArg, int8b = Type.Sizes.Word.bytes)
+      +ADDInstr(s = false, rd = Reg.fstArg, rn = Reg.fstArg, int8b = Sizes.Word.bytes)
       +BLInstr("scanf")
       +type.sizedLDR(Reg.ret, SP.zeroOffsetAddr)
       +ADDInstr(rd = SP, s = false, rn = SP, int8b = type.size.bytes)

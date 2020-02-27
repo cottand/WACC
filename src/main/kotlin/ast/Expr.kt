@@ -4,6 +4,7 @@ import arrow.core.None
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.some
 import arrow.core.valid
+import ast.Sizes
 import ic.org.arm.*
 import ic.org.arm.addressing.ImmEqualLabel
 import ic.org.arm.addressing.ImmEquals32b
@@ -118,7 +119,7 @@ data class ArrayElemExpr internal constructor(
       +MOVInstr(rd = Reg(1), op2 = dst)  // Place the array variable in r1
       +BLInstr(CheckArrayBounds.label)
       // Increment dst (ident) so we skip the actual first element, the array size
-      +ADDInstr(s = false, rd = dst, rn = dst, int8b = Type.Sizes.Word.bytes)
+      +ADDInstr(s = false, rd = dst, rn = dst, int8b = Sizes.Word.bytes)
       +ADDInstr(None, false, dst, dst, LSLImmOperand2(nxt, Immed_5(log2(type.size.bytes))))
     }
     Code.write {
@@ -215,9 +216,9 @@ data class BinaryOperExpr internal constructor(
       // No available registers, use stack machine! We can only use dest and Reg.last
       +expr2.code(rem)
       +PUSHInstr(dest)
-      +ADDInstr(s = false, rd = SP, rn = SP, int8b = Type.Sizes.Word.bytes)
+      +ADDInstr(s = false, rd = SP, rn = SP, int8b = Sizes.Word.bytes)
       +expr1.code(rem)
-      +SUBInstr(s = false, rd = SP, rn = SP, int8b = Type.Sizes.Word.bytes)
+      +SUBInstr(s = false, rd = SP, rn = SP, int8b = Sizes.Word.bytes)
       +POPInstr(Reg.last)
       +binaryOper.code(dest, Reg.last)
     }, { (dest, next, rest) ->
