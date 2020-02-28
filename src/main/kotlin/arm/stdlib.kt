@@ -180,49 +180,27 @@ object MallocStdFunc : StdFunc() {
 }
 
 /**
- * C stdlib function. NOT FOR USE IN GENERATED CODE. Use [FreePairFunc] instead, for example.
+ * C stdlib function. NOT FOR USE IN GENERATED CODE. Use [FreeFunc] instead, for example.
  */
 object FreeStdLibFunc : StdFunc() {
   override val name = "free"
   override val body = Code.empty
 }
 
-object FreePairFunc : StdFunc() {
-  override val name = "p_free_pair"
+object FreeFunc : StdFunc() {
+  override val name = "p_free"
   private const val errormsg = "NullReferenceError: dereference a null reference\\n\\0"
-  private val msg0 = StringData(errormsg, errormsg.length - 2)
+  private val msg0 by lazy { StringData(errormsg, errormsg.length - 2) }
+  override val body = Code.write {
+    data { +msg0 }
+    +label
+    +PUSHInstr(LR)
+    +CMPInstr(None, Reg(0), 0)
+    +LDRInstr(EQCond, Reg(0), ImmEqualLabel(msg0.label))
+    +BInstr(EQCond.some(), RuntimeError.label)
+    +BLInstr(FreeStdLibFunc.label)
+    +POPInstr(PC)
 
-  private val instructions by lazy {
-    persistentListOf(
-      label,
-      PUSHInstr(LR),
-      CMPInstr(None, Reg(0), 0),
-      LDRInstr(EQCond, Reg(0), ImmEqualLabel(msg0.label)),
-      BInstr(EQCond.some(), RuntimeError.label),
-      BLInstr(FreeStdLibFunc.label),
-      POPInstr(PC)
-    )
+    withFunction(RuntimeError)
   }
-
-  override val body = Code(instructions, msg0.body).withFunction(RuntimeError.body)
-}
-
-object FreeArrayFunc : StdFunc() {
-  override val name = "p_free_array"
-  private const val errormsg = "NullReferenceError: dereference a null reference\\n\\0"
-  private val msg0 = StringData(errormsg, errormsg.length - 2)
-
-  private val instructions by lazy {
-    persistentListOf(
-      label,
-      PUSHInstr(LR),
-      CMPInstr(None, Reg(0), 0),
-      LDRInstr(EQCond, Reg(0), ImmEqualLabel(msg0.label)),
-      BInstr(EQCond.some(), RuntimeError.label),
-      BLInstr(FreeStdLibFunc.label),
-      POPInstr(PC)
-    )
-  }
-
-  override val body = Code(instructions, msg0.body).withFunction(RuntimeError.body)
 }

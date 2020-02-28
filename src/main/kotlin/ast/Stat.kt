@@ -6,8 +6,7 @@ import ast.Sizes
 import ic.org.arm.CheckArrayBounds
 import ic.org.arm.CheckNullPointer
 import ic.org.arm.EQCond
-import ic.org.arm.FreeArrayFunc
-import ic.org.arm.FreePairFunc
+import ic.org.arm.FreeFunc
 import ic.org.arm.Label
 import ic.org.arm.PC
 import ic.org.arm.PrintBoolStdFunc
@@ -97,16 +96,16 @@ data class Free(val expr: Expr, override val scope: Scope, override val pos: Pos
     is AnyPairTs -> Code.write {
       +expr.code(Reg.fromExpr)
       +MOVInstr(rd = Reg.first, op2 = Reg.firstExpr)
-      +BLInstr(FreePairFunc.label)
+      +BLInstr(FreeFunc.label)
 
-      withFunction(FreePairFunc)
+      withFunction(FreeFunc)
     }
     is AnyArrayT -> Code.write {
       +expr.code(Reg.fromExpr)
       +MOVInstr(rd = Reg.first, op2 = Reg.firstExpr)
-      +BLInstr(FreeArrayFunc.label)
+      +BLInstr(FreeFunc.label)
 
-      withFunction(FreeArrayFunc)
+      withFunction(FreeFunc)
     }
 
     else -> NOT_REACHED()

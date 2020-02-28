@@ -36,7 +36,7 @@ data class Prog(val funcs: List<Func>, val body: Stat, val globalScope: GlobalSc
         Directive.ltorg +
         // Function code segments:
         allFuncs.instr
-    }.joinToString(separator = "\n") {
+    }.joinToString(separator = "\n", postfix = "\n") {
       val margin = when (it) {
         is Directive, is Label -> "  "
         else -> "    "
