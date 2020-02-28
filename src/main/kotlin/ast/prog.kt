@@ -50,15 +50,16 @@ data class Func(val retType: Type, val ident: Ident, val params: List<Variable>,
 
   val label = Label("f_" + ident.name)
 
-  fun instr(): Code {
+  fun instr() = Code.write {
     val statCode = stat.instr()
-    val body =
-      label +
-        PUSHInstr(LR) +
-        statCode.instr +
-        POPInstr(PC) +
-        Directive.ltorg
-    return Code(body, statCode.data).withFunctions(statCode.funcs)
+    data { +statCode.data }
+    +label
+    +PUSHInstr(LR)
+    +statCode.instr
+    +POPInstr(PC)
+    +Directive.ltorg
+
+    withFunctions(statCode.funcs)
   }
 }
 
