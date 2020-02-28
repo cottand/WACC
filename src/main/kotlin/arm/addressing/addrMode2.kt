@@ -2,7 +2,13 @@
 
 package ic.org.arm.addressing
 
-import ic.org.arm.*
+import ic.org.arm.Immed_12
+import ic.org.arm.Immed_5
+import ic.org.arm.Label
+import ic.org.arm.Plus
+import ic.org.arm.Printable
+import ic.org.arm.Register
+import ic.org.arm.Sign
 
 sealed class AddrMode2 : Printable
 

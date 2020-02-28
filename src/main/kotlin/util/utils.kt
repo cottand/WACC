@@ -6,9 +6,9 @@ import arrow.core.Either
 import arrow.core.Validated
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
+import kotlin.math.log2
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
-import kotlin.math.log2
 
 /**
  * Returns whether a [List] of [Either] contains any [Either.Left]

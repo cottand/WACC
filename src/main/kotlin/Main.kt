@@ -8,22 +8,26 @@ import arrow.core.invalid
 import arrow.core.some
 import arrow.core.valid
 import ast.graph.asGraph
-import ic.org.arm.Directive
-import ic.org.arm.Label
-import ic.org.arm.asm
 import ic.org.ast.Prog
 import ic.org.ast.build.asAst
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
-import ic.org.util.*
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.tree.ParseTreeWalker
+import ic.org.util.Parsed
+import ic.org.util.areAllValid
+import ic.org.util.asLines
+import ic.org.util.errors
+import ic.org.util.flatMap
+import ic.org.util.head
+import ic.org.util.ifExsistsAnd
+import ic.org.util.tail
 import java.io.File
 import kotlin.system.exitProcess
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.tree.ParseTreeWalker
 
 @ExperimentalTime
 fun main(args: Array<String>) {
@@ -94,14 +98,6 @@ class WACCCompiler(private val filename: String) {
       .flatMap { it.checkControlFlow() }
   }
 
-  private fun Prog.toAssembly(): String = asm().joinToString(separator = "\n") {
-    val margin = when (it) {
-      is Directive, is Label -> "  "
-      else -> "    "
-    }
-    margin + it.code
-  }
-
   fun compile(checkOnly: Boolean = false): CompileResult {
     val start = MonoClock.markNow()
     // Make a CompileResultout of the outcome
@@ -117,7 +113,7 @@ class WACCCompiler(private val filename: String) {
       if (checkOnly)
         CompileResult.checkSuccess(duration = start.elapsedNow())
       else {
-        val assembly = prog.toAssembly()
+        val assembly = prog.asm()
         CompileResult.success(duration = start.elapsedNow(), output = assembly)
       }
     })

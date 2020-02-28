@@ -5,7 +5,14 @@ import arrow.core.some
 import ast.Sizes
 import ic.org.arm.addressing.ImmEqualLabel
 import ic.org.arm.addressing.zeroOffsetAddr
-import ic.org.arm.instr.*
+import ic.org.arm.instr.ADDInstr
+import ic.org.arm.instr.BInstr
+import ic.org.arm.instr.BLInstr
+import ic.org.arm.instr.CMPInstr
+import ic.org.arm.instr.LDRInstr
+import ic.org.arm.instr.MOVInstr
+import ic.org.arm.instr.POPInstr
+import ic.org.arm.instr.PUSHInstr
 import ic.org.ast.CharT
 import ic.org.ast.IntT
 import ic.org.ast.Type

@@ -1,8 +1,28 @@
 package ast.graph
 
-import arrow.core.*
-import ic.org.ast.*
-import ic.org.util.*
+import arrow.core.None
+import arrow.core.Option
+import arrow.core.Some
+import arrow.core.Valid
+import arrow.core.invalid
+import arrow.core.toOption
+import arrow.core.valid
+import ic.org.ast.BegEnd
+import ic.org.ast.Exit
+import ic.org.ast.Ident
+import ic.org.ast.If
+import ic.org.ast.Return
+import ic.org.ast.Stat
+import ic.org.ast.StatChain
+import ic.org.ast.Type
+import ic.org.util.ControlFlowTypeError
+import ic.org.util.IfElseNextTypeMismatchError
+import ic.org.util.IllegalFunctionReturnTypeError
+import ic.org.util.Parsed
+import ic.org.util.Position
+import ic.org.util.errors
+import ic.org.util.flatMap
+import ic.org.util.validate
 import kotlinx.collections.immutable.plus
 
 /**
@@ -65,8 +85,7 @@ sealed class Node {
      * do not.
      */
     fun checkTypeDiscrepancies(pos: Position, t1: Type, t2: Type): Parsed<Option<Type>> =
-      t1.toOption().valid().validate({ t1.matches(t2) })
-      { IfElseNextTypeMismatchError(pos, t1, t2) }
+      t1.toOption().valid().validate({ t1.matches(t2) }) { IfElseNextTypeMismatchError(pos, t1, t2) }
   }
 }
 

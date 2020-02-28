@@ -3,7 +3,14 @@ package ic.org.ast
 import arrow.core.None
 import arrow.core.firstOrNone
 import ast.Sizes
-import ic.org.arm.*
+import ic.org.arm.CheckNullPointer
+import ic.org.arm.MallocStdFunc
+import ic.org.arm.ReadChar
+import ic.org.arm.ReadInt
+import ic.org.arm.Reg
+import ic.org.arm.Register
+import ic.org.arm.Regs
+import ic.org.arm.SP
 import ic.org.arm.addressing.ZeroOffsetAddrMode2
 import ic.org.arm.addressing.withOffset
 import ic.org.arm.addressing.zeroOffsetAddr

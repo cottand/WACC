@@ -1,12 +1,43 @@
 package ic.org.ast.build
 
-import antlr.WACCParser.*
+import antlr.WACCParser.Assign_rhsContext
+import antlr.WACCParser.RHSArrayLitContext
+import antlr.WACCParser.RHSExprContext
+import antlr.WACCParser.RHSFuncCallContext
+import antlr.WACCParser.RHSNewpairContext
+import antlr.WACCParser.RHSPairElemContext
 import arrow.core.getOrElse
 import arrow.core.invalid
 import arrow.core.toOption
 import arrow.core.valid
-import ic.org.ast.*
-import ic.org.util.*
+import ic.org.ast.AnyPairTs
+import ic.org.ast.ArrayLit
+import ic.org.ast.ArrayT
+import ic.org.ast.AssRHS
+import ic.org.ast.Call
+import ic.org.ast.EmptyArrayT
+import ic.org.ast.Expr
+import ic.org.ast.ExprRHS
+import ic.org.ast.Newpair
+import ic.org.ast.NullPairLit
+import ic.org.ast.PairElem
+import ic.org.ast.PairElemRHS
+import ic.org.ast.PairT
+import ic.org.ast.Scope
+import ic.org.util.NOT_REACHED
+import ic.org.util.NullPairError
+import ic.org.util.Parsed
+import ic.org.util.TypeError
+import ic.org.util.UndefinedIdentifier
+import ic.org.util.UnexpectedNumberOfParamsError
+import ic.org.util.areAllValid
+import ic.org.util.combine
+import ic.org.util.errors
+import ic.org.util.flatMap
+import ic.org.util.position
+import ic.org.util.startPosition
+import ic.org.util.validate
+import ic.org.util.valids
 import kotlinx.collections.immutable.toPersistentList
 
 internal fun Assign_rhsContext.asAst(scp: Scope): Parsed<AssRHS> {

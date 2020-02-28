@@ -6,19 +6,20 @@ import arrow.core.getOrElse
 import ic.org.CompileResult
 import ic.org.WACCCompiler
 import ic.org.util.containsAll
-import ic.org.util.print
+import java.io.File
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assumptions.*
+import org.junit.jupiter.api.Assumptions.assumeFalse
+import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.Assumptions.assumingThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.fail
-import java.io.File
-import kotlin.time.ExperimentalTime
 import reference.ReferenceCompilerAPI as Ref
 
 /**
@@ -51,7 +52,7 @@ class TestPrograms {
   }
 
   private fun skipIfIgnored(prog: WACCProgram) =
-      assumeTrue(ignoreKeyword !in prog.file.absolutePath) {"File path contains '$ignoreKeyword', skipping test"}
+    assumeTrue(ignoreKeyword !in prog.file.absolutePath) { "File path contains '$ignoreKeyword', skipping test" }
 
   private val waccFiles =
     File(waccExamplesPath).walk()

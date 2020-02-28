@@ -8,12 +8,34 @@ package ic.org.ast.build
  * Thus, we use a Validated in order to return either a succesful value or a list of errors, and the caller dels with
  * that accordingly, thanks to higher order functions like `validate` (see util package).
  */
-import antlr.WACCParser.*
+import antlr.WACCParser.ArrayPairElemContext
+import antlr.WACCParser.BaseTPairElemContext
+import antlr.WACCParser.FuncContext
+import antlr.WACCParser.Pair_elem_typeContext
+import antlr.WACCParser.ParamContext
+import antlr.WACCParser.ProgContext
 import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.ast.*
-import ic.org.util.*
+import ic.org.ast.AnyPairTs
+import ic.org.ast.Func
+import ic.org.ast.FuncIdent
+import ic.org.ast.FuncScope
+import ic.org.ast.GlobalScope
+import ic.org.ast.Ident
+import ic.org.ast.Param
+import ic.org.ast.Prog
+import ic.org.ast.Scope
+import ic.org.ast.Type
+import ic.org.util.DuplicateParamError
+import ic.org.util.Parsed
+import ic.org.util.areAllValid
+import ic.org.util.combineWith
+import ic.org.util.errors
+import ic.org.util.flatMap
+import ic.org.util.startPosition
+import ic.org.util.validate
+import ic.org.util.valids
 import kotlinx.collections.immutable.plus
 
 /**
@@ -86,7 +108,6 @@ fun FuncContext.asAst(funcIdent: FuncIdent): Parsed<Func> {
   val funcScope = funcIdent.funcScope
 
   val type = type().asAst()
-
 
   return stat().asAst(funcScope).map { body -> Func(type, ident, params, body, funcScope) }
 }

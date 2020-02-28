@@ -1,8 +1,17 @@
 package ic.org.util
 
-import ic.org.arm.*
-import kotlinx.collections.immutable.*
+import ic.org.arm.Data
+import ic.org.arm.Exception
+import ic.org.arm.Instr
+import ic.org.arm.StdFunc
+import ic.org.arm.StringData
 import java.util.LinkedList
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.plus
+import kotlinx.collections.immutable.toPersistentList
 
 typealias Instructions = PersistentList<Instr>
 typealias Datas = PersistentList<Data>
@@ -19,8 +28,8 @@ private constructor(
 ) {
   val isEmpty by lazy { instr.isEmpty() && data.isEmpty() && funcs.isEmpty() }
 
-  constructor(instr: Instructions = persistentListOf(), data: Datas = persistentListOf())
-    : this(instr, data, persistentSetOf())
+  constructor(instr: Instructions = persistentListOf(), data: Datas = persistentListOf()) :
+    this(instr, data, persistentSetOf())
 
   fun combine(other: Code) = Code(instr + other.instr, data + other.data, funcs.addAll(other.funcs))
 

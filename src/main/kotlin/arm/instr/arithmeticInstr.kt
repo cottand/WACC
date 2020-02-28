@@ -1,7 +1,13 @@
 package ic.org.arm.instr
 
 import arrow.core.None
-import ic.org.arm.*
+import ic.org.arm.ARMCondSInstr
+import ic.org.arm.Flag
+import ic.org.arm.ImmOperand2
+import ic.org.arm.Immed_8r_bs
+import ic.org.arm.Operand2
+import ic.org.arm.RegOperand2
+import ic.org.arm.Register
 
 interface ArithmeticInstr {
   val s: Boolean

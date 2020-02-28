@@ -3,9 +3,6 @@ import arrow.core.extensions.list.semialign.padZip
 import arrow.core.getOrElse
 import arrow.core.some
 import ic.org.util.joinLines
-import ic.org.util.print
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.opentest4j.AssertionFailedError
 
 fun String.sideToSideWith(other: String, pad: Int = 20) = lines().padZip(other.lines())
   .map { (ol, or) ->
@@ -16,7 +13,6 @@ fun String.sideToSideWith(other: String, pad: Int = 20) = lines().padZip(other.l
     lNumber + "     ".drop(lNumber.length) + s
   }
   .joinLines()
-
 
 /**
  * Reads this [WACCProgram]'s file looking for a particlar input field.

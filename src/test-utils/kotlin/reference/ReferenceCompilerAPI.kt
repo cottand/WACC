@@ -12,9 +12,8 @@ import com.google.gson.Gson
 import ic.org.util.NOT_REACHED
 import ic.org.util.createWithDirs
 import ic.org.util.joinLines
-import ic.org.util.print
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import java.io.File
+import org.junit.jupiter.api.Assumptions.assumeTrue
 
 object ReferenceCompilerAPI {
 
@@ -116,5 +115,3 @@ data class EmulatorReply(
  * Serialised JSON produced by the reference compiler
  */
 data class CompilerReply(val test: String, val upload: String, val compiler_out: String)
-
-

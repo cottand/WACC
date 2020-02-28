@@ -3,7 +3,11 @@ package ic.org.arm
 import arrow.core.None
 import ic.org.arm.addressing.ImmEqualLabel
 import ic.org.arm.addressing.zeroOffsetAddr
-import ic.org.arm.instr.*
+import ic.org.arm.instr.BLInstr
+import ic.org.arm.instr.CMPInstr
+import ic.org.arm.instr.LDRInstr
+import ic.org.arm.instr.POPInstr
+import ic.org.arm.instr.PUSHInstr
 import ic.org.util.Code
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus

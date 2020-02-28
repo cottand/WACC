@@ -1,7 +1,7 @@
 package ic.org.arm
 
-import kotlinx.collections.immutable.persistentListOf
 import java.util.UUID
+import kotlinx.collections.immutable.persistentListOf
 
 /**
  * Represents a unique label in a code segment that references a string.

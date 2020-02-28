@@ -2,8 +2,6 @@
 
 package ic.org.arm
 
-import java.lang.UnsupportedOperationException
-
 /**
  * 8-bit constant
  */

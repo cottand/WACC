@@ -2,7 +2,15 @@ package ic.org.arm.instr
 
 import arrow.core.None
 import arrow.core.Some
-import ic.org.arm.*
+import ic.org.arm.ARMCondSInstr
+import ic.org.arm.CondFlag
+import ic.org.arm.Flag
+import ic.org.arm.ImmOperand2
+import ic.org.arm.Immed_8r_bs
+import ic.org.arm.Immed_8r_char
+import ic.org.arm.Operand2
+import ic.org.arm.RegOperand2
+import ic.org.arm.Register
 
 data class MOVInstr(
   override val cond: Flag,
@@ -18,8 +26,8 @@ data class MOVInstr(
   constructor(rd: Register, op2: Register) : this(None, false, rd, RegOperand2(op2))
 
   constructor(cond: CondFlag, s: Boolean = false, rd: Register, op2: Operand2) : this(Some(cond), s, rd, op2)
-  constructor(cond: CondFlag, s: Boolean = false, rd: Register, imm8b: Byte)
-    : this(cond, s, rd, ImmOperand2(Immed_8r_bs(imm8b, 0)))
+  constructor(cond: CondFlag, s: Boolean = false, rd: Register, imm8b: Byte) :
+    this(cond, s, rd, ImmOperand2(Immed_8r_bs(imm8b, 0)))
 
   constructor(rd: Register, char: Char) : this(None, false, rd, ImmOperand2(Immed_8r_char(char)))
   constructor(rd: Register, imm8b: Byte) : this(None, false, rd, ImmOperand2(Immed_8r_bs(imm8b, 0)))

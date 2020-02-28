@@ -1,16 +1,20 @@
 package ic.org.util
 
-import arrow.core.*
+import arrow.core.None
+import arrow.core.Option
+import arrow.core.Some
 import arrow.core.extensions.list.foldable.forAll
+import arrow.core.firstOrNone
+import arrow.core.some
 import arrow.syntax.collections.tail
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.plus
-import kotlinx.collections.immutable.toPersistentList
 import java.io.File
 import java.util.UUID
 import java.util.stream.Stream
 import kotlin.streams.toList
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.plus
+import kotlinx.collections.immutable.toPersistentList
 
 /**
  * Like [List.map], except it produces a [PersistentList]
@@ -86,4 +90,3 @@ fun File.createWithDirs() {
   parentFile.mkdirs()
   createNewFile()
 }
-

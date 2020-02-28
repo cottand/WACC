@@ -20,4 +20,3 @@ data class ASRImmOperand2(val rm: Register, val imm: Immed_5) : Operand2() {
 data class RegOperand2(val rm: Register) : Operand2() {
   override val code = rm.code
 }
-

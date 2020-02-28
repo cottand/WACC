@@ -5,12 +5,54 @@ import arrow.core.extensions.list.foldable.forAll
 import arrow.core.some
 import arrow.core.valid
 import ast.Sizes
-import ic.org.arm.*
+import ic.org.arm.ASRImmOperand2
+import ic.org.arm.CheckArrayBounds
+import ic.org.arm.CheckDivByZero
+import ic.org.arm.EQCond
+import ic.org.arm.GECond
+import ic.org.arm.GTCond
+import ic.org.arm.ImmOperand2
+import ic.org.arm.Immed_5
+import ic.org.arm.Immed_8r_bs
+import ic.org.arm.LECond
+import ic.org.arm.LSLImmOperand2
+import ic.org.arm.LTCond
+import ic.org.arm.Label
+import ic.org.arm.NECond
+import ic.org.arm.OverflowException
+import ic.org.arm.Reg
+import ic.org.arm.RegOperand2
+import ic.org.arm.Regs
+import ic.org.arm.SP
+import ic.org.arm.StringData
+import ic.org.arm.VSCond
 import ic.org.arm.addressing.ImmEqualLabel
 import ic.org.arm.addressing.ImmEquals32b
 import ic.org.arm.addressing.zeroOffsetAddr
-import ic.org.arm.instr.*
-import ic.org.util.*
+import ic.org.arm.instr.ADDInstr
+import ic.org.arm.instr.ANDInstr
+import ic.org.arm.instr.BLInstr
+import ic.org.arm.instr.CMPInstr
+import ic.org.arm.instr.EORInstr
+import ic.org.arm.instr.LDRInstr
+import ic.org.arm.instr.MOVInstr
+import ic.org.arm.instr.ORRInstr
+import ic.org.arm.instr.POPInstr
+import ic.org.arm.instr.PUSHInstr
+import ic.org.arm.instr.RSBInstr
+import ic.org.arm.instr.SMULLInstr
+import ic.org.arm.instr.SUBInstr
+import ic.org.util.Code
+import ic.org.util.IllegalArrayAccess
+import ic.org.util.NOT_REACHED
+import ic.org.util.Parsed
+import ic.org.util.Position
+import ic.org.util.TypeError
+import ic.org.util.head
+import ic.org.util.log2
+import ic.org.util.prepend
+import ic.org.util.tail
+import ic.org.util.take2OrNone
 import java.lang.Integer.max
 import java.lang.Integer.min
 
@@ -115,8 +157,8 @@ data class ArrayElemExpr internal constructor(
     TODO()
   }, { (dst, nxt, _) ->
     val arrayAccessCode = Code.write {
-      +MOVInstr(rd = Reg(0), op2 = nxt)  // Place the evaluated expr for index in r0
-      +MOVInstr(rd = Reg(1), op2 = dst)  // Place the array variable in r1
+      +MOVInstr(rd = Reg(0), op2 = nxt) // Place the evaluated expr for index in r0
+      +MOVInstr(rd = Reg(1), op2 = dst) // Place the array variable in r1
       +BLInstr(CheckArrayBounds.label)
       // Increment dst (ident) so we skip the actual first element, the array size
       +ADDInstr(s = false, rd = dst, rn = dst, int8b = Sizes.Word.bytes)
@@ -124,7 +166,7 @@ data class ArrayElemExpr internal constructor(
     }
     Code.write {
       +exprs.head.code(rem.tail)
-      +variable.get(scope, dst)  // Place ident pointer in dst
+      +variable.get(scope, dst) // Place ident pointer in dst
       +arrayAccessCode
       exprs.tail.forEach { expr ->
         +expr.code(rem.tail)
