@@ -10,7 +10,7 @@ import arrow.core.invalid
 import arrow.core.valid
 import ic.org.arm.Ranges
 import ic.org.ast.AssRHS
-import ic.org.ast.Expr
+import ic.org.ast.expr.Expr
 import ic.org.ast.Ident
 import ic.org.ast.Type
 import kotlinx.collections.immutable.PersistentList
