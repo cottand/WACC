@@ -6,11 +6,11 @@ import ic.org.arm.Immed_12
 import ic.org.arm.Immed_5
 import ic.org.arm.AsmLabel
 import ic.org.arm.Plus
-import ic.org.arm.Printable
+import ic.org.arm.ARMAsmInstr
 import ic.org.arm.Register
 import ic.org.arm.Sign
 
-sealed class AddrMode2 : Printable
+sealed class AddrMode2 : ARMAsmInstr
 
 /* Normal Offset */
 

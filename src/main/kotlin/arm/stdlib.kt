@@ -31,7 +31,7 @@ abstract class IOFunc : StdFunc() {
   abstract val msgTemplate: String
   internal val msg by lazy { StringData(msgTemplate, msgTemplate.length - 1) }
   override val body by lazy { ARMAsm(instructions, msg.body) }
-  abstract val instructions: PersistentList<Instr>
+  abstract val instructions: PersistentList<ARMAsmInstr>
 }
 
 object PrintIntStdFunc : IOFunc() {

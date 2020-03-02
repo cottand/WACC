@@ -5,14 +5,14 @@ package ic.org.arm
 /**
  * 8-bit constant
  */
-data class Immed_8(val v: Byte) : Printable {
+data class Immed_8(val v: Byte) : ARMAsmInstr {
   override val code = v.toString()
 }
 
 /**
  * 5-bit constant
  */
-data class Immed_5(val v: UByte) : Printable {
+data class Immed_5(val v: UByte) : ARMAsmInstr {
   constructor(v: Int) : this(v.toUByte())
 
   init {
@@ -22,7 +22,7 @@ data class Immed_5(val v: UByte) : Printable {
   override val code = v.toString()
 }
 
-sealed class Immed_8r : Printable
+sealed class Immed_8r : ARMAsmInstr
 
 /**
  * 32-bit constant formed by right-rotating an 8-bit value by an even number of bits
@@ -38,7 +38,7 @@ data class Immed_8r_char(val c: Char) : Immed_8r() {
 /**
  * 12-bit constant
  */
-data class Immed_12(val v: Int) : Printable {
+data class Immed_12(val v: Int) : ARMAsmInstr {
   init {
     require(v in Ranges._12b)
   }

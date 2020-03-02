@@ -2,7 +2,7 @@ package ic.org.util
 
 import ic.org.arm.Data
 import ic.org.arm.Exception
-import ic.org.arm.Instr
+import ic.org.arm.ARMAsmInstr
 import ic.org.arm.StdFunc
 import ic.org.arm.StringData
 import java.util.LinkedList
@@ -13,7 +13,7 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.toPersistentList
 
-typealias Instructions = PersistentList<Instr>
+typealias Instructions = PersistentList<ARMAsmInstr>
 typealias Datas = PersistentList<Data>
 
 /**
@@ -35,7 +35,7 @@ private constructor(
 
   operator fun plus(other: ARMAsm) = combine(other)
   operator fun plus(other: Instructions) = combine(ARMAsm(other))
-  operator fun plus(other: Instr) = combine(instr(other))
+  operator fun plus(other: ARMAsmInstr) = combine(instr(other))
 
   fun withFunction(other: ARMAsm) =
     ARMAsm(instr, data, funcs + other).withFunctions(other.funcs)
@@ -68,36 +68,36 @@ private constructor(
 
   companion object {
 
-    fun write(init: CodeBuilderScope.() -> Unit) =
-      CodeBuilderScope().apply(init).codes.flatten()
+    fun write(init: BuilderScope.() -> Unit) =
+      BuilderScope().apply(init).codes.flatten()
 
     val empty = ARMAsm(
       persistentListOf<Nothing>(),
       persistentListOf<Nothing>()
     )
 
-    fun instr(instr: Instr) = ARMAsm(
+    fun instr(instr: ARMAsmInstr) = ARMAsm(
       persistentListOf(instr),
       persistentListOf<Nothing>()
     )
   }
 
-  class CodeBuilderScope {
+  class BuilderScope {
     internal val codes = LinkedList<ARMAsm>()
     operator fun ARMAsm.unaryPlus() = codes.addLast(this)
-    operator fun Instr.unaryPlus() = codes.addLast(ARMAsm(instr = persistentListOf(this)))
-    operator fun List<Instr>.unaryPlus() = codes.addLast(ARMAsm(instr = toPersistentList()))
+    operator fun ARMAsmInstr.unaryPlus() = codes.addLast(ARMAsm(instr = persistentListOf(this)))
+    operator fun List<ARMAsmInstr>.unaryPlus() = codes.addLast(ARMAsm(instr = toPersistentList()))
     fun withFunction(other: ARMAsm) = codes.addLast(empty.withFunction(other))
     fun withFunction(exception: Exception) = withFunction(exception.body)
     fun withFunction(func: StdFunc) = withFunction(func.body)
     fun withFunctions(others: Collection<ARMAsm>) = codes.addLast(empty.withFunctions(others))
-    fun data(init: CodeBuilderDataScope.() -> Unit) {
-      val d = CodeBuilderDataScope().apply(init)
+    fun data(init: BuilderDataScope.() -> Unit) {
+      val d = BuilderDataScope().apply(init)
       codes.addLast(ARMAsm(data = d.instrs.toPersistentList()))
     }
   }
 
-  class CodeBuilderDataScope {
+  class BuilderDataScope {
     internal val instrs = LinkedList<Data>()
     operator fun Data.unaryPlus() = instrs.addLast(this)
     operator fun StringData.unaryPlus() = body.forEach { instrs.addLast(it) }

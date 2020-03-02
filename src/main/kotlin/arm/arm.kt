@@ -13,17 +13,11 @@ typealias Regs = PersistentList<Reg>
 /**
  * Something that can be printed as ARM code
  */
-interface Printable {
+interface ARMAsmInstr {
   val code: String
+  operator fun plus(other: PersistentList<ARMAsmInstr>) = persistentListOf(this) + other
 }
 
-/**
- * Highest level element of our IR. This compiler ends up producing a [List] of [Instr]s
- */
-interface Instr : Printable {
-  operator fun plus(other: Instr) = persistentListOf(this, other)
-  operator fun plus(other: PersistentList<Instr>) = persistentListOf(this) + other
-}
 
 data class AsmDirective(val text: String) : Data() {
   override val code = ".$text"
@@ -37,16 +31,16 @@ data class AsmDirective(val text: String) : Data() {
 }
 
 /**
- * [Instr] that goes inside the Data segment of the program
+ * [ARMAsmInstr] that goes inside the Data segment of the program
  */
-sealed class Data : Instr
+sealed class Data : ARMAsmInstr
 
 /**
  * ARM instruction, can be translated to ARM assembly code
  */
-abstract class ARMInstr : Instr {
+abstract class ARMInstr : ARMAsmInstr {
   /**
-   * Aliases to [Printable.code]
+   * Aliases to [ARMAsmInstr.code]
    */
   override fun toString() = code
 }
@@ -72,7 +66,7 @@ abstract class ARMCondSInstr : ARMCondInstr() {
   override fun opcode(op: String) = super.opcode(op) + if (s) "S" else ""
 }
 
-sealed class Register : Printable
+sealed class Register : ARMAsmInstr
 
 /**
  * Register, represented by an ID
@@ -139,7 +133,7 @@ data class AsmLabel(val name: String) : Data() {
 /**
  * Sign for offsets
  */
-sealed class Sign : Printable
+sealed class Sign : ARMAsmInstr
 
 object Plus : Sign() {
   override val code = ""

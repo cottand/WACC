@@ -2,7 +2,7 @@ package ic.org.arm
 
 import arrow.core.Option
 
-sealed class CondFlag : Printable
+sealed class CondFlag : ARMAsmInstr
 
 typealias Flag = Option<CondFlag>
 

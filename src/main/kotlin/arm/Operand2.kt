@@ -3,7 +3,7 @@ package ic.org.arm
 /**
  * Operand2 types
  */
-sealed class Operand2 : Printable
+sealed class Operand2 : ARMAsmInstr
 
 data class ImmOperand2(val imm: Immed_8r) : Operand2() {
   override val code = "#${imm.code}"
