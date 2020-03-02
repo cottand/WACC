@@ -30,6 +30,9 @@ class JvmAsm private constructor(
 
   fun combine(other: JvmAsm) = JvmAsm(instrs + other.instrs, methods + other.methods)
 
+  operator fun plus(other: JvmAsm) = combine(other)
+  operator fun plus(other: JvmInstr) = combine(instr(other))
+
   class BuilderScope {
     private val instructions = LinkedList<JvmAsm>()
 
