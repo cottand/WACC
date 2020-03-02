@@ -3,6 +3,7 @@ package ic.org.ast
 import arrow.core.None
 import arrow.core.firstOrNone
 import ast.Sizes
+import ic.org.arm.ARMGenOnly
 import ic.org.arm.CheckNullPointer
 import ic.org.arm.MallocStdFunc
 import ic.org.arm.ReadChar
@@ -19,6 +20,8 @@ import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.MOVInstr
 import ic.org.arm.instr.STRInstr
 import ic.org.ast.expr.Expr
+import ic.org.jvm.JvmAsm
+import ic.org.jvm.JvmGenOnly
 import ic.org.util.Code
 import ic.org.util.NOT_REACHED
 import ic.org.util.head
@@ -59,13 +62,21 @@ interface Computable {
    *
    * If this [Computable] is non basic (ie, a pair or an array) then the pointer to the structure is put in [rem].head
    */
-  fun code(rem: Regs): Code
+  @ARMGenOnly
+  fun armAsm(rem: Regs): Code
+
+  /**
+   * Convert to [JvmAsm]. It will load this [Computable] from the locals into the stack and evaluate its components
+   * as it does it. The final result (whatever its type) will be left at the top of the stack.
+   */
+  @JvmGenOnly
+  fun jvmAsm(): JvmAsm
 
   /**
    * Evaluates an expression in order to put it in [dest]. Should be used by [Stat]
    */
   fun eval(dest: Register, usingRegs: List<Reg> = Reg.fromExpr) = Code.write {
-    +code(usingRegs.toPersistentList())
+    +armAsm(usingRegs.toPersistentList())
     if (dest != usingRegs.head)
       +MOVInstr(rd = dest, op2 = usingRegs.head)
   }
@@ -74,7 +85,7 @@ interface Computable {
 sealed class AssRHS : Computable
 
 data class ReadRHS(override val type: Type) : AssRHS() {
-  override fun code(rem: Regs): Code = Code.write {
+  override fun armAsm(rem: Regs): Code = Code.write {
     val readFunc = when (type) {
       is IntT -> ReadInt
       is CharT -> ReadChar
@@ -86,6 +97,8 @@ data class ReadRHS(override val type: Type) : AssRHS() {
 
     withFunction(readFunc)
   }
+
+  override fun jvmAsm() = TODO()
 }
 
 data class ExprRHS(val expr: Expr) : AssRHS(), Computable by expr {
@@ -98,7 +111,7 @@ data class ExprRHS(val expr: Expr) : AssRHS(), Computable by expr {
  */
 data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
   override val type = arrT
-  override fun code(rem: Regs) = Code.write {
+  override fun armAsm(rem: Regs) = Code.write {
     require(rem.size >= 2)
 
     val dst = rem.head
@@ -116,7 +129,7 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
     +MOVInstr(None, false, dst, Reg(0))
     // For each expr, evaluate and put in array at index + exprSize
     exprs.forEachIndexed { i, expr ->
-      +expr.code(exprRem)
+      +expr.armAsm(exprRem)
       +exprType.sizedSTR(exprRem.head, dst.withOffset(4 + i * exprSize))
     }
     // Add array size to first slot
@@ -125,6 +138,7 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
 
     withFunction(MallocStdFunc)
   }
+  override fun jvmAsm() = TODO()
 
   override fun toString() =
     exprs.joinToString(separator = ", ", prefix = "[", postfix = "]") { it.toString() }
@@ -133,7 +147,7 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
 data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
   override val type = PairT(expr1.type, expr2.type)
   override fun toString() = "newpair($expr1, $expr2)"
-  override fun code(rem: Regs) = Code.write {
+  override fun armAsm(rem: Regs) = Code.write {
     val dst = rem.head
     val rest = rem.tail
     +LDRInstr(Reg(0), 8)
@@ -141,14 +155,15 @@ data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
     +BLInstr(MallocStdFunc.label)
     +MOVInstr(None, false, dst, Reg(0))
     // Compute the fst expr
-    +expr1.code(rest)
+    +expr1.armAsm(rest)
     // Put result in pair fst slot
     +STRInstr(rest.head, dst.zeroOffsetAddr)
     // Compute the snd expr
-    +expr2.code(rest)
+    +expr2.armAsm(rest)
     // Put result in pair snd slot
     +STRInstr(rest.head, dst.withOffset(Sizes.Word.bytes))
   }
+  override fun jvmAsm() = TODO()
 }
 
 data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
@@ -157,14 +172,15 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
     is Snd -> pairs.sndT
   }
 
-  override fun code(rem: Regs) = Code.write {
-    +pairElem.expr.code(rem)
+  override fun armAsm(rem: Regs) = Code.write {
+    +pairElem.expr.armAsm(rem)
     +MOVInstr(None, false, Reg(0), rem.head)
     +BLInstr(None, CheckNullPointer.label)
     +LDRInstr(rem.head, rem.head.withOffset(pairElem.offsetFromAddr))
 
     withFunction(CheckNullPointer)
   }
+  override fun jvmAsm() = TODO()
 
   override fun toString() = pairElem.toString()
 }
@@ -172,13 +188,13 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
 data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
   override val type = func.retType
   val name = func.name
-  override fun code(rem: Regs) = Code.write {
+  override fun armAsm(rem: Regs) = Code.write {
     val (init, end, stackSize) = func.funcScope.makeInstrScope()
     args.zip(func.params).forEach { (argExpr, paramVar) ->
       // Offset corresponds to pram's address, minues 4b (because the stack grows when calling a function
       // minus the size of the function's stack (which will be compensated by when passing [init])
       val destAddr = SP.withOffset(paramVar.addrFromSP - stackSize - Sizes.Word.bytes)
-      +argExpr.code(rem)
+      +argExpr.armAsm(rem)
       +argExpr.type.sizedSTR(rem.head, destAddr)
     }
     +init
@@ -186,6 +202,7 @@ data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
     +end
     +MOVInstr(rd = rem.head, op2 = Reg.ret)
   }
+  override fun jvmAsm() = TODO()
 
   override fun toString() = "call ${func.name.name} (..)"
 }

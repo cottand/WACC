@@ -65,7 +65,7 @@ sealed class Expr : Computable {
 
 data class IntLit(val value: Int) : Expr() {
   override val type = IntT
-  override fun code(rem: Regs) = Code.empty + LDRInstr(
+  override fun armAsm(rem: Regs) = Code.empty + LDRInstr(
     rem.head,
     ImmEquals32b(value)
   )
@@ -73,15 +73,17 @@ data class IntLit(val value: Int) : Expr() {
   override val weight = 1
 
   override fun toString(): String = value.toString()
+  override fun jvmAsm() = TODO()
 }
 
 data class BoolLit(val value: Boolean) : Expr() {
   override val type = BoolT
   override fun toString(): String = value.toString()
   // Booleans are represented as a 1 for true, and 0 for false
-  override fun code(rem: Regs) = Code.write {
+  override fun armAsm(rem: Regs) = Code.write {
     +MOVInstr(rem.head, if (value) 1.toByte() else 0.toByte())
   }
+  override fun jvmAsm() = TODO()
 
   override val weight = 1
 }
@@ -90,9 +92,10 @@ data class CharLit(val value: Char) : Expr() {
   override val type = CharT
   override fun toString(): String = "$value"
   // Chars are represented as their ASCII value
-  override fun code(rem: Regs) = Code.write {
+  override fun armAsm(rem: Regs) = Code.write {
     +MOVInstr(rem.head, value)
   }
+  override fun jvmAsm() = TODO()
 
   override val weight = 1
 }
@@ -100,11 +103,12 @@ data class CharLit(val value: Char) : Expr() {
 data class StrLit(val value: String) : Expr() {
   override val type = StringT
   override fun toString(): String = value
-  override fun code(rem: Regs): Code {
+  override fun armAsm(rem: Regs): Code {
     val s = StringData(value, value.length - countEscape())
     val instr = LDRInstr(rem.head, ImmEqualLabel(s.label))
     return Code(data = s.body) + instr
   }
+  override fun jvmAsm() = TODO()
 
   override val weight = 1
 
@@ -126,7 +130,8 @@ object NullPairLit : Expr() {
   override val type = AnyPairTs()
   override fun toString(): String = "null"
   // null is represented as 0
-  override fun code(rem: Regs) = Code.instr(LDRInstr(rem.head, ImmEquals32b(0)))
+  override fun armAsm(rem: Regs) = Code.instr(LDRInstr(rem.head, ImmEquals32b(0)))
+  override fun jvmAsm() = TODO()
 
   override val weight = 1
 }
@@ -134,7 +139,8 @@ object NullPairLit : Expr() {
 data class IdentExpr(val vari: Variable, val scope: Scope) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
-  override fun code(rem: Regs): Code = Code.instr(vari.get(destReg = rem.head, currentScope = scope))
+  override fun armAsm(rem: Regs): Code = Code.instr(vari.get(destReg = rem.head, currentScope = scope))
+  override fun jvmAsm() = TODO()
   override val weight = stackAccess
 }
 
@@ -147,7 +153,7 @@ data class ArrayElemExpr internal constructor(
   override fun toString(): String = variable.ident.name +
     exprs.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
-  override fun code(rem: Regs): Code = rem.take2OrNone.fold({
+  override fun armAsm(rem: Regs): Code = rem.take2OrNone.fold({
     TODO()
   }, { (dst, nxt, _) ->
     val arrayAccessCode = Code.write {
@@ -159,17 +165,18 @@ data class ArrayElemExpr internal constructor(
       +ADDInstr(None, false, dst, dst, LSLImmOperand2(nxt, Immed_5(log2(type.size.bytes))))
     }
     Code.write {
-      +exprs.head.code(rem.tail)
+      +exprs.head.armAsm(rem.tail)
       +variable.get(scope, dst) // Place ident pointer in dst
       +arrayAccessCode
       exprs.tail.forEach { expr ->
-        +expr.code(rem.tail)
+        +expr.armAsm(rem.tail)
         +LDRInstr(dst, dst.zeroOffsetAddr)
         +arrayAccessCode
       }
       +type.sizedLDR(dst, dst.zeroOffsetAddr)
     }
   }).withFunction(CheckArrayBounds.body)
+  override fun jvmAsm() = TODO()
 
   override val weight = heapAccess * exprs.size
 
@@ -199,24 +206,25 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
   override val weight = expr.weight + 1
 
   override fun toString(): String = "$unaryOper $expr"
-  override fun code(rem: Regs) = when (unaryOper) {
+  override fun armAsm(rem: Regs) = when (unaryOper) {
     NotUO -> Code.write {
-      +expr.code(rem)
+      +expr.armAsm(rem)
       +EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r_bs(1, 0)))
     }
     MinusUO -> Code.write {
-      +expr.code(rem)
+      +expr.armAsm(rem)
       +RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r_bs(0, 0)))
       +BLInstr(VSCond.some(), OverflowException.label)
       withFunction(OverflowException)
     }
     LenUO -> Code.write {
-      +expr.code(rem)
+      +expr.armAsm(rem)
       +LDRInstr(rem.head, rem.head.zeroOffsetAddr)
     }
-    OrdUO -> expr.code(rem)
-    ChrUO -> expr.code(rem)
+    OrdUO -> expr.armAsm(rem)
+    ChrUO -> expr.armAsm(rem)
   }
+  override fun jvmAsm() = TODO()
 
   companion object {
     /**
@@ -246,29 +254,30 @@ data class BinaryOperExpr internal constructor(
   }
 
   override fun toString(): String = "($expr1 $binaryOper $expr2)"
-  override fun code(rem: Regs) = Code.write {
+  override fun armAsm(rem: Regs) = Code.write {
     rem.take2OrNone.fold({
       val dest = rem.head
       // No available registers, use stack machine! We can only use dest and Reg.last
-      +expr2.code(rem)
+      +expr2.armAsm(rem)
       +PUSHInstr(dest)
       +ADDInstr(s = false, rd = SP, rn = SP, int8b = Sizes.Word.bytes)
-      +expr1.code(rem)
+      +expr1.armAsm(rem)
       +SUBInstr(s = false, rd = SP, rn = SP, int8b = Sizes.Word.bytes)
       +POPInstr(Reg.last)
       +binaryOper.code(dest, Reg.last)
     }, { (dest, next, rest) ->
       // We can use at least two registers, dest and next, but we know there's more
       if (expr1.weight > expr2.weight) {
-        +expr1.code(rem)
-        +expr2.code(next prepend rest)
+        +expr1.armAsm(rem)
+        +expr2.armAsm(next prepend rest)
       } else {
-        +expr2.code(next prepend (dest prepend rest))
-        +expr1.code(dest prepend rest)
+        +expr2.armAsm(next prepend (dest prepend rest))
+        +expr1.armAsm(dest prepend rest)
       }
       +binaryOper.code(dest, next)
     })
   }
+  override fun jvmAsm() = TODO()
 
   companion object {
     /**

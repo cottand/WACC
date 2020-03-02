@@ -205,7 +205,7 @@ data class Variable(
    */
   @ARMGenOnly
   fun set(rhs: Computable, currentScope: Scope, availableRegs: Regs = Reg.fromExpr) =
-    rhs.code(availableRegs) +
+    rhs.armAsm(availableRegs) +
       type.sizedSTR(availableRegs.head, SP.withOffset(addrWithScopeOffset(currentScope)))
 
   /**

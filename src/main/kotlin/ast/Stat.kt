@@ -59,7 +59,7 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
       +lhs.variable.get(scope, Reg(4)) // Put array var in r4
       // Iteratively load array addresses into r0 for nested arrays
       lhs.indices.dropLast(1).forEach {
-        +it.code(Reg.fromExpr.tail) // Load index into r5
+        +it.armAsm(Reg.fromExpr.tail) // Load index into r5
         +MOVInstr(rd = Reg.sndArg, op2 = Reg(4))
         +MOVInstr(None, false, Reg.fstArg, Reg(5))
         +BLInstr(CheckArrayBounds.label)
@@ -67,7 +67,7 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
         +rhs.type.sizedLDR(Reg(4), Reg(4).withOffset(Reg(5), log2(rhs.type.size.bytes)))
       }
       // Get index of array elem by evaluating the last expression
-      +lhs.indices.last().code(Reg.fromExpr.tail) // Load index into r5
+      +lhs.indices.last().armAsm(Reg.fromExpr.tail) // Load index into r5
       +MOVInstr(None, false, Reg.sndArg, Reg(4))
       +MOVInstr(None, false, Reg.fstArg, Reg(5))
       +BLInstr(CheckArrayBounds.label)
@@ -95,14 +95,14 @@ data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Po
 data class Free(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() = when (expr.type) {
     is AnyPairTs -> Code.write {
-      +expr.code(Reg.fromExpr)
+      +expr.armAsm(Reg.fromExpr)
       +MOVInstr(rd = Reg.first, op2 = Reg.firstExpr)
       +BLInstr(FreeFunc.label)
 
       withFunction(FreeFunc)
     }
     is AnyArrayT -> Code.write {
-      +expr.code(Reg.fromExpr)
+      +expr.armAsm(Reg.fromExpr)
       +MOVInstr(rd = Reg.first, op2 = Reg.firstExpr)
       +BLInstr(FreeFunc.label)
 
@@ -173,7 +173,7 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
     val (initThen, endThen) = then.scope.makeInstrScope()
     val (initElse, endElse) = `else`.scope.makeInstrScope()
 
-    +cond.code(Reg.fromExpr)
+    +cond.armAsm(Reg.fromExpr)
     +CMPInstr(cond = None, rn = Reg.firstExpr, int8b = 0) // Test whether cond == 0
     +BInstr(cond = EQCond.some(), label = elseLabel) // / If so, jump to the else (cond was false!)
     +initThen // init the scope stack
