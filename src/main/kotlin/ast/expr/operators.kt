@@ -31,6 +31,7 @@ import ic.org.ast.CharT
 import ic.org.ast.IntT
 import ic.org.ast.StringT
 import ic.org.ast.Type
+import ic.org.jvm.JvmAsm
 import ic.org.util.Code
 
 /**
@@ -115,6 +116,11 @@ sealed class BinaryOper {
    * The [Code] required in order to perform this [BinaryOper]. By convention, the result should be put in [dest]
    */
   abstract fun code(dest: Reg, r2: Reg): Code
+
+  /**
+   * Convert to [JvmAsm]
+   */
+  abstract fun jvmCode(): JvmAsm
 }
 
 // (int, int) -> int:
@@ -151,6 +157,7 @@ object MulBO : IntBinOp() {
     +CMPInstr(None, r2, ASRImmOperand2(dest, Immed_5(31)))
     +BLInstr(NECond, OverflowException.label)
   }
+  override fun jvmCode() = TODO()
 }
 
 object DivBO : IntBinOp() {
@@ -165,6 +172,7 @@ object DivBO : IntBinOp() {
 
     withFunction(CheckDivByZero)
   }
+  override fun jvmCode() = TODO()
 }
 
 object ModBO : IntBinOp() {
@@ -179,6 +187,7 @@ object ModBO : IntBinOp() {
 
     withFunction(CheckDivByZero.body)
   }
+  override fun jvmCode() = TODO()
 }
 
 object PlusBO : IntBinOp() {
@@ -188,6 +197,7 @@ object PlusBO : IntBinOp() {
     +BLInstr(VSCond, OverflowException.label)
     withFunction(OverflowException.body)
   }
+  override fun jvmCode() = TODO()
 }
 
 object MinusBO : IntBinOp() {
@@ -197,6 +207,7 @@ object MinusBO : IntBinOp() {
     +BLInstr(VSCond, OverflowException.label)
     withFunction(OverflowException)
   }
+  override fun jvmCode() = TODO()
 }
 
 // (int, int) -> bool:
@@ -207,6 +218,7 @@ object GtBO : CompBinOp() {
     +MOVInstr(GTCond, rd = dest, imm8b = 1)
     +MOVInstr(LECond, rd = dest, imm8b = 0)
   }
+  override fun jvmCode() = TODO()
 }
 
 object GeqBO : CompBinOp() {
@@ -216,6 +228,7 @@ object GeqBO : CompBinOp() {
     +MOVInstr(GECond, rd = dest, imm8b = 1)
     +MOVInstr(LTCond, rd = dest, imm8b = 0)
   }
+  override fun jvmCode() = TODO()
 }
 
 object LtBO : CompBinOp() {
@@ -225,6 +238,7 @@ object LtBO : CompBinOp() {
     +MOVInstr(LTCond, rd = dest, imm8b = 1)
     +MOVInstr(GECond, rd = dest, imm8b = 0)
   }
+  override fun jvmCode() = TODO()
 }
 
 object LeqBO : CompBinOp() {
@@ -234,6 +248,7 @@ object LeqBO : CompBinOp() {
     +MOVInstr(cond = LECond, rd = dest, imm8b = 1)
     +MOVInstr(cond = GTCond, rd = dest, imm8b = 0)
   }
+  override fun jvmCode() = TODO()
 }
 
 sealed class EqualityBinOp : BinaryOper() {
@@ -258,6 +273,7 @@ object EqBO : EqualityBinOp() {
       +MOVInstr(cond = EQCond, rd = dest, imm8b = 1)
       +MOVInstr(cond = NECond, rd = dest, imm8b = 0)
     }
+  override fun jvmCode() = TODO()
 }
 
 object NeqBO : EqualityBinOp() {
@@ -268,6 +284,7 @@ object NeqBO : EqualityBinOp() {
       +MOVInstr(cond = NECond, rd = dest, imm8b = 1)
       +MOVInstr(cond = EQCond, rd = dest, imm8b = 0)
     }
+  override fun jvmCode() = TODO()
 }
 
 object AndBO : BoolBinOp() {
@@ -275,6 +292,7 @@ object AndBO : BoolBinOp() {
   override fun code(dest: Reg, r2: Reg) = Code.write {
     +ANDInstr(None, false, dest, dest, RegOperand2(r2))
   }
+  override fun jvmCode() = TODO()
 }
 
 object OrBO : BoolBinOp() {
@@ -282,4 +300,5 @@ object OrBO : BoolBinOp() {
   override fun code(dest: Reg, r2: Reg) = Code.write {
     +ORRInstr(None, false, dest, dest, RegOperand2(r2))
   }
+  override fun jvmCode() = TODO()
 }

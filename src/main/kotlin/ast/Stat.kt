@@ -23,6 +23,7 @@ import ic.org.arm.instr.CMPInstr
 import ic.org.arm.instr.MOVInstr
 import ic.org.arm.instr.POPInstr
 import ic.org.ast.expr.Expr
+import ic.org.jvm.JvmAsm
 import ic.org.util.Code
 import ic.org.util.NOT_REACHED
 import ic.org.util.Position
@@ -38,10 +39,16 @@ sealed class Stat {
    * Convert to [Code]
    */
   abstract fun instr(): Code
+
+  /**
+   * Convert to [JvmAsm]
+   */
+  abstract fun jvmInstr(): JvmAsm
 }
 
 data class Skip(override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() = Code.empty
+  override fun jvmInstr() = TODO()
 }
 
 data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Scope, override val pos: Position) :
@@ -49,6 +56,7 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
   val type = variable.type
   val ident = variable.ident
   override fun instr() = variable.set(rhs, scope)
+  override fun jvmInstr() = TODO()
 }
 
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
@@ -86,10 +94,12 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
       withFunction(CheckNullPointer)
     }
   }
+  override fun jvmInstr() = TODO()
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr(): Code = Assign(lhs, ReadRHS(lhs.type), scope, pos).instr()
+  override fun jvmInstr() = TODO()
 }
 
 data class Free(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
@@ -111,14 +121,17 @@ data class Free(val expr: Expr, override val scope: Scope, override val pos: Pos
 
     else -> NOT_REACHED()
   }
+  override fun jvmInstr() = TODO()
 }
 
 data class Return(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() = expr.eval(Reg.ret) + POPInstr(PC)
+  override fun jvmInstr() = TODO()
 }
 
 data class Exit(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() = expr.eval(Reg.ret) + BLInstr(Label("exit"))
+  override fun jvmInstr() = TODO()
 }
 
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
@@ -153,6 +166,7 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
       else -> NOT_REACHED()
     }
   }
+  override fun jvmInstr() = TODO()
 }
 
 data class Println(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
@@ -161,6 +175,7 @@ data class Println(val expr: Expr, override val scope: Scope, override val pos: 
     +BLInstr(PrintLnStdFunc.label)
     withFunction(PrintLnStdFunc)
   }
+  override fun jvmInstr() = TODO()
 }
 
 data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val scope: Scope, override val pos: Position) :
@@ -186,6 +201,7 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
     +endElse
     +continueLabel
   }
+  override fun jvmInstr() = TODO()
 }
 
 data class While(val cond: Expr, val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
@@ -206,6 +222,7 @@ data class While(val cond: Expr, val body: Stat, override val scope: Scope, over
     +CMPInstr(cond = None, rn = Reg(4), int8b = 1) // Test whether cond == 1
     +BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
   }
+  override fun jvmInstr() = TODO()
 }
 
 data class BegEnd(val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
@@ -215,6 +232,7 @@ data class BegEnd(val body: Stat, override val scope: Scope, override val pos: P
     +body.instr()
     +end
   }
+  override fun jvmInstr() = TODO()
 }
 
 data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope, override val pos: Position) :
@@ -222,4 +240,5 @@ data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope
   val thisStat = stat1
   val nextStat = stat2
   override fun instr() = thisStat.instr() + nextStat.instr()
+  override fun jvmInstr() = TODO()
 }

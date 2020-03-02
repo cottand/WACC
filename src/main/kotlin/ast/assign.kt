@@ -19,6 +19,7 @@ import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.MOVInstr
 import ic.org.arm.instr.STRInstr
 import ic.org.ast.expr.Expr
+import ic.org.jvm.JvmAsm
 import ic.org.util.Code
 import ic.org.util.NOT_REACHED
 import ic.org.util.head
@@ -62,6 +63,11 @@ interface Computable {
   fun code(rem: Regs): Code
 
   /**
+   * Convert to [JvmAsm]
+   */
+  fun jvmCode(): JvmAsm
+
+  /**
    * Evaluates an expression in order to put it in [dest]. Should be used by [Stat]
    */
   fun eval(dest: Register, usingRegs: List<Reg> = Reg.fromExpr) = Code.write {
@@ -86,6 +92,7 @@ data class ReadRHS(override val type: Type) : AssRHS() {
 
     withFunction(readFunc)
   }
+  override fun jvmCode() = TODO()
 }
 
 data class ExprRHS(val expr: Expr) : AssRHS(), Computable by expr {
@@ -125,6 +132,7 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
 
     withFunction(MallocStdFunc)
   }
+  override fun jvmCode() = TODO()
 
   override fun toString() =
     exprs.joinToString(separator = ", ", prefix = "[", postfix = "]") { it.toString() }
@@ -149,6 +157,7 @@ data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
     // Put result in pair snd slot
     +STRInstr(rest.head, dst.withOffset(Sizes.Word.bytes))
   }
+  override fun jvmCode() = TODO()
 }
 
 data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
@@ -165,6 +174,7 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
 
     withFunction(CheckNullPointer)
   }
+  override fun jvmCode() = TODO()
 
   override fun toString() = pairElem.toString()
 }
@@ -186,6 +196,7 @@ data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
     +end
     +MOVInstr(rd = rem.head, op2 = Reg.ret)
   }
+  override fun jvmCode() = TODO()
 
   override fun toString() = "call ${func.name.name} (..)"
 }
