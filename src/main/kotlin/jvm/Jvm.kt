@@ -23,9 +23,10 @@ class JvmAsm private constructor(
 
   constructor(a: JvmAsm) : this(a.instrs, a.methods)
 
-  constructor(init: JvmAsmBuilder.() -> Unit) : this(JvmAsmBuilder().apply(init).build())
+  constructor(init: JvmAsmBuilder.() -> Unit) : this(write(init))
 
   fun withMethod(m: JvmAsm) = JvmAsm(instrs, methods + m)
+  fun withMethod(m: JvmMethod) = JvmAsm(instrs, methods + m.body())
 
   fun combine(other: JvmAsm) = JvmAsm(instrs + other.instrs, methods + other.methods)
 
@@ -37,11 +38,14 @@ class JvmAsm private constructor(
     operator fun JvmAsm.unaryPlus() = instructions.addLast(this)
 
     internal fun build() = instructions.fold(empty, JvmAsm::combine)
+
+    fun withMethod(m: JvmMethod) = withMethod(m.body())
+    fun withMethod(m: JvmAsm) = instructions.addLast(empty.withMethod(m))
   }
 
   companion object {
     fun instr(i: JvmInstr) = JvmAsm(persistentListOf(i))
-
     val empty = JvmAsm(persistentListOf())
+    fun write(init: JvmAsmBuilder.() -> Unit) = JvmAsmBuilder().apply(init).build()
   }
 }
