@@ -24,7 +24,7 @@ import kotlinx.collections.immutable.plus
 abstract class StdFunc {
   abstract val name: String
   abstract val body: Code
-  internal val label by lazy { Label(name) }
+  internal val label by lazy { AsmLabel(name) }
 }
 
 abstract class IOFunc : StdFunc() {

@@ -7,10 +7,6 @@ import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.plus
 import java.util.LinkedList
 
-interface JvmMethod {
-  fun body(): JvmAsm
-}
-
 interface JvmInstr {
   val code: String
   // override fun toString() = code

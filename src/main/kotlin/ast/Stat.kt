@@ -7,7 +7,7 @@ import ic.org.arm.CheckArrayBounds
 import ic.org.arm.CheckNullPointer
 import ic.org.arm.EQCond
 import ic.org.arm.FreeFunc
-import ic.org.arm.Label
+import ic.org.arm.AsmLabel
 import ic.org.arm.PC
 import ic.org.arm.PrintBoolStdFunc
 import ic.org.arm.PrintIntStdFunc
@@ -118,7 +118,7 @@ data class Return(val expr: Expr, override val scope: Scope, override val pos: P
 }
 
 data class Exit(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = expr.eval(Reg.ret) + BLInstr(Label("exit"))
+  override fun instr() = expr.eval(Reg.ret) + BLInstr(AsmLabel("exit"))
 }
 
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
@@ -134,7 +134,7 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
         withFunction(PrintBoolStdFunc.body)
         +BLInstr(PrintBoolStdFunc.label)
       }
-      is CharT -> +BLInstr(Label("putchar"))
+      is CharT -> +BLInstr(AsmLabel("putchar"))
       is StringT -> {
         withFunction(PrintStringStdFunc.body)
         +BLInstr(PrintStringStdFunc.label)
@@ -168,8 +168,8 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
   override fun instr() = Code.write {
     val uuid = shortRandomUUID()
     val (line, _) = pos
-    val elseLabel = Label("if_else_${uuid}_at_line_$line")
-    val continueLabel = Label("if_continue_${uuid}_at_line_$line")
+    val elseLabel = AsmLabel("if_else_${uuid}_at_line_$line")
+    val continueLabel = AsmLabel("if_continue_${uuid}_at_line_$line")
     val (initThen, endThen) = then.scope.makeInstrScope()
     val (initElse, endElse) = `else`.scope.makeInstrScope()
 
@@ -193,8 +193,8 @@ data class While(val cond: Expr, val body: Stat, override val scope: Scope, over
     val uuid = shortRandomUUID()
     val (line, _) = pos
     val (initScope, endScope) = body.scope.makeInstrScope()
-    val bodyLabel = Label("while_body_${uuid}_at_line_$line")
-    val condLabel = Label("while_cond_${uuid}_at_line_$line")
+    val bodyLabel = AsmLabel("while_body_${uuid}_at_line_$line")
+    val condLabel = AsmLabel("while_cond_${uuid}_at_line_$line")
 
     +BInstr(cond = None, label = condLabel)
     +bodyLabel

@@ -8,7 +8,7 @@ import arrow.core.or
 import arrow.core.toOption
 import arrow.core.valid
 import ast.Sizes
-import ic.org.arm.Label
+import ic.org.arm.AsmLabel
 import ic.org.arm.Reg
 import ic.org.arm.RegOperand2
 import ic.org.arm.Register
@@ -203,5 +203,5 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
 }
 
 data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variable>, val funcScope: FuncScope) {
-  val label = Label("f_$name")
+  val label = AsmLabel("f_$name")
 }

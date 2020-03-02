@@ -5,18 +5,18 @@ import arrow.core.some
 import ic.org.arm.ARMCondInstr
 import ic.org.arm.CondFlag
 import ic.org.arm.Flag
-import ic.org.arm.Label
+import ic.org.arm.AsmLabel
 
-data class BInstr(override val cond: Flag = None, val label: Label) : ARMCondInstr() {
-  constructor(label: Label) : this(None, label)
+data class BInstr(override val cond: Flag = None, val label: AsmLabel) : ARMCondInstr() {
+  constructor(label: AsmLabel) : this(None, label)
 
   override val code = "${opcode("B")} ${label.name}"
 }
 
-data class BLInstr(override val cond: Flag = None, val label: Label) : ARMCondInstr() {
-  constructor(label: Label) : this(None, label)
-  constructor(labelName: String) : this(None, Label(labelName))
-  constructor(condFlag: CondFlag, label: Label) : this(condFlag.some(), label)
+data class BLInstr(override val cond: Flag = None, val label: AsmLabel) : ARMCondInstr() {
+  constructor(label: AsmLabel) : this(None, label)
+  constructor(labelName: String) : this(None, AsmLabel(labelName))
+  constructor(condFlag: CondFlag, label: AsmLabel) : this(condFlag.some(), label)
 
   override val code = "${opcode("BL")} ${label.name}"
 }

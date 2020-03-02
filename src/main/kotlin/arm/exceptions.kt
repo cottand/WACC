@@ -15,7 +15,7 @@ import kotlinx.collections.immutable.plus
 abstract class Exception {
   abstract val name: String
   abstract val body: Code
-  val label by lazy { Label(name) }
+  val label by lazy { AsmLabel(name) }
 }
 
 object OverflowException : Exception() {

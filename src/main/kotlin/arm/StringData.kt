@@ -10,10 +10,10 @@ import kotlinx.collections.immutable.persistentListOf
  */
 data class StringData(val msg: String, val length: Int, val uid: String? = null) {
   val id = uid ?: UUID.randomUUID().toString().take(8)
-  val label = Label("s_$id")
+  val label = AsmLabel("s_$id")
   val body = persistentListOf(
     label,
-    Directive("word $length"),
-    Directive("ascii\t\"$msg\"")
+    AsmDirective("word $length"),
+    AsmDirective("ascii\t\"$msg\"")
   )
 }

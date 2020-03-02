@@ -9,7 +9,7 @@ import ic.org.arm.GTCond
 import ic.org.arm.Immed_5
 import ic.org.arm.LECond
 import ic.org.arm.LTCond
-import ic.org.arm.Label
+import ic.org.arm.AsmLabel
 import ic.org.arm.NECond
 import ic.org.arm.OverflowException
 import ic.org.arm.Reg
@@ -154,7 +154,7 @@ object MulBO : IntBinOp() {
 }
 
 object DivBO : IntBinOp() {
-  private val stdlibDiv = Label("__aeabi_idiv")
+  private val stdlibDiv = AsmLabel("__aeabi_idiv")
   override fun toString(): String = "/"
   override fun code(dest: Reg, r2: Reg) = Code.write {
     +MOVInstr(None, false, Reg(0), dest)
@@ -170,7 +170,7 @@ object DivBO : IntBinOp() {
 object ModBO : IntBinOp() {
   override fun toString(): String = "%"
   override fun code(dest: Reg, r2: Reg) = Code.write {
-    val stdlibMod = Label("__aeabi_idivmod")
+    val stdlibMod = AsmLabel("__aeabi_idivmod")
     +MOVInstr(None, rd = Reg(0), op2 = Reg(4))
     +MOVInstr(None, rd = Reg(1), op2 = Reg(5))
     +BLInstr(None, CheckDivByZero.label)

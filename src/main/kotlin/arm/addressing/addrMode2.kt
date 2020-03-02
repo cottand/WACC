@@ -4,7 +4,7 @@ package ic.org.arm.addressing
 
 import ic.org.arm.Immed_12
 import ic.org.arm.Immed_5
-import ic.org.arm.Label
+import ic.org.arm.AsmLabel
 import ic.org.arm.Plus
 import ic.org.arm.Printable
 import ic.org.arm.Register
@@ -47,7 +47,7 @@ data class ImmEquals32b(val v32bit: Int) : AddrMode2() {
   override val code = "=$v32bit"
 }
 
-data class ImmEqualLabel(val l: Label) : AddrMode2() {
+data class ImmEqualLabel(val l: AsmLabel) : AddrMode2() {
   override val code = "=${l.name}"
 }
 

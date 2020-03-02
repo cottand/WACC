@@ -25,14 +25,14 @@ interface Instr : Printable {
   operator fun plus(other: PersistentList<Instr>) = persistentListOf(this) + other
 }
 
-data class Directive(val text: String) : Data() {
+data class AsmDirective(val text: String) : Data() {
   override val code = ".$text"
 
   companion object {
-    val main = Directive("global main")
-    val data = Directive("data")
-    val text = Directive("text")
-    val ltorg = Directive("ltorg")
+    val main = AsmDirective("global main")
+    val data = AsmDirective("data")
+    val text = AsmDirective("text")
+    val ltorg = AsmDirective("ltorg")
   }
 }
 
@@ -132,7 +132,7 @@ object PC : Register() {
 /**
  * Label, represented by a name
  */
-data class Label(val name: String) : Data() {
+data class AsmLabel(val name: String) : Data() {
   override val code = "$name:"
 }
 
