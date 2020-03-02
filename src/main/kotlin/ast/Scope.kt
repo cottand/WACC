@@ -8,6 +8,7 @@ import arrow.core.or
 import arrow.core.toOption
 import arrow.core.valid
 import ast.Sizes
+import ic.org.arm.ARMGenOnly
 import ic.org.arm.AsmLabel
 import ic.org.arm.Reg
 import ic.org.arm.RegOperand2
@@ -18,6 +19,7 @@ import ic.org.arm.addressing.withOffset
 import ic.org.arm.instr.ADDInstr
 import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.SUBInstr
+import ic.org.jvm.JvmAsm
 import ic.org.jvm.JvmGenOnly
 import ic.org.util.NOT_REACHED
 import ic.org.util.Position
@@ -43,6 +45,7 @@ sealed class Scope {
    *
    * Functions Push LR in their prelude so they have extra stuff in their stack
    */
+  @ARMGenOnly
   private val relativeStartingAddress = if (this is FuncScope) Sizes.Word.bytes else 0
 
   /**
@@ -50,6 +53,7 @@ sealed class Scope {
    * this scope's stack. Value relative to the address of the parent's scope stack.
    * Grows as stuff is added to the stack!
    */
+  @ARMGenOnly
   fun stackSizeSoFar() = variables.toList().fold(relativeStartingAddress) { stack, (_, v) -> stack + v.type.size.bytes }
 
   @JvmGenOnly
@@ -80,8 +84,8 @@ sealed class Scope {
    *
    * @see Scope.stackSizeSoFar
    */
-  fun addVariable(pos: Position, t: Type, i: Ident, offsetBytes: Int = 0) =
-    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar() + offsetBytes).let {
+  fun addVariable(pos: Position, t: Type, i: Ident) =
+    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar(), indexNo = localVarsSoFar()).let {
       if (variables.put(it.ident, it) == null)
         it.valid()
       else
@@ -179,7 +183,13 @@ data class ControlFlowScope(val parent: Scope) : Scope() {
  * whose address is represented by [addrFromSP]. During code generation, [BegEnd], [Call] and [Prog]
  * have the responsibility of growing the stack down before placing stuff on it.
  */
-data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addrFromSP: Int) {
+data class Variable(
+  val type: Type,
+  val ident: Ident,
+  val scope: Scope,
+  @ARMGenOnly val addrFromSP: Int,
+  @JvmGenOnly val indexNo: Int
+) {
 
   /**
    * Returns this [Variable]'s stack address with the respect to [childScope], for accessing from a nested scope.
@@ -193,6 +203,7 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
   /**
    * Sets this [Variable] to [rhs], allowing itself to use [availableRegs] remaining registers
    */
+  @ARMGenOnly
   fun set(rhs: Computable, currentScope: Scope, availableRegs: Regs = Reg.fromExpr) =
     rhs.code(availableRegs) +
       type.sizedSTR(availableRegs.head, SP.withOffset(addrWithScopeOffset(currentScope)))
@@ -200,8 +211,21 @@ data class Variable(val type: Type, val ident: Ident, val scope: Scope, val addr
   /**
    * Puts this [Variable] into the register [destReg] (usually an expression register like [Reg.firstExpr])
    */
+  @ARMGenOnly
   fun get(currentScope: Scope, destReg: Register = Reg.firstExpr, offsetBytes: Int = 0) =
     type.sizedLDR(destReg, SP.withOffset(addrWithScopeOffset(currentScope) + offsetBytes))
+
+  /**
+   * Loads this [Variable] from the locals to the top of the stack
+   */
+  @JvmGenOnly
+  fun load(): JvmAsm = TODO("aload instr")
+
+  /**
+   * Stores this [Variable] from the top of the stack to the locals
+   */
+  @JvmGenOnly
+  fun store() : JvmAsm = TODO("astore instr")
 
   override fun toString() = "($type $ident at stack+$addrFromSP)"
 }

@@ -1,6 +1,7 @@
 package ic.org.ast
 
 import ast.Sizes
+import ic.org.arm.ARMGenOnly
 import ic.org.arm.Register
 import ic.org.arm.addressing.AddrMode2
 import ic.org.arm.instr.LDRBInstr
@@ -12,11 +13,13 @@ import ic.org.arm.instr.STRInstr
  * Class representing one of WACC's types.
  */
 sealed class Type {
+  @ARMGenOnly
   fun sizedSTR(rd: Register, addr: AddrMode2) = when (size) {
     Sizes.Word -> STRInstr(rd, addr)
     Sizes.Char -> STRBInstr(rd, addr)
   }
 
+  @ARMGenOnly
   fun sizedLDR(rd: Register, addr: AddrMode2) = when (size) {
     Sizes.Word -> LDRInstr(rd, addr)
     Sizes.Char -> LDRBInstr(rd, addr)
