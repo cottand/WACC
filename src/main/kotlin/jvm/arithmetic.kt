@@ -1,17 +1,17 @@
 package ic.org.jvm
 
-class IADD() : JvmInstr {
+object IADD : JvmInstr {
   override val code = "iadd"
 }
 
-class IDIV() : JvmInstr {
+object IDIV : JvmInstr {
   override val code = "idiv"
 }
 
-class IMUL() : JvmInstr {
-  override val code = "imul "
+object IMUL : JvmInstr {
+  override val code = "imul"
 }
 
-class ISUB() : JvmInstr {
-  override val code = "isub "
+object ISUB : JvmInstr {
+  override val code = "isub"
 }
