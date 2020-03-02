@@ -18,13 +18,9 @@ data class JvmLabel(val name: String) : JvmInstr {
 
 class JvmAsm private constructor(
   val instrs: PersistentList<JvmInstr>,
-  private val methods: PersistentSet<JvmAsm> = persistentSetOf()
+  val methods: PersistentSet<JvmAsm> = persistentSetOf()
 ) {
-
   constructor(a: JvmAsm) : this(a.instrs, a.methods)
-
-  constructor(init: BuilderScope.() -> Unit) : this(write(init))
-
   fun withMethod(m: WACCMethod): JvmAsm = JvmAsm(instrs, methods + m.asm)
   fun withMethods(ms: List<WACCMethod>) = JvmAsm(instrs, methods + ms.map { it.asm })
 
@@ -50,6 +46,7 @@ class JvmAsm private constructor(
     fun instr(i: JvmInstr) = JvmAsm(persistentListOf(i))
     val empty = JvmAsm(persistentListOf())
     fun write(init: BuilderScope.() -> Unit) = BuilderScope().apply(init).build()
+    operator fun invoke(init: BuilderScope.() -> Unit) = write(init)
   }
 }
 

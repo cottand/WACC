@@ -115,7 +115,7 @@ class WACCCompiler(private val filename: String) {
         CompileResult.checkSuccess(duration = start.elapsedNow())
       else {
         val assembly = when (target) {
-          ARM -> prog.asm()
+          ARM -> prog.armAsm()
           JVM -> prog.jvmAsm()
         }
         CompileResult.success(duration = start.elapsedNow(), output = assembly)
