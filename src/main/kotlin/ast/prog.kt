@@ -10,6 +10,7 @@ import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.POPInstr
 import ic.org.arm.instr.PUSHInstr
 import ic.org.ast.expr.Expr
+import ic.org.jvm.JvmAsm
 import ic.org.util.ARMAsm
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
@@ -44,6 +45,8 @@ data class Prog(val funcs: List<Func>, val body: Stat, val globalScope: GlobalSc
       }
       margin + it.code
     }
+
+  fun jvmAsm() = "" + TODO()
 }
 
 // <func>
@@ -61,6 +64,10 @@ data class Func(val retType: Type, val ident: Ident, val params: List<Variable>,
     +AsmDirective.ltorg
 
     withFunctions(statCode.funcs)
+  }
+
+  fun jvmAsm() = JvmAsm {
+    TODO()
   }
 }
 

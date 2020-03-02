@@ -20,14 +20,14 @@ import ic.org.util.flatMap
 import ic.org.util.head
 import ic.org.util.ifExsistsAnd
 import ic.org.util.tail
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.tree.ParseTreeWalker
 import java.io.File
 import kotlin.system.exitProcess
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.tree.ParseTreeWalker
 
 @ExperimentalTime
 fun main(args: Array<String>) {
@@ -41,12 +41,13 @@ fun main(args: Array<String>) {
   val cmds = args.toMutableList()
   val printAssembly = cmds.remove("-a")
   val saveToFile = !cmds.remove("-nosave")
+  val target = if (cmds.remove("-jvm")) JVM else ARM
   if (cmds.size != 1) {
     println("Proceeding with unrecognised arguments:")
     println("  " + cmds.tail.joinToString() + '\n')
   }
   val file = cmds.head
-  val result = WACCCompiler(file).compile()
+  val result = WACCCompiler(file).compile(target = target)
   println(result.msg + '\n')
 
   // Deal with passed arguments
@@ -98,7 +99,7 @@ class WACCCompiler(private val filename: String) {
       .flatMap { it.checkControlFlow() }
   }
 
-  fun compile(checkOnly: Boolean = false): CompileResult {
+  fun compile(checkOnly: Boolean = false, target: Target): CompileResult {
     val start = MonoClock.markNow()
     // Make a CompileResultout of the outcome
     return check().fold({ errors ->
@@ -113,7 +114,10 @@ class WACCCompiler(private val filename: String) {
       if (checkOnly)
         CompileResult.checkSuccess(duration = start.elapsedNow())
       else {
-        val assembly = prog.asm()
+        val assembly = when (target) {
+          ARM -> prog.asm()
+          JVM -> prog.jvmAsm()
+        }
         CompileResult.success(duration = start.elapsedNow(), output = assembly)
       }
     })
@@ -152,3 +156,13 @@ class WACCCompiler(private val filename: String) {
       }
   }
 }
+
+sealed class Target
+object ARM : Target()
+object JVM : Target()
+
+val Target.fileExtension
+  get() = when (this) {
+    ARM -> ".s"
+    JVM -> ".j"
+  }
