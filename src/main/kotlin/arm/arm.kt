@@ -149,5 +149,7 @@ object Minus : Sign() {
   override val code = "-"
 }
 
+annotation class ARMGenOnly
+
 @Deprecated("Only for quick testing")
 data class InlineARM(override val code: String) : ARMInstr()

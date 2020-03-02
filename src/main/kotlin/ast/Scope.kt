@@ -18,6 +18,7 @@ import ic.org.arm.addressing.withOffset
 import ic.org.arm.instr.ADDInstr
 import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.SUBInstr
+import ic.org.jvm.JvmGenOnly
 import ic.org.util.NOT_REACHED
 import ic.org.util.Position
 import ic.org.util.RedeclarationError
@@ -50,6 +51,9 @@ sealed class Scope {
    * Grows as stuff is added to the stack!
    */
   fun stackSizeSoFar() = variables.toList().fold(relativeStartingAddress) { stack, (_, v) -> stack + v.type.size.bytes }
+
+  @JvmGenOnly
+  fun localVarsSoFar() = variables.size
 
   /**
    * Returns the [Variable] associated with [ident]. If [ident] exists twice in this scope and/or

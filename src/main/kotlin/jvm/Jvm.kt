@@ -23,14 +23,14 @@ class JvmAsm private constructor(
 
   constructor(a: JvmAsm) : this(a.instrs, a.methods)
 
-  constructor(init: JvmAsmBuilder.() -> Unit) : this(write(init))
+  constructor(init: BuilderScope.() -> Unit) : this(write(init))
 
-  fun withMethod(m: JvmAsm) = JvmAsm(instrs, methods + m)
-  fun withMethod(m: JvmMethod) = JvmAsm(instrs, methods + m.body())
+  fun withMethod(m: JvmMethod): JvmAsm = JvmAsm(instrs, methods + m.asm)
+  fun withMethods(ms: List<JvmMethod>) = JvmAsm(instrs, methods + ms.map { it.asm })
 
   fun combine(other: JvmAsm) = JvmAsm(instrs + other.instrs, methods + other.methods)
 
-  class JvmAsmBuilder {
+  class BuilderScope {
     private val instructions = LinkedList<JvmAsm>()
 
     operator fun JvmInstr.unaryPlus() = instructions.addLast(instr(this))
@@ -39,13 +39,16 @@ class JvmAsm private constructor(
 
     internal fun build() = instructions.fold(empty, JvmAsm::combine)
 
-    fun withMethod(m: JvmMethod) = withMethod(m.body())
-    fun withMethod(m: JvmAsm) = instructions.addLast(empty.withMethod(m))
+    fun withMethod(m: JvmMethod) = instructions.addLast(empty.withMethod(m))
+    fun withMethods(ms: List<JvmMethod>) = instructions.addLast(empty.withMethods(ms))
   }
 
   companion object {
     fun instr(i: JvmInstr) = JvmAsm(persistentListOf(i))
     val empty = JvmAsm(persistentListOf())
-    fun write(init: JvmAsmBuilder.() -> Unit) = JvmAsmBuilder().apply(init).build()
+    fun write(init: BuilderScope.() -> Unit) = BuilderScope().apply(init).build()
   }
 }
+
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.FIELD)
+annotation class JvmGenOnly

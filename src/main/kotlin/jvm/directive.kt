@@ -1,6 +1,12 @@
 package ic.org.jvm
 
-sealed class JvmDirective : JvmInstr
+abstract class JvmDirective : JvmInstr {
+  companion object {
+    fun inline(txt: String) = object : JvmDirective() {
+      override val code = txt
+    }
+  }
+}
 
 object MainClass : JvmDirective() {
   override val code = ".class public wacc"
@@ -9,4 +15,3 @@ object MainClass : JvmDirective() {
 object SuperObject : JvmDirective() {
   override val code = ".super java/lang/Object"
 }
-
