@@ -39,6 +39,7 @@ import ic.org.ast.Scope
 import ic.org.ast.StringT
 import ic.org.ast.Type
 import ic.org.ast.Variable
+import ic.org.jvm.ILOAD
 import ic.org.jvm.JvmAsm
 import ic.org.util.ARMAsm
 import ic.org.util.IllegalArrayAccess
@@ -70,9 +71,8 @@ data class IntLit(val value: Int) : Expr() {
     rem.head,
     ImmEquals32b(value)
   )
-  override fun jvmAsm() = JvmAsm {
-    TODO("load lit into stack!")
-  }
+
+  override fun jvmAsm() = JvmAsm { +ILOAD(value) }
 
   override val weight = 1
 
@@ -86,6 +86,7 @@ data class BoolLit(val value: Boolean) : Expr() {
   override fun armAsm(rem: Regs) = ARMAsm.write {
     +MOVInstr(rem.head, if (value) 1.toByte() else 0.toByte())
   }
+
   override fun jvmAsm() = TODO()
 
   override val weight = 1
@@ -98,6 +99,7 @@ data class CharLit(val value: Char) : Expr() {
   override fun armAsm(rem: Regs) = ARMAsm.write {
     +MOVInstr(rem.head, value)
   }
+
   override fun jvmAsm() = JvmAsm {
     TODO("bipush char value onto stack")
   }
@@ -113,6 +115,7 @@ data class StrLit(val value: String) : Expr() {
     val instr = LDRInstr(rem.head, ImmEqualLabel(s.label))
     return ARMAsm(data = s.body) + instr
   }
+
   override fun jvmAsm() = TODO()
 
   override val weight = 1
@@ -136,6 +139,7 @@ object NullPairLit : Expr() {
   override fun toString(): String = "null"
   // null is represented as 0
   override fun armAsm(rem: Regs) = ARMAsm.instr(LDRInstr(rem.head, ImmEquals32b(0)))
+
   override fun jvmAsm() = TODO()
 
   override val weight = 1
@@ -181,6 +185,7 @@ data class ArrayElemExpr internal constructor(
       +type.sizedLDR(dst, dst.zeroOffsetAddr)
     }
   }).withFunction(CheckArrayBounds.body)
+
   override fun jvmAsm() = TODO()
 
   override val weight = heapAccess * exprs.size
@@ -229,6 +234,7 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
     OrdUO -> expr.armAsm(rem)
     ChrUO -> expr.armAsm(rem)
   }
+
   override fun jvmAsm() = TODO()
 
   companion object {
@@ -282,6 +288,7 @@ data class BinaryOperExpr internal constructor(
       +binaryOper.code(dest, next)
     })
   }
+
   override fun jvmAsm() = TODO()
 
   companion object {

@@ -24,6 +24,7 @@ import ic.org.arm.instr.MOVInstr
 import ic.org.arm.instr.POPInstr
 import ic.org.ast.expr.Expr
 import ic.org.jvm.JvmAsm
+import ic.org.jvm.JvmSystemExit
 import ic.org.util.ARMAsm
 import ic.org.util.NOT_REACHED
 import ic.org.util.Position
@@ -131,7 +132,7 @@ data class Return(val expr: Expr, override val scope: Scope, override val pos: P
 
 data class Exit(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() = expr.eval(Reg.ret) + BLInstr(AsmLabel("exit"))
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = expr.jvmAsm() + JvmSystemExit.call
 }
 
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {

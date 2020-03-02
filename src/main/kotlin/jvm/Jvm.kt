@@ -25,8 +25,8 @@ class JvmAsm private constructor(
 
   constructor(init: BuilderScope.() -> Unit) : this(write(init))
 
-  fun withMethod(m: JvmMethod): JvmAsm = JvmAsm(instrs, methods + m.asm)
-  fun withMethods(ms: List<JvmMethod>) = JvmAsm(instrs, methods + ms.map { it.asm })
+  fun withMethod(m: WACCMethod): JvmAsm = JvmAsm(instrs, methods + m.asm)
+  fun withMethods(ms: List<WACCMethod>) = JvmAsm(instrs, methods + ms.map { it.asm })
 
   fun combine(other: JvmAsm) = JvmAsm(instrs + other.instrs, methods + other.methods)
 
@@ -42,8 +42,8 @@ class JvmAsm private constructor(
 
     internal fun build() = instructions.fold(empty, JvmAsm::combine)
 
-    fun withMethod(m: JvmMethod) = instructions.addLast(empty.withMethod(m))
-    fun withMethods(ms: List<JvmMethod>) = instructions.addLast(empty.withMethods(ms))
+    fun withMethod(m: WACCMethod) = instructions.addLast(empty.withMethod(m))
+    fun withMethods(ms: List<WACCMethod>) = instructions.addLast(empty.withMethods(ms))
   }
 
   companion object {
