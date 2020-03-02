@@ -16,6 +16,10 @@ interface JvmInstr {
   // override fun toString() = code
 }
 
+data class JvmLabel(val name: String) : JvmInstr {
+  override val code = "$name:"
+}
+
 class JvmAsm private constructor(
   val instrs: PersistentList<JvmInstr>,
   private val methods: PersistentSet<JvmAsm> = persistentSetOf()
