@@ -3,11 +3,13 @@
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+val linting = false
+
 plugins {
   kotlin("jvm") version "1.3.61"
   // Gradle Shadow plugin for building a fat jar
   id("com.github.johnrengelman.shadow") version "5.2.0"
-  id("org.jmailen.kotlinter") version "2.3.1"
+    // id("org.jmailen.kotlinter") version "2.3.1"
 
   antlr
   application
@@ -19,10 +21,10 @@ version = "1.0"
 application.mainClassName = "ic.org.MainKt"
 repositories.jcenter()
 
-kotlinter {
-  indentSize = 2
-  continuationIndentSize = 2
-}
+// kotlinter {
+//   indentSize = 2
+//   continuationIndentSize = 2
+// }
 
 dependencies {
   val arrowVer = "0.10.4"

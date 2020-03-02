@@ -45,8 +45,7 @@ sealed class UnaryOper {
   abstract val retType: Type
 }
 
-// bool:
-object NotUO : UnaryOper() { // !
+object NotUO : UnaryOper() {
   override val validArg: (Type) -> Boolean = { it is BoolT }
   override val resCheck: (Type) -> Boolean = { it is BoolT }
   override val argType: Type = BoolT
@@ -54,8 +53,7 @@ object NotUO : UnaryOper() { // !
   override fun toString(): String = "!"
 }
 
-// int:
-object MinusUO : UnaryOper() { // -
+object MinusUO : UnaryOper() {
   override val validArg: (Type) -> Boolean = { it is IntT }
   override val resCheck: (Type) -> Boolean = { it is IntT }
   override val argType: Type = IntT
