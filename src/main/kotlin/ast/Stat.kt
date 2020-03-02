@@ -240,5 +240,5 @@ data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope
   val thisStat = stat1
   val nextStat = stat2
   override fun instr() = thisStat.instr() + nextStat.instr()
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = thisStat.jvmInstr() + nextStat.jvmInstr()
 }
