@@ -6,8 +6,6 @@ import arrow.core.getOrElse
 import ic.org.CompileResult
 import ic.org.WACCCompiler
 import ic.org.util.containsAll
-import java.io.File
-import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -20,6 +18,9 @@ import org.junit.jupiter.api.Assumptions.assumingThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.fail
+import reference.JasminAPI
+import java.io.File
+import kotlin.time.ExperimentalTime
 import reference.ReferenceCompilerAPI as Ref
 
 /**
@@ -48,11 +49,18 @@ class TestPrograms {
     private const val testingKeyword = "TEST"
     private const val ignoreKeyword = "IGNORE"
     private const val testSemanticsOnly = false
+    private const val testJVM = true
+    private const val testARM = false
     private const val defaultInput = "Hello"
+    private const val ignoreJVMKeyword = "NO_JVM"
   }
 
-  private fun skipIfIgnored(prog: WACCProgram) =
+  private fun skipIfIgnored(prog: WACCProgram) {
     assumeTrue(ignoreKeyword !in prog.file.absolutePath) { "File path contains '$ignoreKeyword', skipping test" }
+    assumeTrue(ignoreJVMKeyword !in prog.file.absolutePath && testJVM) {
+      "File path contains $ignoreJVMKeyword, skipping test"
+    }
+  }
 
   private val waccFiles =
     File(waccExamplesPath).walk()
@@ -71,14 +79,14 @@ class TestPrograms {
   @ExperimentalTime
   private fun test(program: WACCProgram, doCheckOnly: Boolean) {
     skipIfIgnored(program)
-    val filename = program.file.absolutePath
+    val filePath = program.file.absolutePath
     val canonicalPath = program.file.canonicalPath
     val input = program.specialInput().getOrElse { defaultInput }
     val expRef = if (!doCheckOnly)
       CoroutineScope(Dispatchers.IO).async { Ref.ask(program.file, input) }
     else null
     val res: CompileResult = try {
-      WACCCompiler(filename).compile(doCheckOnly)
+      WACCCompiler(filePath).compile(doCheckOnly)
     } catch (e: Throwable) {
       expRef?.cancel()
       assumeFalse(e is NotImplementedError) {
@@ -101,8 +109,8 @@ class TestPrograms {
     if (!doCheckOnly) runBlocking {
       val (expectedAss, expectedOut, expectedCode) = expRef!!.await()
       val actualAss = res.out.getOrElse { fail("Compilation unsuccessful") }
-      if (expectedAss != actualAss) {
-        val (actualOut, actualCode) = Ref.emulate(actualAss, filename, input)
+      if (testARM) {
+        val (actualOut, actualCode) = Ref.emulate(actualAss, filePath, input)
         println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
         println("\nCompiled WACC:\n${program.file.readText()}")
         if (expectedOut != actualOut) {
@@ -116,8 +124,14 @@ class TestPrograms {
           println("Expected $expectedCode and actual: $actualCode\n")
           assertEquals(expectedAss, actualAss)
         }
-      } else
-        println("Expected and actual assembly outputs are identical")
+      }
+      if (testJVM) {
+        val (actualOut, actualCode) = JasminAPI.emulate(actualAss, filePath, input)
+        println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
+        println("\nCompiled WACC:\n${program.file.readText()}")
+        assertEquals(expectedOut, actualOut) { "Not matching program outputs for $canonicalPath." }
+        assertEquals(expectedCode, actualCode) {"Not amtching exit codes for $canonicalPath"}
+      }
     }
     println("Test successful (compiler exit code ${res.exitCode}). Compiler output:\n${res.msg}\n")
   }
@@ -128,7 +142,6 @@ class TestPrograms {
    *
    * It only checks a program syntactically and semantically.
    */
-  @ExperimentalTime
   @TestFactory
   fun semanticallyCheckPrograms() = waccFiles.map { prog ->
     DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = true) }
@@ -140,7 +153,6 @@ class TestPrograms {
    *
    * It does only check tests that are supposed to preoduce assembly, ie, are valid.
    */
-  @ExperimentalTime
   @TestFactory
   fun compileCheckPrograms() = waccFiles
     .filterNot { testSemanticsOnly }
