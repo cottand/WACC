@@ -51,4 +51,5 @@ class JvmAsm private constructor(
 }
 
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.FIELD)
+@MustBeDocumented
 annotation class JvmGenOnly

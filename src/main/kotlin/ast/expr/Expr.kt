@@ -39,6 +39,7 @@ import ic.org.ast.Scope
 import ic.org.ast.StringT
 import ic.org.ast.Type
 import ic.org.ast.Variable
+import ic.org.jvm.JvmAsm
 import ic.org.util.ARMAsm
 import ic.org.util.IllegalArrayAccess
 import ic.org.util.NOT_REACHED
@@ -69,11 +70,13 @@ data class IntLit(val value: Int) : Expr() {
     rem.head,
     ImmEquals32b(value)
   )
+  override fun jvmAsm() = JvmAsm {
+    TODO("load lit into stack!")
+  }
 
   override val weight = 1
 
   override fun toString(): String = value.toString()
-  override fun jvmAsm() = TODO()
 }
 
 data class BoolLit(val value: Boolean) : Expr() {
@@ -95,7 +98,9 @@ data class CharLit(val value: Char) : Expr() {
   override fun armAsm(rem: Regs) = ARMAsm.write {
     +MOVInstr(rem.head, value)
   }
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    TODO("bipush char value onto stack")
+  }
 
   override val weight = 1
 }
@@ -140,7 +145,7 @@ data class IdentExpr(val vari: Variable, val scope: Scope) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
   override fun armAsm(rem: Regs): ARMAsm = ARMAsm.instr(vari.get(destReg = rem.head, currentScope = scope))
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = vari.load()  // TODO is it just load?
   override val weight = stackAccess
 }
 
