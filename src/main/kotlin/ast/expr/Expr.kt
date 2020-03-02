@@ -69,7 +69,6 @@ data class IntLit(val value: Int) : Expr() {
     rem.head,
     ImmEquals32b(value)
   )
-  override fun jvmCode() = TODO()
 
   override val weight = 1
 
@@ -83,7 +82,6 @@ data class BoolLit(val value: Boolean) : Expr() {
   override fun code(rem: Regs) = Code.write {
     +MOVInstr(rem.head, if (value) 1.toByte() else 0.toByte())
   }
-  override fun jvmCode() = TODO()
 
   override val weight = 1
 }
@@ -95,7 +93,6 @@ data class CharLit(val value: Char) : Expr() {
   override fun code(rem: Regs) = Code.write {
     +MOVInstr(rem.head, value)
   }
-  override fun jvmCode() = TODO()
 
   override val weight = 1
 }
@@ -108,7 +105,6 @@ data class StrLit(val value: String) : Expr() {
     val instr = LDRInstr(rem.head, ImmEqualLabel(s.label))
     return Code(data = s.body) + instr
   }
-  override fun jvmCode() = TODO()
 
   override val weight = 1
 
@@ -131,7 +127,6 @@ object NullPairLit : Expr() {
   override fun toString(): String = "null"
   // null is represented as 0
   override fun code(rem: Regs) = Code.instr(LDRInstr(rem.head, ImmEquals32b(0)))
-  override fun jvmCode() = TODO()
 
   override val weight = 1
 }
@@ -140,7 +135,6 @@ data class IdentExpr(val vari: Variable, val scope: Scope) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
   override fun code(rem: Regs): Code = Code.instr(vari.get(destReg = rem.head, currentScope = scope))
-  override fun jvmCode() = TODO()
   override val weight = stackAccess
 }
 
@@ -176,8 +170,6 @@ data class ArrayElemExpr internal constructor(
       +type.sizedLDR(dst, dst.zeroOffsetAddr)
     }
   }).withFunction(CheckArrayBounds.body)
-
-  override fun jvmCode() = TODO()
 
   override val weight = heapAccess * exprs.size
 
@@ -225,7 +217,6 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
     OrdUO -> expr.code(rem)
     ChrUO -> expr.code(rem)
   }
-  override fun jvmCode() = TODO()
 
   companion object {
     /**
@@ -278,7 +269,6 @@ data class BinaryOperExpr internal constructor(
       +binaryOper.code(dest, next)
     })
   }
-  override fun jvmCode() = TODO()
 
   companion object {
     /**
