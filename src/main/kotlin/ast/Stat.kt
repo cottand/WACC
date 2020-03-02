@@ -23,7 +23,7 @@ import ic.org.arm.instr.CMPInstr
 import ic.org.arm.instr.MOVInstr
 import ic.org.arm.instr.POPInstr
 import ic.org.ast.expr.Expr
-import ic.org.util.Code
+import ic.org.util.ARMAsm
 import ic.org.util.NOT_REACHED
 import ic.org.util.Position
 import ic.org.util.log2
@@ -35,13 +35,13 @@ sealed class Stat {
   abstract val pos: Position
 
   /**
-   * Convert to [Code]
+   * Convert to [ARMAsm]
    */
-  abstract fun instr(): Code
+  abstract fun instr(): ARMAsm
 }
 
 data class Skip(override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = Code.empty
+  override fun instr() = ARMAsm.empty
 }
 
 data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Scope, override val pos: Position) :
@@ -55,7 +55,7 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
   // See Decl.instr()
   override fun instr() = when (lhs) {
     is IdentLHS -> lhs.variable.set(rhs, scope)
-    is ArrayElemLHS -> Code.write {
+    is ArrayElemLHS -> ARMAsm.write {
       +lhs.variable.get(scope, Reg(4)) // Put array var in r4
       // Iteratively load array addresses into r0 for nested arrays
       lhs.indices.dropLast(1).forEach {
@@ -77,7 +77,7 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
       +rhs.type.sizedSTR(Reg(6), Reg(4).withOffset(Reg(5), log2(rhs.type.size.bytes)))
       withFunction(CheckArrayBounds)
     }
-    is PairElemLHS -> Code.write {
+    is PairElemLHS -> ARMAsm.write {
       +rhs.eval(Reg(1)) // Put RHS expr in r1
       +lhs.variable.get(scope, Reg(0)) // Put Pair Ident in r0 (which is an addr)
       +BLInstr(None, CheckNullPointer.label)
@@ -89,19 +89,19 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr(): Code = Assign(lhs, ReadRHS(lhs.type), scope, pos).instr()
+  override fun instr(): ARMAsm = Assign(lhs, ReadRHS(lhs.type), scope, pos).instr()
 }
 
 data class Free(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() = when (expr.type) {
-    is AnyPairTs -> Code.write {
+    is AnyPairTs -> ARMAsm.write {
       +expr.armAsm(Reg.fromExpr)
       +MOVInstr(rd = Reg.first, op2 = Reg.firstExpr)
       +BLInstr(FreeFunc.label)
 
       withFunction(FreeFunc)
     }
-    is AnyArrayT -> Code.write {
+    is AnyArrayT -> ARMAsm.write {
       +expr.armAsm(Reg.fromExpr)
       +MOVInstr(rd = Reg.first, op2 = Reg.firstExpr)
       +BLInstr(FreeFunc.label)
@@ -122,7 +122,7 @@ data class Exit(val expr: Expr, override val scope: Scope, override val pos: Pos
 }
 
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = Code.write {
+  override fun instr() = ARMAsm.write {
     val type = expr.type
     +expr.eval(Reg.first)
     when (type) {
@@ -156,7 +156,7 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
 }
 
 data class Println(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = Code.write {
+  override fun instr() = ARMAsm.write {
     +Print(expr, scope, pos).instr()
     +BLInstr(PrintLnStdFunc.label)
     withFunction(PrintLnStdFunc)
@@ -165,7 +165,7 @@ data class Println(val expr: Expr, override val scope: Scope, override val pos: 
 
 data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val scope: Scope, override val pos: Position) :
   Stat() {
-  override fun instr() = Code.write {
+  override fun instr() = ARMAsm.write {
     val uuid = shortRandomUUID()
     val (line, _) = pos
     val elseLabel = AsmLabel("if_else_${uuid}_at_line_$line")
@@ -189,7 +189,7 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
 }
 
 data class While(val cond: Expr, val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = Code.write {
+  override fun instr() = ARMAsm.write {
     val uuid = shortRandomUUID()
     val (line, _) = pos
     val (initScope, endScope) = body.scope.makeInstrScope()
@@ -209,7 +209,7 @@ data class While(val cond: Expr, val body: Stat, override val scope: Scope, over
 }
 
 data class BegEnd(val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr() = Code.write {
+  override fun instr() = ARMAsm.write {
     val (init, end) = body.scope.makeInstrScope()
     +init
     +body.instr()

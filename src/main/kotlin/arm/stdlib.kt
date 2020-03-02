@@ -16,21 +16,21 @@ import ic.org.arm.instr.PUSHInstr
 import ic.org.ast.CharT
 import ic.org.ast.IntT
 import ic.org.ast.Type
-import ic.org.util.Code
+import ic.org.util.ARMAsm
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 
 abstract class StdFunc {
   abstract val name: String
-  abstract val body: Code
+  abstract val body: ARMAsm
   internal val label by lazy { AsmLabel(name) }
 }
 
 abstract class IOFunc : StdFunc() {
   abstract val msgTemplate: String
   internal val msg by lazy { StringData(msgTemplate, msgTemplate.length - 1) }
-  override val body by lazy { Code(instructions, msg.body) }
+  override val body by lazy { ARMAsm(instructions, msg.body) }
   abstract val instructions: PersistentList<Instr>
 }
 
@@ -93,7 +93,7 @@ object PrintBoolStdFunc : IOFunc() {
     )
   }
 
-  override val body by lazy { Code(instructions, msg.body + msg2.body) }
+  override val body by lazy { ARMAsm(instructions, msg.body + msg2.body) }
 }
 
 object PrintStringStdFunc : IOFunc() {
@@ -143,7 +143,7 @@ sealed class ReadStdFunc : StdFunc() {
   abstract val template: StringData
 
   override val body by lazy {
-    Code.write {
+    ARMAsm.write {
       data { +template }
 
       +label
@@ -176,7 +176,7 @@ object ReadChar : ReadStdFunc() {
 
 object MallocStdFunc : StdFunc() {
   override val name = "malloc"
-  override val body = Code.empty
+  override val body = ARMAsm.empty
 }
 
 /**
@@ -184,14 +184,14 @@ object MallocStdFunc : StdFunc() {
  */
 object FreeStdLibFunc : StdFunc() {
   override val name = "free"
-  override val body = Code.empty
+  override val body = ARMAsm.empty
 }
 
 object FreeFunc : StdFunc() {
   override val name = "p_free"
   private const val errormsg = "NullReferenceError: dereference a null reference\\n\\0"
   private val msg0 by lazy { StringData(errormsg, errormsg.length - 2) }
-  override val body = Code.write {
+  override val body = ARMAsm.write {
     data { +msg0 }
     +label
     +PUSHInstr(LR)

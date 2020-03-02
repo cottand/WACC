@@ -8,13 +8,13 @@ import ic.org.arm.instr.CMPInstr
 import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.POPInstr
 import ic.org.arm.instr.PUSHInstr
-import ic.org.util.Code
+import ic.org.util.ARMAsm
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 
 abstract class Exception {
   abstract val name: String
-  abstract val body: Code
+  abstract val body: ARMAsm
   val label by lazy { AsmLabel(name) }
 }
 
@@ -32,7 +32,7 @@ object OverflowException : Exception() {
     )
   }
 
-  override val body = Code(instructions, msg0.body).withFunction(RuntimeError.body)
+  override val body = ARMAsm(instructions, msg0.body).withFunction(RuntimeError.body)
 }
 
 object RuntimeError : Exception() {
@@ -47,7 +47,7 @@ object RuntimeError : Exception() {
       BLInstr("exit")
     )
   }
-  override val body = Code(instr = instructions).withFunction(println.body)
+  override val body = ARMAsm(instr = instructions).withFunction(println.body)
 }
 
 object CheckDivByZero : Exception() {
@@ -56,7 +56,7 @@ object CheckDivByZero : Exception() {
   private const val errormsg = "DivideByZeroError: divide or modulo by zero\\n\\0"
   private val msgData = StringData(errormsg, errormsg.length - 1)
 
-  override val body = Code.write {
+  override val body = ARMAsm.write {
     data { +msgData }
 
     +label
@@ -97,7 +97,7 @@ object CheckArrayBounds : Exception() {
     )
   }
 
-  override val body = Code(instructions, msg0.body + msg1.body).withFunction(RuntimeError.body)
+  override val body = ARMAsm(instructions, msg0.body + msg1.body).withFunction(RuntimeError.body)
 }
 
 /**
@@ -120,5 +120,5 @@ object CheckNullPointer : Exception() {
     )
   }
 
-  override val body = Code(instructions, msg0.body).withFunction(RuntimeError.body)
+  override val body = ARMAsm(instructions, msg0.body).withFunction(RuntimeError.body)
 }

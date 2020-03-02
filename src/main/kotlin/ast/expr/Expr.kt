@@ -39,7 +39,7 @@ import ic.org.ast.Scope
 import ic.org.ast.StringT
 import ic.org.ast.Type
 import ic.org.ast.Variable
-import ic.org.util.Code
+import ic.org.util.ARMAsm
 import ic.org.util.IllegalArrayAccess
 import ic.org.util.NOT_REACHED
 import ic.org.util.Parsed
@@ -65,7 +65,7 @@ sealed class Expr : Computable {
 
 data class IntLit(val value: Int) : Expr() {
   override val type = IntT
-  override fun armAsm(rem: Regs) = Code.empty + LDRInstr(
+  override fun armAsm(rem: Regs) = ARMAsm.empty + LDRInstr(
     rem.head,
     ImmEquals32b(value)
   )
@@ -80,7 +80,7 @@ data class BoolLit(val value: Boolean) : Expr() {
   override val type = BoolT
   override fun toString(): String = value.toString()
   // Booleans are represented as a 1 for true, and 0 for false
-  override fun armAsm(rem: Regs) = Code.write {
+  override fun armAsm(rem: Regs) = ARMAsm.write {
     +MOVInstr(rem.head, if (value) 1.toByte() else 0.toByte())
   }
   override fun jvmAsm() = TODO()
@@ -92,7 +92,7 @@ data class CharLit(val value: Char) : Expr() {
   override val type = CharT
   override fun toString(): String = "$value"
   // Chars are represented as their ASCII value
-  override fun armAsm(rem: Regs) = Code.write {
+  override fun armAsm(rem: Regs) = ARMAsm.write {
     +MOVInstr(rem.head, value)
   }
   override fun jvmAsm() = TODO()
@@ -103,10 +103,10 @@ data class CharLit(val value: Char) : Expr() {
 data class StrLit(val value: String) : Expr() {
   override val type = StringT
   override fun toString(): String = value
-  override fun armAsm(rem: Regs): Code {
+  override fun armAsm(rem: Regs): ARMAsm {
     val s = StringData(value, value.length - countEscape())
     val instr = LDRInstr(rem.head, ImmEqualLabel(s.label))
-    return Code(data = s.body) + instr
+    return ARMAsm(data = s.body) + instr
   }
   override fun jvmAsm() = TODO()
 
@@ -130,7 +130,7 @@ object NullPairLit : Expr() {
   override val type = AnyPairTs()
   override fun toString(): String = "null"
   // null is represented as 0
-  override fun armAsm(rem: Regs) = Code.instr(LDRInstr(rem.head, ImmEquals32b(0)))
+  override fun armAsm(rem: Regs) = ARMAsm.instr(LDRInstr(rem.head, ImmEquals32b(0)))
   override fun jvmAsm() = TODO()
 
   override val weight = 1
@@ -139,7 +139,7 @@ object NullPairLit : Expr() {
 data class IdentExpr(val vari: Variable, val scope: Scope) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
-  override fun armAsm(rem: Regs): Code = Code.instr(vari.get(destReg = rem.head, currentScope = scope))
+  override fun armAsm(rem: Regs): ARMAsm = ARMAsm.instr(vari.get(destReg = rem.head, currentScope = scope))
   override fun jvmAsm() = TODO()
   override val weight = stackAccess
 }
@@ -153,10 +153,10 @@ data class ArrayElemExpr internal constructor(
   override fun toString(): String = variable.ident.name +
     exprs.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
-  override fun armAsm(rem: Regs): Code = rem.take2OrNone.fold({
+  override fun armAsm(rem: Regs): ARMAsm = rem.take2OrNone.fold({
     TODO()
   }, { (dst, nxt, _) ->
-    val arrayAccessCode = Code.write {
+    val arrayAccessCode = ARMAsm.write {
       +MOVInstr(rd = Reg(0), op2 = nxt) // Place the evaluated expr for index in r0
       +MOVInstr(rd = Reg(1), op2 = dst) // Place the array variable in r1
       +BLInstr(CheckArrayBounds.label)
@@ -164,7 +164,7 @@ data class ArrayElemExpr internal constructor(
       +ADDInstr(s = false, rd = dst, rn = dst, int8b = Sizes.Word.bytes)
       +ADDInstr(None, false, dst, dst, LSLImmOperand2(nxt, Immed_5(log2(type.size.bytes))))
     }
-    Code.write {
+    ARMAsm.write {
       +exprs.head.armAsm(rem.tail)
       +variable.get(scope, dst) // Place ident pointer in dst
       +arrayAccessCode
@@ -207,17 +207,17 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
 
   override fun toString(): String = "$unaryOper $expr"
   override fun armAsm(rem: Regs) = when (unaryOper) {
-    NotUO -> Code.write {
+    NotUO -> ARMAsm.write {
       +expr.armAsm(rem)
       +EORInstr(None, false, rem.head, rem.head, ImmOperand2(Immed_8r_bs(1, 0)))
     }
-    MinusUO -> Code.write {
+    MinusUO -> ARMAsm.write {
       +expr.armAsm(rem)
       +RSBInstr(None, true, rem.head, rem.head, ImmOperand2(Immed_8r_bs(0, 0)))
       +BLInstr(VSCond.some(), OverflowException.label)
       withFunction(OverflowException)
     }
-    LenUO -> Code.write {
+    LenUO -> ARMAsm.write {
       +expr.armAsm(rem)
       +LDRInstr(rem.head, rem.head.zeroOffsetAddr)
     }
@@ -254,7 +254,7 @@ data class BinaryOperExpr internal constructor(
   }
 
   override fun toString(): String = "($expr1 $binaryOper $expr2)"
-  override fun armAsm(rem: Regs) = Code.write {
+  override fun armAsm(rem: Regs) = ARMAsm.write {
     rem.take2OrNone.fold({
       val dest = rem.head
       // No available registers, use stack machine! We can only use dest and Reg.last

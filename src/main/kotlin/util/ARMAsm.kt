@@ -20,33 +20,33 @@ typealias Datas = PersistentList<Data>
  * Returned by something that produces assembly. [instr] corresponds to the assembly instructions,
  * and [data] to information in the Data segment.
  */
-class Code
+class ARMAsm
 private constructor(
   val instr: Instructions = persistentListOf(),
   val data: Datas = persistentListOf(),
-  val funcs: PersistentSet<Code> = persistentSetOf()
+  val funcs: PersistentSet<ARMAsm> = persistentSetOf()
 ) {
   val isEmpty by lazy { instr.isEmpty() && data.isEmpty() && funcs.isEmpty() }
 
   constructor(instr: Instructions = persistentListOf(), data: Datas = persistentListOf()) :
     this(instr, data, persistentSetOf())
 
-  fun combine(other: Code) = Code(instr + other.instr, data + other.data, funcs.addAll(other.funcs))
+  fun combine(other: ARMAsm) = ARMAsm(instr + other.instr, data + other.data, funcs.addAll(other.funcs))
 
-  operator fun plus(other: Code) = combine(other)
-  operator fun plus(other: Instructions) = combine(Code(other))
+  operator fun plus(other: ARMAsm) = combine(other)
+  operator fun plus(other: Instructions) = combine(ARMAsm(other))
   operator fun plus(other: Instr) = combine(instr(other))
 
-  fun withFunction(other: Code) =
-    Code(instr, data, funcs + other).withFunctions(other.funcs)
+  fun withFunction(other: ARMAsm) =
+    ARMAsm(instr, data, funcs + other).withFunctions(other.funcs)
 
-  fun withFunctions(others: Collection<Code>) =
-    Code(instr, data, funcs + others + others.map { it.funcs }.flatten())
+  fun withFunctions(others: Collection<ARMAsm>) =
+    ARMAsm(instr, data, funcs + others + others.map { it.funcs }.flatten())
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (javaClass != other?.javaClass) return false
-    other as Code
+    other as ARMAsm
     if (instr != other.instr) return false
     if (data != other.data) return false
     if (funcs != other.funcs) return false
@@ -71,29 +71,29 @@ private constructor(
     fun write(init: CodeBuilderScope.() -> Unit) =
       CodeBuilderScope().apply(init).codes.flatten()
 
-    val empty = Code(
+    val empty = ARMAsm(
       persistentListOf<Nothing>(),
       persistentListOf<Nothing>()
     )
 
-    fun instr(instr: Instr) = Code(
+    fun instr(instr: Instr) = ARMAsm(
       persistentListOf(instr),
       persistentListOf<Nothing>()
     )
   }
 
   class CodeBuilderScope {
-    internal val codes = LinkedList<Code>()
-    operator fun Code.unaryPlus() = codes.addLast(this)
-    operator fun Instr.unaryPlus() = codes.addLast(Code(instr = persistentListOf(this)))
-    operator fun List<Instr>.unaryPlus() = codes.addLast(Code(instr = toPersistentList()))
-    fun withFunction(other: Code) = codes.addLast(empty.withFunction(other))
+    internal val codes = LinkedList<ARMAsm>()
+    operator fun ARMAsm.unaryPlus() = codes.addLast(this)
+    operator fun Instr.unaryPlus() = codes.addLast(ARMAsm(instr = persistentListOf(this)))
+    operator fun List<Instr>.unaryPlus() = codes.addLast(ARMAsm(instr = toPersistentList()))
+    fun withFunction(other: ARMAsm) = codes.addLast(empty.withFunction(other))
     fun withFunction(exception: Exception) = withFunction(exception.body)
     fun withFunction(func: StdFunc) = withFunction(func.body)
-    fun withFunctions(others: Collection<Code>) = codes.addLast(empty.withFunctions(others))
+    fun withFunctions(others: Collection<ARMAsm>) = codes.addLast(empty.withFunctions(others))
     fun data(init: CodeBuilderDataScope.() -> Unit) {
       val d = CodeBuilderDataScope().apply(init)
-      codes.addLast(Code(data = d.instrs.toPersistentList()))
+      codes.addLast(ARMAsm(data = d.instrs.toPersistentList()))
     }
   }
 
@@ -105,5 +105,5 @@ private constructor(
   }
 }
 
-fun Instructions.code() = Code(this)
-fun List<Code>.flatten() = fold(Code.empty, Code::combine)
+fun Instructions.code() = ARMAsm(this)
+fun List<ARMAsm>.flatten() = fold(ARMAsm.empty, ARMAsm::combine)

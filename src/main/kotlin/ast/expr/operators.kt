@@ -31,7 +31,7 @@ import ic.org.ast.CharT
 import ic.org.ast.IntT
 import ic.org.ast.StringT
 import ic.org.ast.Type
-import ic.org.util.Code
+import ic.org.util.ARMAsm
 
 /**
  * Represents a unary operator, like `!` or `-`.
@@ -112,9 +112,9 @@ sealed class BinaryOper {
   abstract val inTypes: List<Type>
 
   /**
-   * The [Code] required in order to perform this [BinaryOper]. By convention, the result should be put in [dest]
+   * The [ARMAsm] required in order to perform this [BinaryOper]. By convention, the result should be put in [dest]
    */
-  abstract fun code(dest: Reg, r2: Reg): Code
+  abstract fun code(dest: Reg, r2: Reg): ARMAsm
 }
 
 // (int, int) -> int:
@@ -145,7 +145,7 @@ sealed class BoolBinOp : BinaryOper() {
 
 object MulBO : IntBinOp() {
   override fun toString(): String = "*"
-  override fun code(dest: Reg, r2: Reg) = Code.write {
+  override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     withFunction(OverflowException)
     +SMULLInstr(None, false, dest, r2, dest, r2)
     +CMPInstr(None, r2, ASRImmOperand2(dest, Immed_5(31)))
@@ -156,7 +156,7 @@ object MulBO : IntBinOp() {
 object DivBO : IntBinOp() {
   private val stdlibDiv = AsmLabel("__aeabi_idiv")
   override fun toString(): String = "/"
-  override fun code(dest: Reg, r2: Reg) = Code.write {
+  override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     +MOVInstr(None, false, Reg(0), dest)
     +MOVInstr(None, false, Reg(1), r2)
     +BLInstr(None, CheckDivByZero.label)
@@ -169,7 +169,7 @@ object DivBO : IntBinOp() {
 
 object ModBO : IntBinOp() {
   override fun toString(): String = "%"
-  override fun code(dest: Reg, r2: Reg) = Code.write {
+  override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     val stdlibMod = AsmLabel("__aeabi_idivmod")
     +MOVInstr(None, rd = Reg(0), op2 = Reg(4))
     +MOVInstr(None, rd = Reg(1), op2 = Reg(5))
@@ -183,7 +183,7 @@ object ModBO : IntBinOp() {
 
 object PlusBO : IntBinOp() {
   override fun toString(): String = "+"
-  override fun code(dest: Reg, r2: Reg) = Code.write {
+  override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     +ADDInstr(rd = dest, rn = dest, op2 = r2)
     +BLInstr(VSCond, OverflowException.label)
     withFunction(OverflowException.body)
@@ -192,7 +192,7 @@ object PlusBO : IntBinOp() {
 
 object MinusBO : IntBinOp() {
   override fun toString(): String = "-"
-  override fun code(dest: Reg, r2: Reg) = Code.write {
+  override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     +SUBInstr(rd = dest, rn = dest, op2 = r2)
     +BLInstr(VSCond, OverflowException.label)
     withFunction(OverflowException)
@@ -202,7 +202,7 @@ object MinusBO : IntBinOp() {
 // (int, int) -> bool:
 object GtBO : CompBinOp() {
   override fun toString(): String = ">"
-  override fun code(dest: Reg, r2: Reg) = Code.write {
+  override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     +CMPInstr(None, dest, RegOperand2(r2))
     +MOVInstr(GTCond, rd = dest, imm8b = 1)
     +MOVInstr(LECond, rd = dest, imm8b = 0)
@@ -211,7 +211,7 @@ object GtBO : CompBinOp() {
 
 object GeqBO : CompBinOp() {
   override fun toString(): String = ">="
-  override fun code(dest: Reg, r2: Reg) = Code.write {
+  override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     +CMPInstr(None, dest, RegOperand2(r2))
     +MOVInstr(GECond, rd = dest, imm8b = 1)
     +MOVInstr(LTCond, rd = dest, imm8b = 0)
@@ -220,7 +220,7 @@ object GeqBO : CompBinOp() {
 
 object LtBO : CompBinOp() {
   override fun toString(): String = "<"
-  override fun code(dest: Reg, r2: Reg) = Code.write {
+  override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     +CMPInstr(None, dest, RegOperand2(r2))
     +MOVInstr(LTCond, rd = dest, imm8b = 1)
     +MOVInstr(GECond, rd = dest, imm8b = 0)
@@ -229,7 +229,7 @@ object LtBO : CompBinOp() {
 
 object LeqBO : CompBinOp() {
   override fun toString(): String = ">="
-  override fun code(dest: Reg, r2: Reg) = Code.write {
+  override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     +CMPInstr(None, dest, RegOperand2(r2))
     +MOVInstr(cond = LECond, rd = dest, imm8b = 1)
     +MOVInstr(cond = GTCond, rd = dest, imm8b = 0)
@@ -253,7 +253,7 @@ sealed class EqualityBinOp : BinaryOper() {
 object EqBO : EqualityBinOp() {
   override fun toString(): String = "=="
   override fun code(dest: Reg, r2: Reg) =
-    Code.write {
+    ARMAsm.write {
       +CMPInstr(None, dest, RegOperand2(r2))
       +MOVInstr(cond = EQCond, rd = dest, imm8b = 1)
       +MOVInstr(cond = NECond, rd = dest, imm8b = 0)
@@ -263,7 +263,7 @@ object EqBO : EqualityBinOp() {
 object NeqBO : EqualityBinOp() {
   override fun toString(): String = "!="
   override fun code(dest: Reg, r2: Reg) =
-    Code.write {
+    ARMAsm.write {
       +CMPInstr(None, dest, RegOperand2(r2))
       +MOVInstr(cond = NECond, rd = dest, imm8b = 1)
       +MOVInstr(cond = EQCond, rd = dest, imm8b = 0)
@@ -272,14 +272,14 @@ object NeqBO : EqualityBinOp() {
 
 object AndBO : BoolBinOp() {
   override fun toString(): String = "&&"
-  override fun code(dest: Reg, r2: Reg) = Code.write {
+  override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     +ANDInstr(None, false, dest, dest, RegOperand2(r2))
   }
 }
 
 object OrBO : BoolBinOp() {
   override fun toString(): String = "||"
-  override fun code(dest: Reg, r2: Reg) = Code.write {
+  override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     +ORRInstr(None, false, dest, dest, RegOperand2(r2))
   }
 }

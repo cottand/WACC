@@ -10,7 +10,7 @@ import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.POPInstr
 import ic.org.arm.instr.PUSHInstr
 import ic.org.ast.expr.Expr
-import ic.org.util.Code
+import ic.org.util.ARMAsm
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 import org.antlr.v4.runtime.tree.TerminalNode
@@ -20,7 +20,7 @@ data class Prog(val funcs: List<Func>, val body: Stat, val globalScope: GlobalSc
   fun asm() = body.instr()
     .withFunctions(funcs.map { it.instr() })
     .let {
-      val allFuncs = it.funcs.fold(Code.empty, Code::combine)
+      val allFuncs = it.funcs.fold(ARMAsm.empty, ARMAsm::combine)
       val allData = it.data + allFuncs.data
       val dataSegment = if (allData.isNotEmpty()) AsmDirective.data + allData else persistentListOf<Nothing>()
       val (initScope, endScope) = globalScope.makeInstrScope()
@@ -51,7 +51,7 @@ data class Func(val retType: Type, val ident: Ident, val params: List<Variable>,
 
   val label = AsmLabel("f_" + ident.name)
 
-  fun instr() = Code.write {
+  fun instr() = ARMAsm.write {
     val statCode = stat.instr()
     data { +statCode.data }
     +label
