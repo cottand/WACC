@@ -42,6 +42,7 @@ fun main(args: Array<String>) {
   val cmds = args.toMutableList()
   val printAssembly = cmds.remove("-a")
   val saveToFile = !cmds.remove("-nosave")
+  val cleanAfterBuild = !cmds.remove("-noclean")
   val target = if (cmds.remove("-jvm")) JVM else ARM
   if (cmds.size != 1) {
     println("Proceeding with unrecognised arguments:")
@@ -67,8 +68,8 @@ fun main(args: Array<String>) {
       val classes = "wacc.class"
       // "java -jar lib/jasmin.jar $newFile".runCommand()
       jasmin.Main.main(arrayOf(newFile))
-      "jar cfm $jarFile ${manifest.path} $classes".runCommand()
-      listOf(manifest, mainClass, assembly).forEach { it.delete() }
+      "jar cfm $jarFile ${manifest.path} $classes -C ${JVM.classpath} ${JVM.classes}".runCommand()
+      if (cleanAfterBuild) listOf(manifest, mainClass, assembly).forEach { it.delete() }
       println("done.\n")
     } else
       println("Saving file with compiled assembly:\n$newFile")
@@ -173,7 +174,10 @@ class WACCCompiler(private val filename: String) {
 
 sealed class Target
 object ARM : Target()
-object JVM : Target()
+object JVM : Target() {
+  val classpath = "lib/wacc-stdlib/*"
+  val classes = "Pair.class"
+}
 
 val Target.fileExtension
   get() = when (this) {
