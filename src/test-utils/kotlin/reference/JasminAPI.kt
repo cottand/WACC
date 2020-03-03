@@ -6,7 +6,7 @@ import java.io.File
 object JasminAPI : ReferenceEmulatorAPI {
   override fun emulate(prog: String, filename: String, input: String): Pair<String, Int> {
     val newFile = File(filename.replace(".wacc", ".j")).apply { writeText(prog) }
-    val (jOut,_) = "jasmin ${newFile.path}".runCommand()
+    val (jOut,_) = "java -jar lib/jasmin.jar ${newFile.path}".runCommand()
     return "java wacc".runCommand().also { (out, code) ->
       File("wacc.class").delete()
       if (code == 1)

@@ -15,6 +15,7 @@ src/main/antlr/WACCLexer.tokens
 src/main/gen/WACCLexer.interp
 src/main/gen/
 !compile
+!lib/*.jar
 
 #assembly from the ref compiler
 *.s

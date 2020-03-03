@@ -65,7 +65,7 @@ fun main(args: Array<String>) {
       print("Packaging JAR file $jarFile... ")
       val manifest = File("manifest").apply { writeText("Main-Class: wacc\n") }
       val classes = "wacc.class"
-      "jasmin $newFile".runCommand()
+      "java -jar lib/jasmin.jar $newFile".runCommand()
       "jar cfm $jarFile ${manifest.path} $classes".runCommand()
       listOf(manifest, mainClass, assembly).forEach { it.delete() }
       println("done.\n")
