@@ -25,6 +25,7 @@ import ic.org.arm.instr.POPInstr
 import ic.org.ast.expr.Expr
 import ic.org.jvm.JvmAsm
 import ic.org.jvm.JvmSystemExit
+import ic.org.jvm.JvmSystemPrintString
 import ic.org.util.ARMAsm
 import ic.org.util.NOT_REACHED
 import ic.org.util.Position
@@ -167,7 +168,16 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
       else -> NOT_REACHED()
     }
   }
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = JvmAsm.write {
+    val type = expr.type
+    +expr.jvmAsm()
+    when (type) {
+      is StringT -> {
+        +JvmSystemPrintString.invoke
+      }
+      else -> TODO()
+    }
+  }
 }
 
 data class Println(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {

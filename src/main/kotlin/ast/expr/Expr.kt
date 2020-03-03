@@ -113,7 +113,7 @@ data class StrLit(val value: String) : Expr() {
     return ARMAsm(data = s.body) + instr
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm { +LDC(value) }
 
   override val weight = 1
 

@@ -2,12 +2,12 @@ package ic.org.jvm
 
 import ic.org.ast.Stat
 
-sealed class JvmMethod {
+abstract class JvmMethod {
   internal abstract val descriptor: String
   internal abstract val args: List<JvmType>
   internal abstract val ret: JvmType
   internal val spec by lazy { "$descriptor(${args.joinToString(separator = "") { it.rep }})$ret" }
-  val invoke by lazy { JvmAsm.instr(JvmDirective.inline("invokestatic $spec")) }
+  open val invoke by lazy { JvmAsm.instr(JvmDirective.inline("invokestatic $spec")) }
 }
 
 object JvmSystemExit : JvmMethod() {
@@ -24,7 +24,7 @@ sealed class WACCMethod : JvmMethod() {
 }
 
 /**
- * A methid defined in the WACC language.
+ * A method defined in the WACC language.
  *
  * Caller must do LDC and JvmReturn to return stuff
  */
