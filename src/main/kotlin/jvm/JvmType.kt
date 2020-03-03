@@ -33,3 +33,7 @@ object JvmVoid : JvmType() {
 object JvmBool : JvmType() {
   override val rep = "Z"
 }
+
+object JvmChar : JvmType() {
+  override val rep = "C"
+}

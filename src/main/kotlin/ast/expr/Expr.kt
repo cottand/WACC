@@ -39,6 +39,7 @@ import ic.org.ast.Scope
 import ic.org.ast.StringT
 import ic.org.ast.Type
 import ic.org.ast.Variable
+import ic.org.jvm.BIPUSH
 import ic.org.jvm.JvmAsm
 import ic.org.jvm.LDC
 import ic.org.util.ARMAsm
@@ -98,9 +99,9 @@ data class CharLit(val value: Char) : Expr() {
   }
 
   override fun jvmAsm() = JvmAsm {
-    TODO("bipush char value onto stack")
+    +BIPUSH(value.toByte())
   }
-
+g
   override val weight = 1
 }
 
