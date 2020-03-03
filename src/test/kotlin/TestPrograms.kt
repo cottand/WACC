@@ -3,7 +3,10 @@
 import TestPrograms.Companion.ignoreKeyword
 import TestPrograms.Companion.testingKeyword
 import arrow.core.getOrElse
+import ic.org.ARM
 import ic.org.CompileResult
+import ic.org.JVM
+import ic.org.Target
 import ic.org.WACCCompiler
 import ic.org.util.containsAll
 import kotlinx.coroutines.CoroutineScope
@@ -53,6 +56,7 @@ class TestPrograms {
     private const val testARM = false
     private const val defaultInput = "Hello"
     private const val ignoreJVMKeyword = "NO_JVM"
+    private val target: Target = JVM
   }
 
   private fun skipIfIgnored(prog: WACCProgram) {
@@ -86,7 +90,7 @@ class TestPrograms {
       CoroutineScope(Dispatchers.IO).async { Ref.ask(program.file, input) }
     else null
     val res: CompileResult = try {
-      WACCCompiler(filePath).compile(doCheckOnly)
+      WACCCompiler(filePath).compile(doCheckOnly, target = target)
     } catch (e: Throwable) {
       expRef?.cancel()
       assumeFalse(e is NotImplementedError) {
@@ -109,7 +113,7 @@ class TestPrograms {
     if (!doCheckOnly) runBlocking {
       val (expectedAss, expectedOut, expectedCode) = expRef!!.await()
       val actualAss = res.out.getOrElse { fail("Compilation unsuccessful") }
-      if (testARM) {
+      if (target is ARM) {
         val (actualOut, actualCode) = Ref.emulate(actualAss, filePath, input)
         println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
         println("\nCompiled WACC:\n${program.file.readText()}")
@@ -125,7 +129,7 @@ class TestPrograms {
           assertEquals(expectedAss, actualAss)
         }
       }
-      if (testJVM) {
+      if (target is JVM) {
         val (actualOut, actualCode) = JasminAPI.emulate(actualAss, filePath, input)
         println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
         println("\nCompiled WACC:\n${program.file.readText()}")

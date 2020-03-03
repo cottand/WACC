@@ -24,7 +24,9 @@ sealed class WACCMethod : JvmMethod() {
 }
 
 /**
- * A methid defined in the WACC language
+ * A methid defined in the WACC language.
+ *
+ * Caller must do LDC and JvmReturn to return stuff
  */
 open class DefinedMethod(
   override val descriptor: String,
@@ -36,11 +38,15 @@ open class DefinedMethod(
     JvmAsm {
       val maxStack = 20 // TODO change
       val locals = body?.scope?.localVarsSoFar()
-      +JvmDirective.inline(".method public static $spec")
-      +JvmDirective.inline(".limit stack $maxStack")
-      +JvmDirective.inline(".limit locals ${locals?:1}")
+      +".method public static $spec"
+      +".limit stack $maxStack"
+      +".limit locals ${(locals?:1) + 1}"
       body?.let { +it.jvmInstr() }
-      +JvmDirective.inline(".end method")
+      if (ret is JvmVoid) {
+        +LDC(0)
+        +JvmReturn
+      }
+      +".end method"
     }
   }
 }

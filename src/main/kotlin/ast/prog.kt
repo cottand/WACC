@@ -55,7 +55,7 @@ data class Prog(val funcs: List<Func>, val body: Stat, val globalScope: GlobalSc
   fun jvmAsm() = JvmAsm {
     +MainClass
     +SuperObject
-    +MainClass.init
+    // +MainClass.init
     withMethods(funcs.map(Func::jvmMethod))
     withMethod(Main(body))
   }.let { prog ->

@@ -9,11 +9,11 @@ data class ISTORE(val varIndex: Int) : JvmInstr {
 }
 
 data class ASTORE(val varIndex: Int) : JvmInstr {
-  override val code = "astore $varIndex"
+  override val code = "astore_$varIndex"
 }
 
 data class ALOAD(val varIndex: Int) : JvmInstr {
-  override val code = "aload  $varIndex"
+  override val code = "aload_$varIndex"
 }
 
 sealed class LDC : JvmInstr {
