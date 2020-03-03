@@ -22,7 +22,6 @@ src/main/gen/
 
 # generated jasmin files
 *.j
-<<<<<<< HEAD
 
 # do not ignore the Pair class
 !Pair.class
