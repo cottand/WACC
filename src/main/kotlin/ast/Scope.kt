@@ -216,16 +216,16 @@ data class Variable(
     type.sizedLDR(destReg, SP.withOffset(addrWithScopeOffset(currentScope) + offsetBytes))
 
   /**
-   * Loads this [Variable] from the locals to the top of the stack
+   * Loads this [Variable] from the locals to the top of the stack (like set)
    */
   @JvmGenOnly
-  fun load(): JvmAsm = TODO("aload instr")
+  fun load() = JvmAsm { +type.sizedLOAD(indexNo) }
 
   /**
-   * Stores this [Variable] from the top of the stack to the locals
+   * Stores this [Variable] from the top of the stack to the locals (like get)
    */
   @JvmGenOnly
-  fun store() : JvmAsm = TODO("astore instr")
+  fun store(rhs: Computable): JvmAsm = rhs.jvmAsm() + type.sizedSTORE(indexNo)
 
   override fun toString() = "($type $ident at stack+$addrFromSP)"
 }

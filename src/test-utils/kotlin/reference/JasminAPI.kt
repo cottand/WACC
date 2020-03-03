@@ -1,6 +1,5 @@
 package reference
 
-import ic.org.util.print
 import java.io.File
 
 object JasminAPI : ReferenceEmulatorAPI {

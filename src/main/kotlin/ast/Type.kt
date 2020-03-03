@@ -8,6 +8,10 @@ import ic.org.arm.instr.LDRBInstr
 import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.STRBInstr
 import ic.org.arm.instr.STRInstr
+import ic.org.jvm.ASTORE
+import ic.org.jvm.ILOAD
+import ic.org.jvm.ISTORE
+import ic.org.jvm.JvmGenOnly
 
 /**
  * Class representing one of WACC's types.
@@ -23,6 +27,26 @@ sealed class Type {
   fun sizedLDR(rd: Register, addr: AddrMode2) = when (size) {
     Sizes.Word -> LDRInstr(rd, addr)
     Sizes.Char -> LDRBInstr(rd, addr)
+  }
+
+  @JvmGenOnly
+  fun sizedSTORE(indexNo: Int) = when (this) {
+    IntT -> ISTORE(indexNo)
+    BoolT -> TODO()
+    CharT -> TODO()
+    StringT -> ASTORE(indexNo)
+    is AnyArrayT -> TODO()
+    is AnyPairTs -> TODO()
+  }
+
+  @JvmGenOnly
+  fun sizedLOAD(indexNo: Int) = when (this) {
+    IntT -> ILOAD(indexNo)
+    BoolT -> TODO()
+    CharT -> TODO()
+    StringT -> ILOAD(indexNo)
+    is AnyArrayT -> TODO()
+    is AnyPairTs -> TODO()
   }
 
   /**

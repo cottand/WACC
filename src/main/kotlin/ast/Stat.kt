@@ -56,7 +56,7 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
   val type = variable.type
   val ident = variable.ident
   override fun instr() = variable.set(rhs, scope)
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = variable.store(rhs)
 }
 
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
