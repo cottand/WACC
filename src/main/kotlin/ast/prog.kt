@@ -10,13 +10,14 @@ import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.POPInstr
 import ic.org.arm.instr.PUSHInstr
 import ic.org.ast.expr.Expr
+import ic.org.jvm.DefinedMethod
 import ic.org.jvm.JvmAsm
 import ic.org.jvm.JvmDirective
 import ic.org.jvm.JvmLabel
 import ic.org.jvm.Main
 import ic.org.jvm.MainClass
 import ic.org.jvm.SuperObject
-import ic.org.jvm.WACCMethod
+import ic.org.jvm.toJvm
 import ic.org.util.ARMAsm
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
@@ -86,7 +87,8 @@ data class Func(val retType: Type, val ident: Ident, val params: List<Variable>,
     withFunctions(statCode.funcs)
   }
 
-  fun jvmMethod(): WACCMethod = TODO()
+  fun jvmMethod() =
+    DefinedMethod("m_" + ident.name, params.map { it.type.toJvm() }, retType.toJvm(), stat)
 }
 
 // <param>

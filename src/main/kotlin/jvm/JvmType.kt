@@ -1,5 +1,13 @@
 package ic.org.jvm
 
+import ic.org.ast.AnyArrayT
+import ic.org.ast.AnyPairTs
+import ic.org.ast.BoolT
+import ic.org.ast.CharT
+import ic.org.ast.IntT
+import ic.org.ast.StringT
+import ic.org.ast.Type
+
 abstract class JvmType {
   abstract val rep: String
   override fun toString() = rep
@@ -8,6 +16,15 @@ abstract class JvmType {
       override val rep = rep
     }
   }
+}
+
+fun Type.toJvm() = when(this) {
+  IntT -> JvmInt
+  BoolT -> JvmBool
+  CharT -> JvmChar
+  StringT -> JvmString
+  is AnyArrayT -> TODO()
+  is AnyPairTs -> TODO()
 }
 
 object JvmInt : JvmType() {
