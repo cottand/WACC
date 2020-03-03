@@ -75,3 +75,8 @@ data class InvokeVirtual(val spec: String) : JvmInstr {
   override val code = "invokevirtual $spec"
   constructor(method: JvmMethod) : this(method.spec)
 }
+
+data class InvokeSpecial(val spec: String) : JvmInstr {
+  override val code = "invokespecial $spec"
+  constructor(method: JvmMethod) : this(method.spec)
+}

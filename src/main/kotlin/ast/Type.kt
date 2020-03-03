@@ -8,10 +8,7 @@ import ic.org.arm.instr.LDRBInstr
 import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.STRBInstr
 import ic.org.arm.instr.STRInstr
-import ic.org.jvm.ASTORE
-import ic.org.jvm.ILOAD
-import ic.org.jvm.ISTORE
-import ic.org.jvm.JvmGenOnly
+import ic.org.jvm.*
 
 /**
  * Class representing one of WACC's types.
@@ -31,22 +28,18 @@ sealed class Type {
 
   @JvmGenOnly
   fun sizedSTORE(indexNo: Int) = when (this) {
-    IntT -> ISTORE(indexNo)
-    BoolT -> TODO()
-    CharT -> TODO()
+    IntT, BoolT, CharT -> ISTORE(indexNo)
     StringT -> ASTORE(indexNo)
     is AnyArrayT -> TODO()
-    is AnyPairTs -> TODO()
+    is AnyPairTs -> ASTORE(indexNo)
   }
 
   @JvmGenOnly
   fun sizedLOAD(indexNo: Int) = when (this) {
-    IntT -> ILOAD(indexNo)
-    BoolT -> TODO()
-    CharT -> TODO()
-    StringT -> ILOAD(indexNo)
+    IntT, BoolT, CharT -> ILOAD(indexNo)
+    StringT -> ALOAD(indexNo)
     is AnyArrayT -> TODO()
-    is AnyPairTs -> TODO()
+    is AnyPairTs -> ALOAD(indexNo)
   }
 
   /**

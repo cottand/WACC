@@ -39,9 +39,7 @@ import ic.org.ast.Scope
 import ic.org.ast.StringT
 import ic.org.ast.Type
 import ic.org.ast.Variable
-import ic.org.jvm.BIPUSH
-import ic.org.jvm.JvmAsm
-import ic.org.jvm.LDC
+import ic.org.jvm.*
 import ic.org.util.ARMAsm
 import ic.org.util.IllegalArrayAccess
 import ic.org.util.NOT_REACHED

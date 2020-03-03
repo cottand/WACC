@@ -33,4 +33,3 @@ sealed class LDC : JvmInstr {
 data class BIPUSH(val byte: Byte) : JvmInstr {
   override val code = "bipush $byte"
 }
-

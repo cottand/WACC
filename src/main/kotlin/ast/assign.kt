@@ -20,8 +20,7 @@ import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.MOVInstr
 import ic.org.arm.instr.STRInstr
 import ic.org.ast.expr.Expr
-import ic.org.jvm.JvmAsm
-import ic.org.jvm.JvmGenOnly
+import ic.org.jvm.*
 import ic.org.util.ARMAsm
 import ic.org.util.NOT_REACHED
 import ic.org.util.head
@@ -163,7 +162,15 @@ data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
     // Put result in pair snd slot
     +STRInstr(rest.head, dst.withOffset(Sizes.Word.bytes))
   }
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    +JvmNewPair
+    +DUP
+    +expr1.jvmAsm()
+    +expr1.type.toJvm().toNonPrimative
+    +expr2.jvmAsm()
+    +expr2.type.toJvm().toNonPrimative
+    +InvokeSpecial(JvmNewPairInit)
+  }
 }
 
 data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
@@ -180,7 +187,11 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
 
     withFunction(CheckNullPointer)
   }
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    +pairElem.expr.jvmAsm()
+    +if (pairElem is Fst) JvmGetFst else JvmGetSnd
+    +type.toJvm().toPrimative
+  }
 
   override fun toString() = pairElem.toString()
 }
