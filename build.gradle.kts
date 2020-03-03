@@ -81,6 +81,7 @@ tasks {
       delete(fileTree(".") {
         include("**/*.j")
         include("**/*.s")
+        include("**/*.class")
       })
     }
   }

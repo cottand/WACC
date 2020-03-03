@@ -1,14 +1,15 @@
 package reference
 
+import ic.org.util.print
 import java.io.File
 
 object JasminAPI : ReferenceEmulatorAPI {
   override fun emulate(prog: String, filename: String, input: String): Pair<String, Int> {
     val newFile = filename.replace(".wacc", ".j")
-    val classFile = filename.replace(".wacc", ".class")
-    val asmFile = File(newFile).apply { writeText(prog) }
-    val jOut = "jasmin $newFile -d $classFile".runCommand()
-    return "java $classFile".runCommand()
+    File(newFile).writeText(prog)
+    val jOut = "jasmin $newFile".runCommand()
+    return "java wacc".runCommand().also { File("wacc.class").delete() }
+    // TODO execute files in the right directory
   }
 }
 
@@ -19,7 +20,7 @@ fun String.runCommand(workingDir: File = File(".")) =
     .redirectError(ProcessBuilder.Redirect.PIPE)
     .start()
     .let { proc ->
-      val code = proc.waitFor()
-      proc.inputStream.bufferedReader().readText() to code
+      proc.waitFor()
+      proc.inputStream.bufferedReader().readText() to proc.exitValue()
     }
 
