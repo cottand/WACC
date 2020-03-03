@@ -23,8 +23,7 @@ import ic.org.arm.instr.CMPInstr
 import ic.org.arm.instr.MOVInstr
 import ic.org.arm.instr.POPInstr
 import ic.org.ast.expr.Expr
-import ic.org.jvm.JvmAsm
-import ic.org.jvm.JvmSystemExit
+import ic.org.jvm.*
 import ic.org.util.ARMAsm
 import ic.org.util.NOT_REACHED
 import ic.org.util.Position
@@ -167,7 +166,33 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
       else -> NOT_REACHED()
     }
   }
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = JvmAsm.write {
+    val type = expr.type
+    +expr.jvmAsm()
+    when (type) {
+      is IntT -> {
+        +JvmSystemPrintFunc(JvmInt).invoke
+      }
+      is BoolT -> {
+        +JvmSystemPrintFunc(JvmBool).invoke
+      }
+      is CharT -> {
+        +JvmSystemPrintFunc(JvmChar).invoke
+      }
+      is StringT -> {
+        +JvmSystemPrintFunc(JvmString).invoke
+      }
+      is AnyPairTs -> {
+        TODO()
+      }
+      is ArrayT -> if (type.type is CharT) {
+        +JvmSystemPrintFunc(JvmString).invoke
+      } else {
+        TODO()
+      }
+      else -> NOT_REACHED()
+    }
+  }
 }
 
 data class Println(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
@@ -176,7 +201,33 @@ data class Println(val expr: Expr, override val scope: Scope, override val pos: 
     +BLInstr(PrintLnStdFunc.label)
     withFunction(PrintLnStdFunc)
   }
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = JvmAsm.write {
+    val type = expr.type
+    +expr.jvmAsm()
+    when (type) {
+      is IntT -> {
+        +JvmSystemPrintlnFunc(JvmInt).invoke
+      }
+      is BoolT -> {
+        +JvmSystemPrintlnFunc(JvmBool).invoke
+      }
+      is CharT -> {
+        +JvmSystemPrintlnFunc(JvmChar).invoke
+      }
+      is StringT -> {
+        +JvmSystemPrintlnFunc(JvmString).invoke
+      }
+      is AnyPairTs -> {
+        TODO()
+      }
+      is ArrayT -> if (type.type is CharT) {
+        +JvmSystemPrintlnFunc(JvmString).invoke
+      } else {
+        TODO()
+      }
+      else -> NOT_REACHED()
+    }
+  }
 }
 
 data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val scope: Scope, override val pos: Position) :

@@ -25,10 +25,12 @@ sealed class LDC : JvmInstr {
 
   companion object {
     operator fun invoke(constant: Int) = LDCInt(constant)
-    operator fun invoke(constant: String) = LDCString(constant)
+    operator fun invoke(constant: String) = LDCString('"'+constant+'"')
     operator fun invoke(constant: Char) = LDCInt(constant.toInt())
   }
 }
 
-
+data class BIPUSH(val byte: Byte) : JvmInstr {
+  override val code = "bipush $byte"
+}
 

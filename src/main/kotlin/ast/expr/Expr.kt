@@ -39,6 +39,7 @@ import ic.org.ast.Scope
 import ic.org.ast.StringT
 import ic.org.ast.Type
 import ic.org.ast.Variable
+import ic.org.jvm.BIPUSH
 import ic.org.jvm.JvmAsm
 import ic.org.jvm.LDC
 import ic.org.util.ARMAsm
@@ -84,7 +85,7 @@ data class BoolLit(val value: Boolean) : Expr() {
     +MOVInstr(rem.head, if (value) 1.toByte() else 0.toByte())
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm { +LDC(if (value) 1 else 0)}
 
   override val weight = 1
 }
@@ -98,7 +99,7 @@ data class CharLit(val value: Char) : Expr() {
   }
 
   override fun jvmAsm() = JvmAsm {
-    TODO("bipush char value onto stack")
+    +BIPUSH(value.toByte())
   }
 
   override val weight = 1
@@ -113,7 +114,7 @@ data class StrLit(val value: String) : Expr() {
     return ARMAsm(data = s.body) + instr
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm { +LDC(value) }
 
   override val weight = 1
 
