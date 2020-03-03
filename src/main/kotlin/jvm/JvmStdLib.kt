@@ -4,7 +4,7 @@ data class JvmSystemPrintFunc(val type: JvmType) : JvmMethod() {
   override val descriptor = "java/io/PrintStream/print"
   override val args = listOf(type)
   override val ret = JvmVoid
-  private val instanceType by lazy { JvmType.inline("Ljava/io/PrintStream;") }
+  private val instanceType by lazy { PrintStream }
   override val invoke by lazy {
     JvmAsm {
       +GetStatic(JvmSystemOut, instanceType)
@@ -18,7 +18,7 @@ data class JvmSystemPrintlnFunc(val type: JvmType) : JvmMethod() {
   override val descriptor = "java/io/PrintStream/println"
   override val args = listOf(type)
   override val ret = JvmVoid
-  private val instanceType by lazy { JvmType.inline("Ljava/io/PrintStream;") }
+  private val instanceType by lazy { PrintStream }
   override val invoke by lazy {
     JvmAsm {
       +GetStatic(JvmSystemOut, instanceType)

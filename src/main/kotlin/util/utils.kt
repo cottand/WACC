@@ -60,6 +60,7 @@ fun String.runCommand(workingDir: File = File(".")) =
     .start()
     .let { proc ->
       proc.waitFor()
-      proc.inputStream.bufferedReader().readText() to proc.exitValue()
+      val errs = proc.errorStream.bufferedReader().readText()
+      errs + proc.inputStream.bufferedReader().readText() to proc.exitValue()
     }
 

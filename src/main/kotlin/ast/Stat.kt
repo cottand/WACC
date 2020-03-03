@@ -126,7 +126,7 @@ data class Free(val expr: Expr, override val scope: Scope, override val pos: Pos
 
 data class Return(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() = expr.eval(Reg.ret) + POPInstr(PC)
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = expr.jvmAsm() + expr.type.toJvm().jvmReturn
 }
 
 data class Exit(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {

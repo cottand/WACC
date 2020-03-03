@@ -58,8 +58,7 @@ fun main(args: Array<String>) {
   }.ifExsistsAnd(saveToFile) {
     // Replace extension with .s and save compiled text
     val newFile = File(file).name.replace(".wacc", target.fileExtension)
-    val assembly = File(newFile)
-    assembly.writeText(it)
+    val assembly = File(newFile).apply { writeText(it) }
     if (target is JVM) {
       val mainClass = File("wacc.class")
       val jarFile = File(file).name.replace(".wacc", ".jar")
@@ -68,9 +67,7 @@ fun main(args: Array<String>) {
       val classes = "wacc.class"
       "jasmin $newFile".runCommand()
       "jar cfm $jarFile ${manifest.path} $classes".runCommand()
-      manifest.delete()
-      mainClass.delete()
-      assembly.delete()
+      listOf(manifest, mainClass, assembly).forEach { it.delete() }
       println("done.\n")
     } else
       println("Saving file with compiled assembly:\n$newFile")

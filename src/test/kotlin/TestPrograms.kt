@@ -133,8 +133,10 @@ class TestPrograms {
         val (actualOut, actualCode) = JasminAPI.emulate(actualAss, filePath, input)
         println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
         println("\nCompiled WACC:\n${program.file.readText()}")
-        assertEquals(expectedOut, actualOut) { "Not matching program outputs for $canonicalPath." }
-        assertEquals(expectedCode, actualCode) {"Not amtching exit codes for $canonicalPath"}
+        assertEquals(expectedOut, actualOut)
+        { "Not matching program outputs for $canonicalPath.\nBytecode:\n$actualAss" }
+        assertEquals(expectedCode, actualCode)
+        { "Not amtching exit codes for $canonicalPath\n.Bytecode:\n$actualAss" }
       }
     }
     println("Test successful (compiler exit code ${res.exitCode}). Compiler output:\n${res.msg}\n")

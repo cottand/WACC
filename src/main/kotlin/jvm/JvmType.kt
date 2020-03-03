@@ -8,14 +8,9 @@ import ic.org.ast.IntT
 import ic.org.ast.StringT
 import ic.org.ast.Type
 
-abstract class JvmType {
+sealed class JvmType {
   abstract val rep: String
   override fun toString() = rep
-  companion object {
-    fun inline(rep: String) = object : JvmType() {
-      override val rep = rep
-    }
-  }
 }
 
 fun Type.toJvm() = when(this) {
@@ -25,6 +20,10 @@ fun Type.toJvm() = when(this) {
   StringT -> JvmString
   is AnyArrayT -> TODO()
   is AnyPairTs -> TODO()
+}
+
+object PrintStream : JvmType() {
+  override val rep = "Ljava/io/PrintStream;"
 }
 
 object JvmInt : JvmType() {

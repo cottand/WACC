@@ -57,6 +57,22 @@ object JvmReturn : JvmInstr {
   override val code = "return"
 }
 
+object JvmReturnObj : JvmInstr {
+  override val code = "areturn"
+}
+
+val JvmType.jvmReturn
+  get() = when(this) {
+    JvmInt -> object : JvmInstr {
+      override val code = "ireturn"
+    }
+    is JvmArray -> TODO()
+    Object, JvmString, PrintStream -> JvmReturnObj
+    JvmVoid -> JvmReturn
+    JvmBool -> TODO()
+    JvmChar -> TODO()
+  }
+
 abstract class JvmField {
   abstract val name: String
   override fun toString() = name
