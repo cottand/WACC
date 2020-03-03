@@ -173,6 +173,9 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
       is IntT -> {
         +JvmSystemPrintFunc(JvmInt).invoke
       }
+      is BoolT -> {
+        +JvmSystemPrintFunc(JvmBool).invoke
+      }
       is StringT -> {
         +JvmSystemPrintFunc(JvmString).invoke
       }

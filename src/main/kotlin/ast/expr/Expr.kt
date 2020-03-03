@@ -84,7 +84,7 @@ data class BoolLit(val value: Boolean) : Expr() {
     +MOVInstr(rem.head, if (value) 1.toByte() else 0.toByte())
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm { +LDC(if (value) 1 else 0)}
 
   override val weight = 1
 }

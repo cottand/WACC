@@ -29,3 +29,7 @@ object JvmString : JvmType() {
 object JvmVoid : JvmType() {
   override val rep = "V"
 }
+
+object JvmBool : JvmType() {
+  override val rep = "Z"
+}
