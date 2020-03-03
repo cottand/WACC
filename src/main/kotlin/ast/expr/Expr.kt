@@ -39,8 +39,8 @@ import ic.org.ast.Scope
 import ic.org.ast.StringT
 import ic.org.ast.Type
 import ic.org.ast.Variable
-import ic.org.jvm.ILOAD
 import ic.org.jvm.JvmAsm
+import ic.org.jvm.LDC
 import ic.org.util.ARMAsm
 import ic.org.util.IllegalArrayAccess
 import ic.org.util.NOT_REACHED
@@ -67,12 +67,9 @@ sealed class Expr : Computable {
 
 data class IntLit(val value: Int) : Expr() {
   override val type = IntT
-  override fun armAsm(rem: Regs) = ARMAsm.empty + LDRInstr(
-    rem.head,
-    ImmEquals32b(value)
-  )
+  override fun armAsm(rem: Regs) = ARMAsm.instr(LDRInstr(rem.head, ImmEquals32b(value)))
 
-  override fun jvmAsm() = JvmAsm { +ILOAD(value) }
+  override fun jvmAsm() = JvmAsm { +LDC(value) }
 
   override val weight = 1
 

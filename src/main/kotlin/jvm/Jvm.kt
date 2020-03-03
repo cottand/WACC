@@ -9,7 +9,13 @@ import java.util.LinkedList
 
 interface JvmInstr {
   val code: String
+
   // override fun toString() = code
+  companion object {
+    fun inline(s: String) = object : JvmInstr {
+      override val code = s
+    }
+  }
 }
 
 data class JvmLabel(val name: String) : JvmInstr {
@@ -18,12 +24,9 @@ data class JvmLabel(val name: String) : JvmInstr {
 
 class JvmAsm private constructor(
   val instrs: PersistentList<JvmInstr>,
-  private val methods: PersistentSet<JvmAsm> = persistentSetOf()
+  val methods: PersistentSet<JvmAsm> = persistentSetOf()
 ) {
-
   constructor(a: JvmAsm) : this(a.instrs, a.methods)
-
-  constructor(init: BuilderScope.() -> Unit) : this(write(init))
 
   fun withMethod(m: WACCMethod): JvmAsm = JvmAsm(instrs, methods + m.asm)
   fun withMethods(ms: List<WACCMethod>) = JvmAsm(instrs, methods + ms.map { it.asm })
@@ -39,6 +42,7 @@ class JvmAsm private constructor(
     operator fun JvmInstr.unaryPlus() = instructions.addLast(instr(this))
     operator fun List<JvmInstr>.unaryPlus() = forEach { instructions.addLast(instr(it)) }
     operator fun JvmAsm.unaryPlus() = instructions.addLast(this)
+    operator fun String.unaryPlus() = instructions.addLast(instr(JvmInstr.inline(this)))
 
     internal fun build() = instructions.fold(empty, JvmAsm::combine)
 
@@ -50,6 +54,7 @@ class JvmAsm private constructor(
     fun instr(i: JvmInstr) = JvmAsm(persistentListOf(i))
     val empty = JvmAsm(persistentListOf())
     fun write(init: BuilderScope.() -> Unit) = BuilderScope().apply(init).build()
+    operator fun invoke(init: BuilderScope.() -> Unit) = write(init)
   }
 }
 

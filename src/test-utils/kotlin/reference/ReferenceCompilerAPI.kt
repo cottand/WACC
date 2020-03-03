@@ -15,7 +15,11 @@ import ic.org.util.joinLines
 import java.io.File
 import org.junit.jupiter.api.Assumptions.assumeTrue
 
-object ReferenceCompilerAPI {
+interface ReferenceEmulatorAPI {
+  fun emulate(prog: String, filename: String, input: String) : Pair<String, Int>
+}
+
+object ReferenceCompilerAPI : ReferenceEmulatorAPI {
 
   private val gson by lazy { Gson() }
   private const val noCacheToken = "NO_CACHE"
@@ -63,14 +67,14 @@ object ReferenceCompilerAPI {
     return RefAnswer(assembly, runtimeOut, code)
   }
 
-  fun emulate(armProg: String, filename: String, input: String): Pair<String, Int> {
+  override fun emulate(prog: String, filePath: String, input: String): Pair<String, Int> {
     val emulatorUrl = "https://teaching.doc.ic.ac.uk/wacc_compiler/emulate.cgi"
-    val newFile = filename.replace(".wacc", ".s")
-    val armFile = File(newFile).apply { writeText(armProg) }
+    val newFile = filePath.replace(".wacc", ".s")
+    val armFile = File(newFile).apply { writeText(prog) }
     val reply = queryReference<EmulatorReply>(armFile, emulatorUrl, stdin = input)
       .getOrElse { System.err.println("Failed to reach the reference emulator"); assumeTrue(false); NOT_REACHED() }
     if (reply.assemble_out.isNotBlank()) {
-      val asmWithLines = armProg.lines().mapIndexed { i, s ->
+      val asmWithLines = prog.lines().mapIndexed { i, s ->
         val lNo = (i + 1).toString()
         lNo + "      ".drop(lNo.length) + s
       }.joinLines()

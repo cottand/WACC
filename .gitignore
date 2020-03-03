@@ -19,3 +19,5 @@ src/main/gen/
 #assembly from the ref compiler
 *.s
 
+# generated jasmin files
+*.j

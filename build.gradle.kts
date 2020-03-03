@@ -78,6 +78,11 @@ tasks {
   clean {
     doFirst {
       delete(file("./.test_cache/"))
+      delete(fileTree(".") {
+        include("**/*.j")
+        include("**/*.s")
+        include("**/*.class")
+      })
     }
   }
 

@@ -2,14 +2,21 @@ package ic.org.ast
 
 import ast.Sizes
 import ic.org.arm.AsmDirective
-import ic.org.arm.LR
 import ic.org.arm.AsmLabel
+import ic.org.arm.LR
 import ic.org.arm.PC
 import ic.org.arm.Reg
 import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.POPInstr
 import ic.org.arm.instr.PUSHInstr
 import ic.org.ast.expr.Expr
+import ic.org.jvm.JvmAsm
+import ic.org.jvm.JvmDirective
+import ic.org.jvm.JvmLabel
+import ic.org.jvm.Main
+import ic.org.jvm.MainClass
+import ic.org.jvm.SuperObject
+import ic.org.jvm.WACCMethod
 import ic.org.util.ARMAsm
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
@@ -17,8 +24,8 @@ import org.antlr.v4.runtime.tree.TerminalNode
 
 // <program>
 data class Prog(val funcs: List<Func>, val body: Stat, val globalScope: GlobalScope) {
-  fun asm() = body.instr()
-    .withFunctions(funcs.map { it.instr() })
+  fun armAsm() = body.instr()
+    .withFunctions(funcs.map(Func::armAsm))
     .let {
       val allFuncs = it.funcs.fold(ARMAsm.empty, ARMAsm::combine)
       val allData = it.data + allFuncs.data
@@ -44,14 +51,30 @@ data class Prog(val funcs: List<Func>, val body: Stat, val globalScope: GlobalSc
       }
       margin + it.code
     }
+
+  fun jvmAsm() = JvmAsm {
+    +MainClass
+    +SuperObject
+    // +MainClass.init
+    withMethods(funcs.map(Func::jvmMethod))
+    withMethod(Main(body))
+  }.let { prog ->
+    fun JvmAsm.string(): String = instrs.joinToString(separator = "\n", postfix = "\n") {
+      val margin = when (it) {
+        is JvmDirective, is JvmLabel -> "  "
+        else -> "    "
+      }
+      margin + it.code
+    } + if (methods.isEmpty()) "" else methods.joinToString(separator = "\n\n", transform = JvmAsm::string)
+    prog.string()
+  }
 }
 
 // <func>
 data class Func(val retType: Type, val ident: Ident, val params: List<Variable>, val stat: Stat, val scope: Scope) {
 
-  val label = AsmLabel("f_" + ident.name)
-
-  fun instr() = ARMAsm.write {
+  fun armAsm() = ARMAsm.write {
+    val label = AsmLabel("f_" + ident.name)
     val statCode = stat.instr()
     data { +statCode.data }
     +label
@@ -62,6 +85,8 @@ data class Func(val retType: Type, val ident: Ident, val params: List<Variable>,
 
     withFunctions(statCode.funcs)
   }
+
+  fun jvmMethod(): WACCMethod = TODO()
 }
 
 // <param>
