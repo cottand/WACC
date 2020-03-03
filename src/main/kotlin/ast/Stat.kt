@@ -170,6 +170,9 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
     val type = expr.type
     +expr.jvmAsm()
     when (type) {
+      is IntT -> {
+        +JvmSystemPrintFunc(JvmInt).invoke
+      }
       is StringT -> {
         +JvmSystemPrintFunc(JvmString).invoke
       }
