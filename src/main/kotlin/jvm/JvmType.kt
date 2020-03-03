@@ -11,13 +11,6 @@ import ic.org.ast.Type
 sealed class JvmType {
   abstract val rep: String
   override fun toString() = rep
-  companion object {
-    fun inline(rep: String) = object : JvmType() {
-      override val rep = rep
-      override val toNonPrimative = JvmAsm.empty
-      override val toPrimative = JvmAsm.empty
-    }
-  }
   abstract val toNonPrimative: JvmAsm
   abstract val toPrimative: JvmAsm
 }
@@ -33,6 +26,8 @@ fun Type.toJvm() = when(this) {
 
 object PrintStream : JvmType() {
   override val rep = "Ljava/io/PrintStream;"
+  override val toNonPrimative = JvmAsm.empty
+  override val toPrimative = JvmAsm.empty
 }
 
 object JvmInt : JvmType() {
