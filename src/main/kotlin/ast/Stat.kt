@@ -182,7 +182,15 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
       is StringT -> {
         +JvmSystemPrintFunc(JvmString).invoke
       }
-      else -> TODO()
+      is AnyPairTs -> {
+        TODO()
+      }
+      is ArrayT -> if (type.type is CharT) {
+        +JvmSystemPrintFunc(JvmString).invoke
+      } else {
+        TODO()
+      }
+      else -> NOT_REACHED()
     }
   }
 }
@@ -193,7 +201,33 @@ data class Println(val expr: Expr, override val scope: Scope, override val pos: 
     +BLInstr(PrintLnStdFunc.label)
     withFunction(PrintLnStdFunc)
   }
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = JvmAsm.write {
+    val type = expr.type
+    +expr.jvmAsm()
+    when (type) {
+      is IntT -> {
+        +JvmSystemPrintlnFunc(JvmInt).invoke
+      }
+      is BoolT -> {
+        +JvmSystemPrintlnFunc(JvmBool).invoke
+      }
+      is CharT -> {
+        +JvmSystemPrintlnFunc(JvmChar).invoke
+      }
+      is StringT -> {
+        +JvmSystemPrintlnFunc(JvmString).invoke
+      }
+      is AnyPairTs -> {
+        TODO()
+      }
+      is ArrayT -> if (type.type is CharT) {
+        +JvmSystemPrintlnFunc(JvmString).invoke
+      } else {
+        TODO()
+      }
+      else -> NOT_REACHED()
+    }
+  }
 }
 
 data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val scope: Scope, override val pos: Position) :

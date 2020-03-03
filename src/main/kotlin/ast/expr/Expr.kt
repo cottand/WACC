@@ -101,7 +101,7 @@ data class CharLit(val value: Char) : Expr() {
   override fun jvmAsm() = JvmAsm {
     +BIPUSH(value.toByte())
   }
-g
+
   override val weight = 1
 }
 
