@@ -69,7 +69,7 @@ object JvmBool : JvmType() {
   override val toNonPrimative = JvmAsm.instr(InvokeStatic("java/lang/Boolean/valueOf(Z)Ljava/lang/Boolean;"))
   override val toPrimative = JvmAsm {
     +CheckCast("java/lang/Boolean")
-    +InvokeVirtual("java/lang/Boolean/boolValue()Z")
+    +InvokeVirtual("java/lang/Boolean/booleanValue()Z")
   }
 }
 
@@ -77,8 +77,8 @@ object JvmChar : JvmType() {
   override val rep = "C"
   override val toNonPrimative = JvmAsm.instr(InvokeStatic("java/lang/Character/valueOf(C)Ljava/lang/Character;"))
   override val toPrimative = JvmAsm {
-    +CheckCast("java/lang/Char")
-    +InvokeVirtual("java/lang/Char/charValue()C")
+    +CheckCast("java/lang/Character")
+    +InvokeVirtual("java/lang/Character/charValue()C")
   }
 }
 
