@@ -1,8 +1,13 @@
 package ic.org.jvm
 
-sealed class JvmType {
+abstract class JvmType {
   abstract val rep: String
   override fun toString() = rep
+  companion object {
+    fun inline(rep: String) = object : JvmType() {
+      override val rep = rep
+    }
+  }
 }
 
 object JvmInt : JvmType() {
