@@ -136,7 +136,7 @@ class TestPrograms {
         assertEquals(expectedOut, actualOut)
         { "Not matching program outputs for $canonicalPath.\nBytecode:\n$actualAss" }
         assertEquals(expectedCode, actualCode)
-        { "Not amtching exit codes for $canonicalPath\n.Bytecode:\n$actualAss" }
+        { "Not matching exit codes for $canonicalPath\n.Bytecode:\n$actualAss" }
       }
     }
     println("Test successful (compiler exit code ${res.exitCode}). Compiler output:\n${res.msg}\n")
