@@ -132,7 +132,7 @@ data class Return(val expr: Expr, override val scope: Scope, override val pos: P
 
 data class Exit(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() = expr.eval(Reg.ret) + BLInstr(AsmLabel("exit"))
-  override fun jvmInstr() = expr.jvmAsm() + JvmSystemExit.call
+  override fun jvmInstr() = expr.jvmAsm() + JvmSystemExit.invoke
 }
 
 data class Print(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {

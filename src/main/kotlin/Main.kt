@@ -56,7 +56,7 @@ fun main(args: Array<String>) {
     println("Compiled assembly:\n\n$it\n")
   }.ifExsistsAnd(saveToFile) {
     // Replace extension with .s and save compiled text
-    val newFile = File(file).name.replace(".wacc", ".s")
+    val newFile = File(file).name.replace(".wacc", target.fileExtension)
     println("Saving file with compiled assembly:\n$newFile")
     File(newFile).writeText(it)
   }

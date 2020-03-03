@@ -19,3 +19,4 @@ src/main/gen/
 #assembly from the ref compiler
 *.s
 
+skip.j
