@@ -9,6 +9,7 @@ import arrow.core.extensions.list.foldable.forAll
 import kotlin.math.log2
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
+import java.io.File
 
 /**
  * Returns whether a [List] of [Either] contains any [Either.Left]
@@ -50,3 +51,15 @@ inline val <reified E, reified V> List<Validated<E, V>>.valids
 
 inline fun log2(i: Int) =
   log2(i.toDouble()).also { if (it > Byte.MAX_VALUE) throw UnsupportedOperationException() }.toInt().toUByte()
+
+fun String.runCommand(workingDir: File = File(".")) =
+  ProcessBuilder(*split("\\s".toRegex()).toTypedArray())
+    .directory(workingDir)
+    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+    .redirectError(ProcessBuilder.Redirect.PIPE)
+    .start()
+    .let { proc ->
+      proc.waitFor()
+      proc.inputStream.bufferedReader().readText() to proc.exitValue()
+    }
+

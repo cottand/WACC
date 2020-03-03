@@ -1,5 +1,6 @@
 package reference
 
+import ic.org.util.runCommand
 import java.io.File
 
 object JasminAPI : ReferenceEmulatorAPI {
@@ -11,15 +12,4 @@ object JasminAPI : ReferenceEmulatorAPI {
     // TODO execute files in the right directory
   }
 }
-
-fun String.runCommand(workingDir: File = File(".")) =
-  ProcessBuilder(*split("\\s".toRegex()).toTypedArray())
-    .directory(workingDir)
-    .redirectOutput(ProcessBuilder.Redirect.PIPE)
-    .redirectError(ProcessBuilder.Redirect.PIPE)
-    .start()
-    .let { proc ->
-      proc.waitFor()
-      proc.inputStream.bufferedReader().readText() to proc.exitValue()
-    }
 

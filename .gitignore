@@ -21,3 +21,4 @@ src/main/gen/
 
 # generated jasmin files
 *.j
+*.jar

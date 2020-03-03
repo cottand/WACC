@@ -19,6 +19,7 @@ import ic.org.util.errors
 import ic.org.util.flatMap
 import ic.org.util.head
 import ic.org.util.ifExsistsAnd
+import ic.org.util.runCommand
 import ic.org.util.tail
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
@@ -57,8 +58,23 @@ fun main(args: Array<String>) {
   }.ifExsistsAnd(saveToFile) {
     // Replace extension with .s and save compiled text
     val newFile = File(file).name.replace(".wacc", target.fileExtension)
-    println("Saving file with compiled assembly:\n$newFile")
-    File(newFile).writeText(it)
+    val assembly = File(newFile)
+    assembly.writeText(it)
+    if (target is JVM) {
+      val mainClass = File("wacc.class")
+      val jarFile = File(file).name.replace(".wacc", ".jar")
+      print("Packaging JAR file $jarFile... ")
+      val manifest = File("manifest").apply { writeText("Main-Class: wacc\n") }
+      val classes = "wacc.class"
+      "jasmin $newFile".runCommand()
+      "jar cfm $jarFile ${manifest.path} $classes".runCommand()
+      manifest.delete()
+      mainClass.delete()
+      assembly.delete()
+      println("done.\n")
+    } else
+      println("Saving file with compiled assembly:\n$newFile")
+
   }
   exitProcess(result.exitCode)
 }
