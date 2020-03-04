@@ -1,6 +1,8 @@
 package ic.org.jvm
 
+import com.sun.org.apache.bcel.internal.generic.IRETURN
 import ic.org.util.shortRandomUUID
+import javax.swing.ImageIcon
 
 data class JvmSystemPrintFunc(val type: JvmType) : JvmMethod() {
   override val descriptor = "java/io/PrintStream/print"
@@ -38,16 +40,16 @@ object JvmSystemIn : JvmField() {
   override val name = "java/lang/System/in Ljava/io/InputStream"
 }
 
-abstract class JvmSystemReadFunc(val delimiters: CharArray) : WACCMethod() {
+abstract class JvmSystemReadFunc() : WACCMethod() {
   override val args = listOf(JvmVoid)
-  abstract val body: JvmAsm
 
   val maxStack = 10 // TODO change to lower?
   val locals = 10 // TODO change to lower
-  val retIndex = 1
-  private val currIndex = 2
+  protected val retIndex = 1
+  protected val currIndex = 2
   private val nextCharLabel = JvmLabel("next_char_" + shortRandomUUID())
   private val retLabel = JvmLabel("return_" + shortRandomUUID())
+  private val delimiters = charArrayOf(' ')
 
   override val asm = JvmAsm.write {
     +".method public static $spec"
@@ -64,12 +66,8 @@ abstract class JvmSystemReadFunc(val delimiters: CharArray) : WACCMethod() {
     +parseChar()
     +GOTO(nextCharLabel)
     +retLabel.code
-    if (ret is JvmVoid) {
-      +LDC(0)
-      +JvmReturn
-    } else {
-      +ILOAD(retIndex)
-    }
+    +ILOAD(retIndex)
+    +ret.jvmReturn
     +".end method"
   }
 
@@ -82,5 +80,25 @@ abstract class JvmSystemReadFunc(val delimiters: CharArray) : WACCMethod() {
     }
   }.toList()
 
-  abstract fun parseChar() : JvmAsm
+  abstract fun parseChar(): JvmAsm
+}
+
+
+
+class JvmReadIntFunc() : JvmSystemReadFunc() {
+  override val descriptor = "readInt"
+  override val args = listOf(JvmVoid)
+  //TODO: add support for negative integers
+  override fun parseChar() = JvmAsm.write{
+    +ILOAD(currIndex)
+    +LDC('0'.toInt())
+    +ISUB
+    +LDC(10)
+    +ILOAD(retIndex)
+    +IMUL
+    +IADD
+    +ISTORE(retIndex)
+  }
+
+  override val ret = JvmInt
 }
