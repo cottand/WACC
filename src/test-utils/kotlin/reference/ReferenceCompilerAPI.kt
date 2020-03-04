@@ -16,7 +16,7 @@ import java.io.File
 import org.junit.jupiter.api.Assumptions.assumeTrue
 
 interface ReferenceEmulatorAPI {
-  fun emulate(prog: String, filename: String, input: String) : Pair<String, Int>
+  fun emulate(prog: String, filePath: String, input: String) : Pair<String, Int>
 }
 
 object ReferenceCompilerAPI : ReferenceEmulatorAPI {

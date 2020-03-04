@@ -78,7 +78,7 @@ data class Func(val retType: Type, val ident: Ident, val params: List<Variable>,
 
   @JvmGenOnly
   val jvmMethod by lazy {
-    DefinedMethod("method" + ident.name, params.map { it.type.toJvm() }, retType.toJvm(), scope, stat)
+    DefinedMethod(ident.name, params.map { it.type.toJvm() }, retType.toJvm(), scope, stat)
   }
 }
 

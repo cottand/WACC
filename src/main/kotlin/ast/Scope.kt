@@ -230,6 +230,6 @@ data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variab
   val label = AsmLabel("f_$name")
   @JvmGenOnly
   val jvmMethod by lazy {
-    DefinedMethod("method$name", params.map { it.type.toJvm() }, retType.toJvm(), funcScope)
+    DefinedMethod(name.name, params.map { it.type.toJvm() }, retType.toJvm(), funcScope)
   }
 }
