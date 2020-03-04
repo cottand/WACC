@@ -227,7 +227,21 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
     +continueLabel
   }
 
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = JvmAsm {
+    val uuid = shortRandomUUID()
+    val elseLabel = JvmLabel("IfElse$uuid")
+    val continueLabel = JvmLabel("IfContinue$uuid")
+
+    +cond.jvmAsm() // Load cond (bool) to top of the stack
+    +IFEQ(elseLabel) // If cond == 0 (cond == false) jump to else
+    +then.jvmInstr() // `then` body
+    +GOTO(continueLabel) // exit `if`
+    +elseLabel
+    +`else`.jvmInstr() // `else` body
+    +continueLabel
+    +LDC(0) // dummy body so the continuation has something to jump to
+    +POP
+  }
 }
 
 data class While(val cond: Expr, val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
