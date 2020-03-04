@@ -239,6 +239,8 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
     +elseLabel
     +`else`.jvmInstr() // `else` body
     +continueLabel
+    +LDC(0) // dummy body so the continuation has something to jump to
+    +POP
   }
 }
 
