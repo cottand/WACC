@@ -12,15 +12,7 @@ import ic.org.ast.Prog
 import ic.org.ast.build.asAst
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
-import ic.org.util.Parsed
-import ic.org.util.areAllValid
-import ic.org.util.asLines
-import ic.org.util.errors
-import ic.org.util.flatMap
-import ic.org.util.head
-import ic.org.util.ifExsistsAnd
-import ic.org.util.runCommand
-import ic.org.util.tail
+import ic.org.util.*
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker
@@ -29,6 +21,7 @@ import kotlin.system.exitProcess
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
+import jasmin.Main.main as jasminMain
 
 @ExperimentalTime
 fun main(args: Array<String>) {
@@ -52,28 +45,26 @@ fun main(args: Array<String>) {
   val progFile = File(file)
   val progFileName = progFile.name
   val progName = progFileName.replace(".wacc", "")
-  val result = WACCCompiler(file).compile(target = target)
-  println(result.msg + '\n')
+  val result = WACCCompiler(file).compile(target = target).also {
+    println(it.msg + '\n')
+  }
 
   // Deal with passed arguments
-
   result.out.ifExsistsAnd(printAssembly) {
     println("Compiled assembly:\n\n$it\n")
   }.ifExsistsAnd(saveToFile) {
     // Replace extension with .s and save compiled text
-    val newFile = progName + target.fileExtension
+    val newFile = "$progName${target.fileExtension}"
     val assembly = File(newFile).apply { writeText(it) }
     if (target is JVM) {
       val progClass = "$progName.class"
       val mainClass = File(progClass)
       val jarFile = "$progName.jar"
-      print("Packaging JAR file $jarFile... ")
+      println("Packaging JAR file $jarFile... ")
       val manifest = File("manifest").apply { writeText("Main-Class: $progName\n") }
-      // "java -jar lib/jasmin.jar $newFile".runCommand()
-      jasmin.Main.main(arrayOf(newFile))
+      jasminMain(arrayOf(newFile))
       "jar cfm $jarFile ${manifest.path} $progClass -C ${JVM.classpath} ${JVM.classes}".runCommand()
       if (cleanAfterBuild) listOf(manifest, mainClass, assembly).forEach { it.delete() }
-      println("done.\n")
     } else
       println("Saving file with compiled assembly:\n$newFile")
 
@@ -112,7 +103,7 @@ class WACCCompiler(private val filename: String) {
     // Check syntax
     return parser.checkSyntax()
       // Check semantics by building the AST
-      .flatMap { it.prog().asAst(input.name.replace(".wacc","")) }
+      .flatMap { it.prog().asAst(input.name.replace(".wacc", "")) }
       // Check control flow by building a graph
       .flatMap { it.checkControlFlow() }
   }

@@ -12,6 +12,7 @@ object JasminAPI : ReferenceEmulatorAPI {
     val (jOut,_) = "java -jar lib/jasmin.jar ${newFile.path}".runCommand()
     return "java -classpath .:${JVM.classpath.dropLast(1)}:${folder.path} $progName ${JVM.classes}".runCommand().also { (out, code) ->
       File("$progName.class").delete()
+      newFile.delete()
       if (code == 1)
         System.err.println("java returned exit code 1. Output:\n$out\n Jasmin output:$jOut")
     }
