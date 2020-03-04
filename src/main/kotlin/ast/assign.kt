@@ -130,7 +130,17 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
     withFunction(MallocStdFunc)
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    val exprType = exprs.firstOrNone().fold({ arrT }, { it.type })
+    +NEWARRAY(exprType.toJvm())
+    +DUP
+    exprs.forEachIndexed { i, expr ->
+      +LDC(i)
+      +expr.jvmAsm()
+      +IASTORE
+      if(i < exprs.size - 1) +DUP
+    }
+  }
 
   override fun toString() =
     exprs.joinToString(separator = ", ", prefix = "[", postfix = "]") { it.toString() }

@@ -30,7 +30,7 @@ sealed class Type {
   fun sizedSTORE(indexNo: Int) = when (this) {
     IntT, BoolT, CharT -> ISTORE(indexNo)
     StringT -> ASTORE(indexNo)
-    is AnyArrayT -> TODO()
+    is AnyArrayT -> ASTORE(indexNo)
     is AnyPairTs -> ASTORE(indexNo)
   }
 
