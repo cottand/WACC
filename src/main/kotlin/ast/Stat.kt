@@ -3,33 +3,12 @@ package ic.org.ast
 import arrow.core.None
 import arrow.core.some
 import ast.Sizes
-import ic.org.arm.CheckArrayBounds
-import ic.org.arm.CheckNullPointer
-import ic.org.arm.EQCond
-import ic.org.arm.FreeFunc
-import ic.org.arm.AsmLabel
-import ic.org.arm.PC
-import ic.org.arm.PrintBoolStdFunc
-import ic.org.arm.PrintIntStdFunc
-import ic.org.arm.PrintLnStdFunc
-import ic.org.arm.PrintReferenceStdFunc
-import ic.org.arm.PrintStringStdFunc
-import ic.org.arm.Reg
+import ic.org.arm.*
 import ic.org.arm.addressing.withOffset
-import ic.org.arm.instr.ADDInstr
-import ic.org.arm.instr.BInstr
-import ic.org.arm.instr.BLInstr
-import ic.org.arm.instr.CMPInstr
-import ic.org.arm.instr.MOVInstr
-import ic.org.arm.instr.POPInstr
+import ic.org.arm.instr.*
 import ic.org.ast.expr.Expr
 import ic.org.jvm.*
-import ic.org.util.ARMAsm
-import ic.org.util.NOT_REACHED
-import ic.org.util.Position
-import ic.org.util.log2
-import ic.org.util.shortRandomUUID
-import ic.org.util.tail
+import ic.org.util.*
 
 sealed class Stat {
   abstract val scope: Scope
@@ -94,6 +73,7 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
       withFunction(CheckNullPointer)
     }
   }
+
   override fun jvmInstr() = TODO()
 }
 
@@ -121,6 +101,7 @@ data class Free(val expr: Expr, override val scope: Scope, override val pos: Pos
 
     else -> NOT_REACHED()
   }
+
   override fun jvmInstr() = TODO()
 }
 
@@ -166,6 +147,7 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
       else -> NOT_REACHED()
     }
   }
+
   override fun jvmInstr() = JvmAsm.write {
     val type = expr.type
     +expr.jvmAsm()
@@ -201,32 +183,23 @@ data class Println(val expr: Expr, override val scope: Scope, override val pos: 
     +BLInstr(PrintLnStdFunc.label)
     withFunction(PrintLnStdFunc)
   }
+
   override fun jvmInstr() = JvmAsm.write {
     val type = expr.type
     +expr.jvmAsm()
     when (type) {
-      is IntT -> {
-        +JvmSystemPrintlnFunc(JvmInt).invoke
-      }
-      is BoolT -> {
-        +JvmSystemPrintlnFunc(JvmBool).invoke
-      }
-      is CharT -> {
-        +JvmSystemPrintlnFunc(JvmChar).invoke
-      }
-      is StringT -> {
-        +JvmSystemPrintlnFunc(JvmString).invoke
-      }
-      is AnyPairTs -> {
-        TODO()
-      }
-      is ArrayT -> if (type.type is CharT) {
-        +JvmSystemPrintlnFunc(JvmString).invoke
-      } else {
-        TODO()
-      }
-      else -> NOT_REACHED()
+      is IntT -> +JvmSystemPrintlnFunc(JvmInt).invoke
+      is BoolT -> +JvmSystemPrintlnFunc(JvmBool).invoke
+      is CharT -> +JvmSystemPrintlnFunc(JvmChar).invoke
+      is StringT -> +JvmSystemPrintlnFunc(JvmString).invoke
+      is AnyPairTs -> TODO()
+      is ArrayT ->
+        if (type.type is CharT) +JvmSystemPrintlnFunc(JvmString).invoke
+        else TODO()
+      // Empty array
+      is AnyArrayT -> TODO()
     }
+
   }
 }
 
@@ -253,6 +226,7 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
     +endElse
     +continueLabel
   }
+
   override fun jvmInstr() = TODO()
 }
 
@@ -274,6 +248,7 @@ data class While(val cond: Expr, val body: Stat, override val scope: Scope, over
     +CMPInstr(cond = None, rn = Reg(4), int8b = 1) // Test whether cond == 1
     +BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
   }
+
   override fun jvmInstr() = TODO()
 }
 
@@ -284,6 +259,7 @@ data class BegEnd(val body: Stat, override val scope: Scope, override val pos: P
     +body.instr()
     +end
   }
+
   override fun jvmInstr() = TODO()
 }
 

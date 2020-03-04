@@ -2,25 +2,17 @@
 
 package ic.org.ast
 
-import arrow.core.Option
-import arrow.core.getOption
-import arrow.core.or
-import arrow.core.toOption
-import arrow.core.valid
+import arrow.core.*
 import ast.Sizes
-import ic.org.arm.ARMGenOnly
-import ic.org.arm.AsmLabel
-import ic.org.arm.Reg
-import ic.org.arm.RegOperand2
-import ic.org.arm.Register
-import ic.org.arm.Regs
-import ic.org.arm.SP
+import ic.org.arm.*
 import ic.org.arm.addressing.withOffset
 import ic.org.arm.instr.ADDInstr
 import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.SUBInstr
+import ic.org.jvm.DefinedMethod
 import ic.org.jvm.JvmAsm
 import ic.org.jvm.JvmGenOnly
+import ic.org.jvm.toJvm
 import ic.org.util.NOT_REACHED
 import ic.org.util.Position
 import ic.org.util.RedeclarationError
@@ -231,5 +223,8 @@ data class Variable(
 }
 
 data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variable>, val funcScope: FuncScope) {
+  @ARMGenOnly
   val label = AsmLabel("f_$name")
+  @JvmGenOnly
+  val jvmMethod by lazy { DefinedMethod("method$name", params.map { it.type.toJvm() }, retType.toJvm(), null) }
 }

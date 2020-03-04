@@ -3,15 +3,7 @@ package ic.org.ast
 import arrow.core.None
 import arrow.core.firstOrNone
 import ast.Sizes
-import ic.org.arm.ARMGenOnly
-import ic.org.arm.CheckNullPointer
-import ic.org.arm.MallocStdFunc
-import ic.org.arm.ReadChar
-import ic.org.arm.ReadInt
-import ic.org.arm.Reg
-import ic.org.arm.Register
-import ic.org.arm.Regs
-import ic.org.arm.SP
+import ic.org.arm.*
 import ic.org.arm.addressing.ZeroOffsetAddrMode2
 import ic.org.arm.addressing.withOffset
 import ic.org.arm.addressing.zeroOffsetAddr
@@ -137,6 +129,7 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
 
     withFunction(MallocStdFunc)
   }
+
   override fun jvmAsm() = TODO()
 
   override fun toString() =
@@ -162,6 +155,7 @@ data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
     // Put result in pair snd slot
     +STRInstr(rest.head, dst.withOffset(Sizes.Word.bytes))
   }
+
   override fun jvmAsm() = JvmAsm {
     +JvmNewPair
     +DUP
@@ -187,6 +181,7 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
 
     withFunction(CheckNullPointer)
   }
+
   override fun jvmAsm() = JvmAsm {
     +pairElem.expr.jvmAsm()
     +if (pairElem is Fst) JvmGetFst else JvmGetSnd
@@ -213,7 +208,12 @@ data class Call(val func: FuncIdent, val args: List<Expr>) : AssRHS() {
     +end
     +MOVInstr(rd = rem.head, op2 = Reg.ret)
   }
-  override fun jvmAsm() = TODO()
+
+  override fun jvmAsm() = JvmAsm {
+    // Evaluate each argument and put them in the stac, first (bottom) to last (top)
+    args.forEach { +it.jvmAsm() }
+    +func.jvmMethod.invoke
+  }
 
   override fun toString() = "call ${func.name.name} (..)"
 }

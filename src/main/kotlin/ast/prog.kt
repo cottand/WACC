@@ -1,23 +1,12 @@
 package ic.org.ast
 
 import ast.Sizes
-import ic.org.arm.AsmDirective
-import ic.org.arm.AsmLabel
-import ic.org.arm.LR
-import ic.org.arm.PC
-import ic.org.arm.Reg
+import ic.org.arm.*
 import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.POPInstr
 import ic.org.arm.instr.PUSHInstr
 import ic.org.ast.expr.Expr
-import ic.org.jvm.DefinedMethod
-import ic.org.jvm.JvmAsm
-import ic.org.jvm.JvmDirective
-import ic.org.jvm.JvmLabel
-import ic.org.jvm.Main
-import ic.org.jvm.MainClass
-import ic.org.jvm.SuperObject
-import ic.org.jvm.toJvm
+import ic.org.jvm.*
 import ic.org.util.ARMAsm
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
@@ -87,8 +76,8 @@ data class Func(val retType: Type, val ident: Ident, val params: List<Variable>,
     withFunctions(statCode.funcs)
   }
 
-  fun jvmMethod() =
-    DefinedMethod("m_" + ident.name, params.map { it.type.toJvm() }, retType.toJvm(), stat)
+  @JvmGenOnly
+  val jvmMethod by lazy { DefinedMethod("method" + ident.name, params.map { it.type.toJvm() }, retType.toJvm(), stat) }
 }
 
 // <param>

@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 val linting = false
 
 plugins {
-  kotlin("jvm") version "1.3.70"
+  kotlin("jvm") version "1.3.61"
   // Gradle Shadow plugin for building a fat jar
   id("com.github.johnrengelman.shadow") version "5.2.0"
   // id("org.jmailen.kotlinter") version "2.3.1"

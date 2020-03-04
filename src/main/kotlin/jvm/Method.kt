@@ -7,7 +7,7 @@ abstract class JvmMethod {
   internal abstract val args: List<JvmType>
   internal abstract val ret: JvmType
   internal val spec by lazy { "$descriptor(${args.joinToString(separator = "") { it.rep }})$ret" }
-  open val invoke by lazy { JvmAsm.instr(InvokeStatic(this)) }
+  open val invoke by lazy { JvmAsm.instr(InvokeStatic(spec)) }
 }
 
 object JvmSystemExit : JvmMethod() {
@@ -49,6 +49,7 @@ open class DefinedMethod(
       +".end method"
     }
   }
+  override val invoke = JvmAsm.instr(InvokeStatic("wacc/$spec"))
 }
 
 data class Main(override val body: Stat) : DefinedMethod("main", listOf(JvmArray(JvmString)), JvmVoid, body)
@@ -84,7 +85,6 @@ data class GetStatic(val staticField: JvmField, val type: JvmType) : JvmInstr {
 
 data class InvokeStatic(val spec: String) : JvmInstr {
   override val code = "invokestatic $spec"
-  constructor(method: JvmMethod) : this(method.spec)
 }
 
 data class InvokeVirtual(val spec: String) : JvmInstr {

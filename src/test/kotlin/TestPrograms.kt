@@ -3,11 +3,8 @@
 import TestPrograms.Companion.ignoreKeyword
 import TestPrograms.Companion.testingKeyword
 import arrow.core.getOrElse
-import ic.org.ARM
-import ic.org.CompileResult
-import ic.org.JVM
+import ic.org.*
 import ic.org.Target
-import ic.org.WACCCompiler
 import ic.org.util.containsAll
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

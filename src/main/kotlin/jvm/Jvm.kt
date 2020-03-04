@@ -58,6 +58,6 @@ class JvmAsm private constructor(
   }
 }
 
-@Target(AnnotationTarget.FUNCTION, AnnotationTarget.FIELD)
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER)
 @MustBeDocumented
 annotation class JvmGenOnly
