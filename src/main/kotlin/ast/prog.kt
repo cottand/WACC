@@ -13,7 +13,7 @@ import kotlinx.collections.immutable.plus
 import org.antlr.v4.runtime.tree.TerminalNode
 
 // <program>
-data class Prog(val funcs: List<Func>, val body: Stat, val globalScope: GlobalScope) {
+data class Prog(val name: String, val funcs: List<Func>, val body: Stat, val globalScope: GlobalScope) {
   fun armAsm() = body.instr()
     .withFunctions(funcs.map(Func::armAsm))
     .let {
@@ -43,11 +43,11 @@ data class Prog(val funcs: List<Func>, val body: Stat, val globalScope: GlobalSc
     }
 
   fun jvmAsm() = JvmAsm {
-    +MainClass
+    +".class public $name"
     +SuperObject
     // +MainClass.init
     withMethods(funcs.map(Func::jvmMethod))
-    withMethod(Main(body))
+    withMethod(Main(body, globalScope))
   }.let { prog ->
     fun JvmAsm.string(): String = instrs.joinToString(separator = "\n", postfix = "\n") {
       val margin = when (it) {
@@ -77,7 +77,9 @@ data class Func(val retType: Type, val ident: Ident, val params: List<Variable>,
   }
 
   @JvmGenOnly
-  val jvmMethod by lazy { DefinedMethod("method" + ident.name, params.map { it.type.toJvm() }, retType.toJvm(), stat) }
+  val jvmMethod by lazy {
+    DefinedMethod("method" + ident.name, params.map { it.type.toJvm() }, retType.toJvm(), scope, stat)
+  }
 }
 
 // <param>

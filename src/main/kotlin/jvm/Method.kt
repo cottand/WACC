@@ -1,5 +1,7 @@
 package ic.org.jvm
 
+import ic.org.ast.GlobalScope
+import ic.org.ast.Scope
 import ic.org.ast.Stat
 
 abstract class JvmMethod {
@@ -32,15 +34,17 @@ open class DefinedMethod(
   override val descriptor: String,
   override val args: List<JvmType>,
   override val ret: JvmType,
+  scope: Scope,
   open val body: Stat? = null
 ) : WACCMethod() {
+  private val progName = scope.progName
   override val asm by lazy {
     JvmAsm {
       val maxStack = 20 // TODO change
       val locals = body?.scope?.localVarsSoFar()
       +".method public static $spec"
       +".limit stack $maxStack"
-      +".limit locals ${(locals?:1) + 1}"
+      +".limit locals ${(locals ?: 1) + 1}"
       body?.let { +it.jvmInstr() }
       if (ret is JvmVoid) {
         +LDC(0)
@@ -49,10 +53,11 @@ open class DefinedMethod(
       +".end method"
     }
   }
-  override val invoke = JvmAsm.instr(InvokeStatic("wacc/$spec"))
+  override val invoke = JvmAsm.instr(InvokeStatic("$progName/$spec"))
 }
 
-data class Main(override val body: Stat) : DefinedMethod("main", listOf(JvmArray(JvmString)), JvmVoid, body)
+data class Main(override val body: Stat, val gscope: GlobalScope) :
+  DefinedMethod("main", listOf(JvmArray(JvmString)), JvmVoid, gscope, body)
 
 object JvmReturn : JvmInstr {
   override val code = "return"
@@ -63,7 +68,7 @@ object JvmReturnObj : JvmInstr {
 }
 
 val JvmType.jvmReturn
-  get() = when(this) {
+  get() = when (this) {
     JvmInt -> object : JvmInstr {
       override val code = "ireturn"
     }
@@ -89,10 +94,12 @@ data class InvokeStatic(val spec: String) : JvmInstr {
 
 data class InvokeVirtual(val spec: String) : JvmInstr {
   override val code = "invokevirtual $spec"
+
   constructor(method: JvmMethod) : this(method.spec)
 }
 
 data class InvokeSpecial(val spec: String) : JvmInstr {
   override val code = "invokespecial $spec"
+
   constructor(method: JvmMethod) : this(method.spec)
 }

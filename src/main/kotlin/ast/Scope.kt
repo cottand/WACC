@@ -26,6 +26,7 @@ import kotlinx.collections.immutable.persistentListOf
  * [Variable]s of this [Scope]
  */
 sealed class Scope {
+  abstract val progName: String
 
   /**
    * Stateful list that holds all the [Variable]s defined in this scope only (not its parents').
@@ -126,7 +127,7 @@ sealed class Scope {
 /**
  * Global scope. Unique and per program, parent of all [ControlFlowScope]s outside of [FuncScope]s.
  */
-class GlobalScope : Scope() {
+data class GlobalScope(override val progName: String) : Scope() {
   override fun getVar(ident: Ident): Option<Variable> = variables[ident].toOption()
   internal val functions = HashMap<String, FuncIdent>()
 
@@ -147,6 +148,7 @@ class GlobalScope : Scope() {
  *
  */
 data class FuncScope(val ident: Ident, val gScope: GlobalScope) : Scope() {
+  override val progName = gScope.progName
 
   // A [FuncScope] does not have any parent scopes, so if the variable is not here, return an
   // option.
@@ -160,6 +162,7 @@ data class FuncScope(val ident: Ident, val gScope: GlobalScope) : Scope() {
  *
  */
 data class ControlFlowScope(val parent: Scope) : Scope() {
+  override val progName = parent.progName
   // Return whatever ident is found in this scope's varMap, and look in its parent's otherwise.
   override fun getVar(ident: Ident): Option<Variable> =
     variables.getOption(ident) or
@@ -226,5 +229,7 @@ data class FuncIdent(val retType: Type, val name: Ident, val params: List<Variab
   @ARMGenOnly
   val label = AsmLabel("f_$name")
   @JvmGenOnly
-  val jvmMethod by lazy { DefinedMethod("method$name", params.map { it.type.toJvm() }, retType.toJvm(), null) }
+  val jvmMethod by lazy {
+    DefinedMethod("method$name", params.map { it.type.toJvm() }, retType.toJvm(), funcScope)
+  }
 }

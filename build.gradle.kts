@@ -51,7 +51,7 @@ dependencies {
 
   antlr("org.antlr:antlr4:$antlrVer")
 
-  implementation(fileTree(mapOf("dir" to "lib", "include" to listOf("jasmin.jar"))))
+  implementation(fileTree(mapOf("dir" to "lib", "include" to listOf("jasmin.jar", "*.jar"))))
 
   // JUnit5
   testImplementation("org.junit.jupiter:junit-jupiter:$junitVer")

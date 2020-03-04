@@ -49,6 +49,9 @@ fun main(args: Array<String>) {
     println("  " + cmds.tail.joinToString() + '\n')
   }
   val file = cmds.head
+  val progFile = File(file)
+  val progFileName = progFile.name
+  val progName = progFileName.replace(".wacc", "")
   val result = WACCCompiler(file).compile(target = target)
   println(result.msg + '\n')
 
@@ -58,17 +61,17 @@ fun main(args: Array<String>) {
     println("Compiled assembly:\n\n$it\n")
   }.ifExsistsAnd(saveToFile) {
     // Replace extension with .s and save compiled text
-    val newFile = File(file).name.replace(".wacc", target.fileExtension)
+    val newFile = progName + target.fileExtension
     val assembly = File(newFile).apply { writeText(it) }
     if (target is JVM) {
-      val mainClass = File("wacc.class")
-      val jarFile = File(file).name.replace(".wacc", ".jar")
+      val progClass = "$progName.class"
+      val mainClass = File(progClass)
+      val jarFile = "$progName.jar"
       print("Packaging JAR file $jarFile... ")
-      val manifest = File("manifest").apply { writeText("Main-Class: wacc\n") }
-      val classes = "wacc.class"
+      val manifest = File("manifest").apply { writeText("Main-Class: $progName\n") }
       // "java -jar lib/jasmin.jar $newFile".runCommand()
       jasmin.Main.main(arrayOf(newFile))
-      "jar cfm $jarFile ${manifest.path} $classes -C ${JVM.classpath} ${JVM.classes}".runCommand()
+      "jar cfm $jarFile ${manifest.path} $progClass -C ${JVM.classpath} ${JVM.classes}".runCommand()
       if (cleanAfterBuild) listOf(manifest, mainClass, assembly).forEach { it.delete() }
       println("done.\n")
     } else
@@ -109,7 +112,7 @@ class WACCCompiler(private val filename: String) {
     // Check syntax
     return parser.checkSyntax()
       // Check semantics by building the AST
-      .flatMap { it.prog().asAst() }
+      .flatMap { it.prog().asAst(input.name.replace(".wacc","")) }
       // Check control flow by building a graph
       .flatMap { it.checkControlFlow() }
   }

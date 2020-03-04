@@ -48,7 +48,7 @@ import kotlinx.collections.immutable.plus
  * Symbol tables of every body are represented as [Scope]s.
  * Every other construct of the program has a representation defined in the package [ast].
  */
-fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
+fun ProgContext.asAst(progName: String, gScope: GlobalScope = GlobalScope(progName)): Parsed<Prog> {
   val funcs = func()
     // Parse every function's arguments and put each identifier in the [gScope], but conserve antlr's context
     .map { ctx ->
@@ -74,7 +74,7 @@ fun ProgContext.asAst(gScope: GlobalScope = GlobalScope()): Parsed<Prog> {
   val stat = stat().asAst(gScope)
 
   return if (funcs.areAllValid && stat is Valid)
-    Prog(funcs.valids, stat.a, gScope).valid()
+    Prog(progName, funcs.valids, stat.a, gScope).valid()
   else
     (funcs.errors + stat.errors).invalid()
 }
