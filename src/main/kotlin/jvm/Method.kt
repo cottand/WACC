@@ -73,7 +73,7 @@ val JvmType.jvmReturn
       override val code = "ireturn"
     }
     is JvmArray -> TODO()
-    JvmObject, JvmString, PrintStream -> JvmReturnObj
+    JvmObject, JvmString, PrintStream, InputStream -> JvmReturnObj
     JvmVoid -> JvmReturn
     JvmBool -> TODO()
     JvmChar -> TODO()
