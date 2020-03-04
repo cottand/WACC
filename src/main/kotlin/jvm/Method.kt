@@ -21,7 +21,7 @@ object JvmSystemExit : JvmMethod() {
 /**
  * A WACC method that has a body that compiles to bytecode
  */
-sealed class WACCMethod : JvmMethod() {
+abstract class WACCMethod : JvmMethod() {
   abstract val asm: JvmAsm
 }
 

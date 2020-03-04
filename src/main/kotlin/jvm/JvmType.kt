@@ -30,6 +30,13 @@ object PrintStream : JvmType() {
   override val toPrimative = JvmAsm.empty
 }
 
+object InputStream : JvmType() {
+  override val rep = "Ljava/io/InputStream;"
+  override val toNonPrimative = JvmAsm.empty
+  override val toPrimative = JvmAsm.empty
+}
+
+
 object JvmInt : JvmType() {
   override val rep = "I"
   override val toNonPrimative = JvmAsm.instr(InvokeStatic("java/lang/Integer/valueOf(I)Ljava/lang/Integer;"))
