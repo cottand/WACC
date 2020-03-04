@@ -17,7 +17,3 @@ data class ANEWARRAY(val type: JvmType) : JvmInstr {
   private val fullTypeRep = type.rep.substring(1, type.rep.length - 1)
   override val code = "anewarray $fullTypeRep"
 }
-
-object IASTORE : JvmInstr {
-  override val code = "iastore"
-}
