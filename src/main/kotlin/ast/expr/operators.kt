@@ -31,7 +31,7 @@ import ic.org.ast.CharT
 import ic.org.ast.IntT
 import ic.org.ast.StringT
 import ic.org.ast.Type
-import ic.org.jvm.JvmAsm
+import ic.org.jvm.*
 import ic.org.util.ARMAsm
 
 /**
@@ -155,7 +155,9 @@ object MulBO : IntBinOp() {
     +BLInstr(NECond, OverflowException.label)
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    +IMUL
+  }
 }
 
 object DivBO : IntBinOp() {
@@ -171,7 +173,9 @@ object DivBO : IntBinOp() {
     withFunction(CheckDivByZero)
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    +IDIV
+  }
 }
 
 object ModBO : IntBinOp() {
@@ -187,7 +191,9 @@ object ModBO : IntBinOp() {
     withFunction(CheckDivByZero.body)
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    +IREM
+  }
 }
 
 object PlusBO : IntBinOp() {
@@ -198,7 +204,9 @@ object PlusBO : IntBinOp() {
     withFunction(OverflowException.body)
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm  {
+    +IADD
+  }
 }
 
 object MinusBO : IntBinOp() {
@@ -209,7 +217,9 @@ object MinusBO : IntBinOp() {
     withFunction(OverflowException)
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    +ISUB
+  }
 }
 
 // (int, int) -> bool:

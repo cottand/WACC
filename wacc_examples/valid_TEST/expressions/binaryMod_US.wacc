@@ -1,10 +1,11 @@
 # binary mod operator
 
 # Output:
-# #empty#
+# 1
 
 # Program:
 
 begin
-  int x = 1 % 2
+  int x = 1 % 2;
+  exit x
 end
