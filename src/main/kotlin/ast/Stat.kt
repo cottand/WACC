@@ -156,28 +156,14 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
     val type = expr.type
     +expr.jvmAsm()
     when (type) {
-      is IntT -> {
-        +JvmSystemPrintFunc(JvmInt).invoke
-      }
-      is BoolT -> {
-        +JvmSystemPrintFunc(JvmBool).invoke
-      }
-      is CharT -> {
-        +JvmSystemPrintFunc(JvmChar).invoke
-      }
-      is StringT -> {
-        +JvmSystemPrintFunc(JvmString).invoke
-      }
-      is AnyPairTs -> {
-        TODO()
-      }
-      is ArrayT -> if (type.type is CharT) {
-        +JvmSystemPrintFunc(JvmString).invoke
-      } else {
-        TODO()
-      }
-      else -> NOT_REACHED()
-    }
+      is IntT -> +JvmSystemPrintFunc(JvmInt).invoke
+      is BoolT -> +JvmSystemPrintFunc(JvmBool).invoke
+      is CharT -> +JvmSystemPrintFunc(JvmChar).invoke
+      is StringT -> +JvmSystemPrintFunc(JvmString).invoke
+      is AnyPairTs -> TODO()
+      is ArrayT -> if (type.type is CharT) +JvmSystemPrintFunc(JvmString).invoke else TODO()
+      is AnyArrayT -> TODO()
+    }.let{}
   }
 }
 
