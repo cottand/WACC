@@ -27,3 +27,27 @@ data class IFLT(val label: JvmLabel) : JvmInstr {
 data class IFNE(val label: JvmLabel) : JvmInstr {
   override val code = "ifne ${label.name}"
 }
+
+data class IF_ICMPEQ(val label: JvmLabel) : JvmInstr {
+  override val code = "if_icmpeq ${label.name}"
+}
+
+data class IF_ICMPNE(val label: JvmLabel) : JvmInstr {
+  override val code = "if_icmpne ${label.name}"
+}
+
+data class IF_ICMPGE(val label: JvmLabel) : JvmInstr {
+  override val code = "if_icmpge ${label.name}"
+}
+
+data class IF_ICMPGT(val label: JvmLabel) : JvmInstr {
+  override val code = "if_icmpgt ${label.name}"
+}
+
+data class IF_ICMPLE(val label: JvmLabel) : JvmInstr {
+  override val code = "if_icmple ${label.name}"
+}
+
+data class IF_ICMPLT(val label: JvmLabel) : JvmInstr {
+  override val code = "if_icmplt ${label.name}"
+}
