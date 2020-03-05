@@ -74,7 +74,11 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
     }
   }
 
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = when (lhs) {
+    is IdentLHS -> JvmAsm { +lhs.variable.store(rhs) }
+    is ArrayElemLHS -> TODO()
+    is PairElemLHS -> TODO()
+  }
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
@@ -98,11 +102,11 @@ data class Free(val expr: Expr, override val scope: Scope, override val pos: Pos
 
       withFunction(FreeFunc)
     }
-
     else -> NOT_REACHED()
   }
 
-  override fun jvmInstr() = TODO()
+  // Instead of calling `free`, we may rely on the JVM's GC to free our memory
+  override fun jvmInstr() = JvmAsm.empty
 }
 
 data class Return(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
@@ -151,28 +155,14 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
   override fun jvmInstr() = JvmAsm.write {
     val type = expr.type
     +expr.jvmAsm()
-    when (type) {
-      is IntT -> {
-        +JvmSystemPrintFunc(JvmInt).invoke
-      }
-      is BoolT -> {
-        +JvmSystemPrintFunc(JvmBool).invoke
-      }
-      is CharT -> {
-        +JvmSystemPrintFunc(JvmChar).invoke
-      }
-      is StringT -> {
-        +JvmSystemPrintFunc(JvmString).invoke
-      }
-      is AnyPairTs -> {
-        TODO()
-      }
-      is ArrayT -> if (type.type is CharT) {
-        +JvmSystemPrintFunc(JvmString).invoke
-      } else {
-        TODO()
-      }
-      else -> NOT_REACHED()
+    +when (type) {
+      is IntT -> JvmSystemPrintFunc(JvmInt).invoke
+      is BoolT -> JvmSystemPrintFunc(JvmBool).invoke
+      is CharT -> JvmSystemPrintFunc(JvmChar).invoke
+      is StringT -> JvmSystemPrintFunc(JvmString).invoke
+      is AnyPairTs -> TODO()
+      is ArrayT -> if (type.type is CharT) JvmSystemPrintFunc(JvmString).invoke else TODO()
+      is AnyArrayT -> TODO()
     }
   }
 }
@@ -229,8 +219,8 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
 
   override fun jvmInstr() = JvmAsm {
     val uuid = shortRandomUUID()
-    val elseLabel = JvmLabel("IfElse$uuid")
-    val continueLabel = JvmLabel("IfContinue$uuid")
+    val elseLabel = JvmLabel("IfElse_$uuid")
+    val continueLabel = JvmLabel("IfContinue_$uuid")
 
     +cond.jvmAsm() // Load cond (bool) to top of the stack
     +IFEQ(elseLabel) // If cond == 0 (cond == false) jump to else
@@ -263,7 +253,18 @@ data class While(val cond: Expr, val body: Stat, override val scope: Scope, over
     +BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
   }
 
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = jvmAsmWithPos {
+    val uuid = shortRandomUUID()
+    val bodyLabel = JvmLabel("WhileBody_$uuid")
+    val condLabel = JvmLabel("WhileCond_$uuid")
+
+    +GOTO(condLabel)
+    +bodyLabel
+    +body.jvmInstr()
+    +condLabel
+    +cond.jvmAsm()
+    +IFNE(bodyLabel) // If cond != 0 (cond is true) jump to body
+  }
 }
 
 data class BegEnd(val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
