@@ -5,52 +5,14 @@ import arrow.core.extensions.list.foldable.forAll
 import arrow.core.some
 import arrow.core.valid
 import ast.Sizes
-import ic.org.arm.CheckArrayBounds
-import ic.org.arm.ImmOperand2
-import ic.org.arm.Immed_5
-import ic.org.arm.Immed_8r_bs
-import ic.org.arm.LSLImmOperand2
-import ic.org.arm.OverflowException
-import ic.org.arm.Reg
-import ic.org.arm.Regs
-import ic.org.arm.SP
-import ic.org.arm.StringData
-import ic.org.arm.VSCond
+import ic.org.arm.*
 import ic.org.arm.addressing.ImmEqualLabel
 import ic.org.arm.addressing.ImmEquals32b
 import ic.org.arm.addressing.zeroOffsetAddr
-import ic.org.arm.instr.ADDInstr
-import ic.org.arm.instr.BLInstr
-import ic.org.arm.instr.EORInstr
-import ic.org.arm.instr.LDRInstr
-import ic.org.arm.instr.MOVInstr
-import ic.org.arm.instr.POPInstr
-import ic.org.arm.instr.PUSHInstr
-import ic.org.arm.instr.RSBInstr
-import ic.org.arm.instr.SUBInstr
-import ic.org.ast.AnyArrayT
-import ic.org.ast.AnyPairTs
-import ic.org.ast.ArrayT
-import ic.org.ast.BoolT
-import ic.org.ast.CharT
-import ic.org.ast.Computable
-import ic.org.ast.IntT
-import ic.org.ast.Scope
-import ic.org.ast.StringT
-import ic.org.ast.Type
-import ic.org.ast.Variable
+import ic.org.arm.instr.*
+import ic.org.ast.*
 import ic.org.jvm.*
-import ic.org.util.ARMAsm
-import ic.org.util.IllegalArrayAccess
-import ic.org.util.NOT_REACHED
-import ic.org.util.Parsed
-import ic.org.util.Position
-import ic.org.util.TypeError
-import ic.org.util.head
-import ic.org.util.log2
-import ic.org.util.prepend
-import ic.org.util.tail
-import ic.org.util.take2OrNone
+import ic.org.util.*
 import java.lang.Integer.max
 import java.lang.Integer.min
 
@@ -78,12 +40,13 @@ data class IntLit(val value: Int) : Expr() {
 data class BoolLit(val value: Boolean) : Expr() {
   override val type = BoolT
   override fun toString(): String = value.toString()
+
   // Booleans are represented as a 1 for true, and 0 for false
   override fun armAsm(rem: Regs) = ARMAsm.write {
     +MOVInstr(rem.head, if (value) 1.toByte() else 0.toByte())
   }
 
-  override fun jvmAsm() = JvmAsm { +LDC(if (value) 1 else 0)}
+  override fun jvmAsm() = JvmAsm { +LDC(if (value) 1 else 0) }
 
   override val weight = 1
 }
@@ -91,6 +54,7 @@ data class BoolLit(val value: Boolean) : Expr() {
 data class CharLit(val value: Char) : Expr() {
   override val type = CharT
   override fun toString(): String = "$value"
+
   // Chars are represented as their ASCII value
   override fun armAsm(rem: Regs) = ARMAsm.write {
     +MOVInstr(rem.head, value)
@@ -133,6 +97,7 @@ data class StrLit(val value: String) : Expr() {
 object NullPairLit : Expr() {
   override val type = AnyPairTs()
   override fun toString(): String = "null"
+
   // null is represented as 0
   override fun armAsm(rem: Regs) = ARMAsm.instr(LDRInstr(rem.head, ImmEquals32b(0)))
 
@@ -199,9 +164,8 @@ data class ArrayElemExpr internal constructor(
   companion object {
     /**
      * Builds a type safe [ArrayElemExpr] from [variable]    */
-    fun make(pos: Position, variable: Variable, exprs: List<Expr>, scope: Scope): Parsed<ArrayElemExpr> {
-      val arrType = variable.type
-      return when {
+    fun make(pos: Position, variable: Variable, exprs: List<Expr>, scope: Scope) = variable.type.let { arrType ->
+      when {
         // Array access indexes must evaluate to ints
         !exprs.forAll { it.type == IntT } -> {
           val badExpr = exprs.find { it.type != IntT }!!
