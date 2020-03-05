@@ -106,7 +106,7 @@ data class Free(val expr: Expr, override val scope: Scope, override val pos: Pos
   }
 
   // Instead of calling `free`, we may rely on the JVM's GC to free our memory
-  override fun jvmInstr() = JvmAsm.empty
+  override fun jvmInstr() = TODO()
 }
 
 data class Return(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
