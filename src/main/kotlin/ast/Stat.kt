@@ -233,8 +233,8 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
 
   override fun jvmInstr() = JvmAsm {
     val uuid = shortRandomUUID()
-    val elseLabel = JvmLabel("IfElse$uuid")
-    val continueLabel = JvmLabel("IfContinue$uuid")
+    val elseLabel = JvmLabel("IfElse_$uuid")
+    val continueLabel = JvmLabel("IfContinue_$uuid")
 
     +cond.jvmAsm() // Load cond (bool) to top of the stack
     +IFEQ(elseLabel) // If cond == 0 (cond == false) jump to else
@@ -267,7 +267,18 @@ data class While(val cond: Expr, val body: Stat, override val scope: Scope, over
     +BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
   }
 
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = jvmAsmWithPos {
+    val uuid = shortRandomUUID()
+    val bodyLabel = JvmLabel("WhileBody_$uuid")
+    val condLabel = JvmLabel("WhileCond_$uuid")
+
+    +GOTO(condLabel)
+    +bodyLabel
+    +body.jvmInstr()
+    +condLabel
+    +cond.jvmAsm()
+    +IFNE(bodyLabel) // If cond != 0 (cond is true) jump to body
+  }
 }
 
 data class BegEnd(val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
