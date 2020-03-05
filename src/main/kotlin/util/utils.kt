@@ -3,13 +3,15 @@
 package ic.org.util
 
 import arrow.core.Either
+import arrow.core.None
 import arrow.core.Validated
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
-import kotlin.math.log2
+import arrow.core.some
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.tree.TerminalNode
 import java.io.File
+import kotlin.math.log2
 
 /**
  * Returns whether a [List] of [Either] contains any [Either.Left]
@@ -63,4 +65,13 @@ fun String.runCommand(workingDir: File = File(".")) =
       val errs = proc.errorStream.bufferedReader().readText()
       errs + proc.inputStream.bufferedReader().readText() to proc.exitValue()
     }
+
+inline fun <reified T, reified A : S, reified B : S, reified S> T.unfold(
+  pred: (T) -> Boolean,
+  ifSo: (T) -> A,
+  otherise: (T) -> B
+) =
+  let { if (pred(this)) ifSo(this) else otherise(this) }
+
+fun String.noneIfEmpy() = unfold(String::isEmpty, { None }, String::some)
 

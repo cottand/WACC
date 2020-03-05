@@ -12,17 +12,21 @@ import com.google.gson.Gson
 import ic.org.util.NOT_REACHED
 import ic.org.util.createWithDirs
 import ic.org.util.joinLines
-import java.io.File
+import ic.org.util.noneIfEmpy
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import java.io.File
 
 interface ReferenceEmulatorAPI {
-  fun emulate(prog: String, filePath: String, input: String) : Pair<String, Int>
+  fun emulate(prog: String, filePath: String, input: String): Pair<String, Int>
 }
 
 object ReferenceCompilerAPI : ReferenceEmulatorAPI {
 
   private val gson by lazy { Gson() }
   private const val noCacheToken = "NO_CACHE"
+
+  private const val jvmOutTokenBegin = "begin JVM_Output"
+  private const val jvmOutTokenEnd = "end JVM_Output"
 
   private const val delimiters = "==========================================================="
 
@@ -44,18 +48,13 @@ object ReferenceCompilerAPI : ReferenceEmulatorAPI {
           .also { cached.createWithDirs() }
           .also { cached.writeText(it.joinLines()) }
     val assembly = out
-      .asSequence()
-      .dropWhile { delimiters !in it }
-      .drop(1)
-      .takeWhile { delimiters !in it }
+      .extractFromDelimiters(delimiters, delimiters)
       .map { str -> str.dropWhile { chr -> chr.isDigit() }.trim() }
       .filter { it.isNotBlank() }
       .toList()
       .joinLines()
     val runtimeOut = out
-      .dropWhile { "-- Executing..." !in it }
-      .drop(2)
-      .takeWhile { "The exit code is" !in it }
+      .extractFromDelimiters("-- Executing...", "The exit code is", 2)
       .map { if (delimiters in it) it.replace(delimiters, "") else it }
       .joinLines()
     val code = try {
@@ -64,8 +63,21 @@ object ReferenceCompilerAPI : ReferenceEmulatorAPI {
       System.err.println("Could not parse exit code from reference compiler. Output:\n${out.joinLines()}\n")
       -1
     }
-    return RefAnswer(assembly, runtimeOut, code)
+    val jvmSpecOut = out
+      .extractFromDelimiters(jvmOutTokenBegin, jvmOutTokenEnd)
+      .map { it.drop(2) }
+      .joinLines()
+      .noneIfEmpy()
+      .orNull()
+
+    return RefAnswer(assembly, runtimeOut, code, jvmSpecOut)
   }
+
+  private fun Iterable<String>.extractFromDelimiters(beg: String, end: String, dropInitial: Int = 1) =
+    asSequence()
+      .dropWhile { beg !in it }
+      .drop(dropInitial)
+      .takeWhile { end !in it }
 
   override fun emulate(prog: String, filePath: String, input: String): Pair<String, Int> {
     val emulatorUrl = "https://teaching.doc.ic.ac.uk/wacc_compiler/emulate.cgi"
@@ -102,7 +114,7 @@ object ReferenceCompilerAPI : ReferenceEmulatorAPI {
  * Represents an answer from the reference compiler.[out] represents the compiled assembly,
  * or the received errors.
  */
-data class RefAnswer(val assembly: String, val out: String, val code: Int)
+data class RefAnswer(val assembly: String, val out: String, val code: Int, val jvmSpecificOut: String?)
 
 /**
  * Serialised JSON produced by the reference emulator
