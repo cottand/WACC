@@ -22,17 +22,9 @@ data class ALOAD(val varIndex: Int? = null, val type: JvmType = JvmObject) : Jvm
     is JvmInt -> "i"
     is JvmChar -> "c"
     is JvmBool -> "b"
+    is JvmArray -> "a"
     else -> ""
   } + if (varIndex == null)  "aload" else "aload_$varIndex"
-}
-
-data class ALOADType(val type: JvmType) : JvmInstr {
-  override val code = when (type) {
-    is JvmInt -> "iadload"
-    is JvmChar -> "caload"
-    is JvmBool -> "baload"
-    else -> "aload"
-  }
 }
 
 sealed class LDC : JvmInstr {
