@@ -133,11 +133,12 @@ class TestPrograms {
         println("\nCompiled WACC:\n${program.file.readText()}")
         if (jvmOut != null)
           assertTrue(jvmOut in actualOut)
-        else
+        else {
           assertEquals(expectedOut, actualOut)
           { "Not matching program outputs for $canonicalPath.\nBytecode:\n$actualAss" }
-        assertEquals(expectedCode, actualCode)
-        { "Not matching exit codes for $canonicalPath\n.Bytecode:\n$actualAss" }
+          assertEquals(expectedCode, actualCode)
+          { "Not matching exit codes for $canonicalPath\n.Bytecode:\n$actualAss" }
+        }
       }
     }
     println("Test successful (compiler exit code ${res.exitCode}). Compiler output:\n${res.msg}\n")

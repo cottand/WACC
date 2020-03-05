@@ -32,8 +32,6 @@ fun main(args: Array<String>) {
     exitProcess(-1)
   }
 
-  val i = sameArgName.f(3)
-
   val cmds = args.toMutableList()
   val printAssembly = cmds.remove("-a")
   val saveToFile = !cmds.remove("-nosave")

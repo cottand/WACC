@@ -9,10 +9,7 @@ import com.github.kittinunf.fuel.core.FileDataPart
 import com.github.kittinunf.fuel.core.InlineDataPart
 import com.github.kittinunf.fuel.gson.responseObject
 import com.google.gson.Gson
-import ic.org.util.NOT_REACHED
-import ic.org.util.createWithDirs
-import ic.org.util.joinLines
-import ic.org.util.noneIfEmpy
+import ic.org.util.*
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import java.io.File
 
@@ -63,7 +60,7 @@ object ReferenceCompilerAPI : ReferenceEmulatorAPI {
       System.err.println("Could not parse exit code from reference compiler. Output:\n${out.joinLines()}\n")
       -1
     }
-    val jvmSpecOut = out
+    val jvmSpecOut = prog.readLines()
       .extractFromDelimiters(jvmOutTokenBegin, jvmOutTokenEnd)
       .map { it.drop(2) }
       .joinLines()
