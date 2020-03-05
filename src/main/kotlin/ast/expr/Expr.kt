@@ -285,7 +285,11 @@ data class BinaryOperExpr internal constructor(
     })
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    +expr1.jvmAsm()
+    +expr2.jvmAsm()
+    +binaryOper.jvmAsm()
+  }
 
   companion object {
     /**
