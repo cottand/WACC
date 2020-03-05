@@ -182,7 +182,17 @@ data class ArrayElemExpr internal constructor(
     }
   }).withFunction(CheckArrayBounds.body)
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    +variable.load()
+    exprs.forEachIndexed { i, expr ->
+      +expr.jvmAsm()
+      // If the array is empty, we force the ArrayOutOfBoundsException
+      if (variable.type is ArrayT)
+        +ALOAD(type = variable.type.nthNestedType(i + 1).toJvm())
+      else
+        +ALOAD(type = JvmArray(JvmObject))
+    }
+  }
 
   override val weight = heapAccess * exprs.size
 
