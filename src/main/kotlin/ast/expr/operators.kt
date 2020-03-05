@@ -232,7 +232,17 @@ object GtBO : CompBinOp() {
     +MOVInstr(LECond, rd = dest, imm8b = 0)
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
+    val labelSkip = JvmLabel("L_SKIP_" + shortRandomUUID())
+
+    +IF_ICMPGT(labelTrue)
+    +LDC.LDCInt(0)
+    +GOTO(labelSkip)
+    +labelTrue
+    +LDC.LDCInt(1)
+    +labelSkip
+  }
 }
 
 object GeqBO : CompBinOp() {
