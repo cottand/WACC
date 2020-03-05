@@ -38,7 +38,7 @@ sealed class Type {
   fun sizedLOAD(indexNo: Int) = when (this) {
     IntT, BoolT, CharT -> ILOAD(indexNo)
     StringT -> ALOAD(indexNo)
-    is AnyArrayT -> TODO()
+    is AnyArrayT -> ALOAD(indexNo)
     is AnyPairTs -> ALOAD(indexNo)
   }
 

@@ -137,7 +137,7 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
     exprs.forEachIndexed { i, expr ->
       +LDC(i)
       +expr.jvmAsm()
-      +IASTORE
+      +ASTORE(type = exprType.toJvm())
       if(i < exprs.size - 1) +DUP
     }
   }
