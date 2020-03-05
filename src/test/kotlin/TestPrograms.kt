@@ -127,12 +127,15 @@ class TestPrograms {
         }
       }
       if (target is JVM) {
-        val expectedJvmOut = jvmOut?:expectedOut
+        val expectedJvmOut = jvmOut ?: expectedOut
         val (actualOut, actualCode) = JasminAPI.emulate(actualAss, filePath, input)
         println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
         println("\nCompiled WACC:\n${program.file.readText()}")
-        assertEquals(expectedJvmOut, actualOut)
-        { "Not matching program outputs for $canonicalPath.\nBytecode:\n$actualAss" }
+        if (jvmOut != null)
+          assertTrue(jvmOut in actualOut)
+        else
+          assertEquals(expectedOut, actualOut)
+          { "Not matching program outputs for $canonicalPath.\nBytecode:\n$actualAss" }
         assertEquals(expectedCode, actualCode)
         { "Not matching exit codes for $canonicalPath\n.Bytecode:\n$actualAss" }
       }
