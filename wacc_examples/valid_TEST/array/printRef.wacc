@@ -4,7 +4,7 @@
 # Printing an array variable gives an address, such as #addrs#
 
 # begin JVM_Output
-# Printing an array variable gives an address, such as [I@6d06d69c
+# Printing an array variable gives an address, such as [I@
 # end JVM_Output
 
 # Program:
