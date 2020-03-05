@@ -74,7 +74,11 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
     }
   }
 
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = when (lhs) {
+    is IdentLHS -> JvmAsm { +lhs.variable.store(rhs) }
+    is ArrayElemLHS -> TODO()
+    is PairElemLHS -> TODO()
+  }
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
