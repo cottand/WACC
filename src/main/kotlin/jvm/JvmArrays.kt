@@ -6,7 +6,7 @@ import ic.org.util.NOT_REACHED
 data class NEWARRAY(val type: JvmType) : JvmInstr {
   private val fullTypeRep = when(type) {
     is JvmInt -> "int"
-    is JvmBool -> "booleang"
+    is JvmBool -> "boolean"
     is JvmChar -> "char"
     else -> NOT_REACHED()
   }

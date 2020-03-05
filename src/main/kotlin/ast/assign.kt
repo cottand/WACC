@@ -132,6 +132,7 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
 
   override fun jvmAsm() = JvmAsm {
     val exprType = exprs.firstOrNone().fold({ arrT }, { it.type })
+    +LDC(exprs.size)
     +NEWARRAY(exprType.toJvm())
     +DUP
     exprs.forEachIndexed { i, expr ->
