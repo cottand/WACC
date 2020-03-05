@@ -13,6 +13,7 @@ data class ASTORE(val varIndex: Int? = null, val type: JvmType = JvmObject) : Jv
     is JvmInt -> "i"
     is JvmChar -> "c"
     is JvmBool -> "b"
+    is JvmArray -> "a"
     else -> ""
   } + if (varIndex == null)  "astore" else "astore_$varIndex"}
 

@@ -8,12 +8,8 @@ data class NEWARRAY(val type: JvmType) : JvmInstr {
     is JvmInt -> "int"
     is JvmBool -> "boolean"
     is JvmChar -> "char"
-    else -> NOT_REACHED()
+    is JvmArray -> type.rep
+    else -> type.rep.substring(1, type.rep.length - 1)
   }
-  override val code = "newarray $fullTypeRep"
-}
-
-data class ANEWARRAY(val type: JvmType) : JvmInstr {
-  private val fullTypeRep = type.rep.substring(1, type.rep.length - 1)
-  override val code = "anewarray $fullTypeRep"
+  override val code = (if(type is JvmArray) "anewarray" else "newarray") + " $fullTypeRep"
 }
