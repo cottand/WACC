@@ -44,7 +44,7 @@ open class DefinedMethod(
       val locals = body?.scope?.localVarsSoFar()
       +".method public static $spec"
       +".limit stack $maxStack"
-      +".limit locals ${(locals ?: 1) + 1}"
+      +".limit locals ${(locals ?: 1) + 2}"
       body?.let { +it.jvmInstr() }
       if (ret is JvmVoid) {
         +LDC(0)
