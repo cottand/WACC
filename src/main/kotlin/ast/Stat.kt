@@ -168,7 +168,7 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
         TODO()
       }
       is ArrayT -> if (type.type is CharT) {
-        +JvmSystemPrintFunc(JvmString).invoke
+        +JvmSystemPrintFunc(type.toJvm()).invoke
       } else {
         TODO()
       }
@@ -193,9 +193,11 @@ data class Println(val expr: Expr, override val scope: Scope, override val pos: 
       is CharT -> +JvmSystemPrintlnFunc(JvmChar).invoke
       is StringT -> +JvmSystemPrintlnFunc(JvmString).invoke
       is AnyPairTs -> TODO()
-      is ArrayT ->
-        if (type.type is CharT) +JvmSystemPrintlnFunc(JvmString).invoke
-        else TODO()
+      is ArrayT -> if (type.type is CharT) {
+        +JvmSystemPrintlnFunc(type.toJvm()).invoke
+      } else {
+        TODO()
+      }
       // Empty array
       is AnyArrayT -> TODO()
     }
