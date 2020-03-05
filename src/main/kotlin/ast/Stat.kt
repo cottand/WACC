@@ -102,11 +102,11 @@ data class Free(val expr: Expr, override val scope: Scope, override val pos: Pos
 
       withFunction(FreeFunc)
     }
-
     else -> NOT_REACHED()
   }
 
-  override fun jvmInstr() = TODO()
+  // Instead of calling `free`, we may rely on the JVM's GC to free our memory
+  override fun jvmInstr() = JvmAsm.empty
 }
 
 data class Return(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
@@ -155,15 +155,15 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
   override fun jvmInstr() = JvmAsm.write {
     val type = expr.type
     +expr.jvmAsm()
-    when (type) {
-      is IntT -> +JvmSystemPrintFunc(JvmInt).invoke
-      is BoolT -> +JvmSystemPrintFunc(JvmBool).invoke
-      is CharT -> +JvmSystemPrintFunc(JvmChar).invoke
-      is StringT -> +JvmSystemPrintFunc(JvmString).invoke
+    +when (type) {
+      is IntT -> JvmSystemPrintFunc(JvmInt).invoke
+      is BoolT -> JvmSystemPrintFunc(JvmBool).invoke
+      is CharT -> JvmSystemPrintFunc(JvmChar).invoke
+      is StringT -> JvmSystemPrintFunc(JvmString).invoke
       is AnyPairTs -> TODO()
-      is ArrayT -> if (type.type is CharT) +JvmSystemPrintFunc(JvmString).invoke else TODO()
+      is ArrayT -> if (type.type is CharT) JvmSystemPrintFunc(JvmString).invoke else TODO()
       is AnyArrayT -> TODO()
-    }.let{}
+    }
   }
 }
 
