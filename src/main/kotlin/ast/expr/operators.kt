@@ -33,6 +33,7 @@ import ic.org.ast.StringT
 import ic.org.ast.Type
 import ic.org.jvm.*
 import ic.org.util.ARMAsm
+import ic.org.util.NOT_REACHED
 import ic.org.util.shortRandomUUID
 
 /**
@@ -320,6 +321,10 @@ sealed class EqualityBinOp : BinaryOper() {
   override val validReturn: (Type) -> Boolean = { it is BoolT }
   override val inTypes = listOf(IntT, BoolT, CharT, StringT, AnyArrayT(), AnyPairTs())
   override val retType = BoolT
+
+  override fun jvmAsm() = NOT_REACHED()
+
+   abstract fun equalityJvmAsm(t1: Type, t2: Type): JvmAsm
 }
 
 object EqBO : EqualityBinOp() {
@@ -331,11 +336,16 @@ object EqBO : EqualityBinOp() {
       +MOVInstr(cond = NECond, rd = dest, imm8b = 0)
     }
 
-  override fun jvmAsm() = JvmAsm {
+  override fun equalityJvmAsm(t1: Type, t2: Type): JvmAsm = JvmAsm {
     val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
     val labelSkip = JvmLabel("L_SKIP_" + shortRandomUUID())
 
-    +IF_ICMPEQ(labelTrue)
+    if (t1 == StringT && t2 == StringT) {
+      +IF_ACMPEQ(labelTrue)
+    } else {
+      +IF_ICMPEQ(labelTrue)
+    }
+
     +LDC.LDCInt(0)
     +GOTO(labelSkip)
     +labelTrue
@@ -353,11 +363,16 @@ object NeqBO : EqualityBinOp() {
       +MOVInstr(cond = EQCond, rd = dest, imm8b = 0)
     }
 
-  override fun jvmAsm() = JvmAsm {
+  override fun equalityJvmAsm(t1: Type, t2: Type) = JvmAsm {
     val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
     val labelSkip = JvmLabel("L_SKIP_" + shortRandomUUID())
 
-    +IF_ICMPNE(labelTrue)
+    if (t1 == StringT && t2 == StringT) {
+      +IF_ACMPNE(labelTrue)
+    } else {
+      +IF_ICMPNE(labelTrue)
+    }
+
     +LDC.LDCInt(0)
     +GOTO(labelSkip)
     +labelTrue

@@ -288,7 +288,12 @@ data class BinaryOperExpr internal constructor(
   override fun jvmAsm() = JvmAsm {
     +expr1.jvmAsm()
     +expr2.jvmAsm()
-    +binaryOper.jvmAsm()
+
+    // If binaryOper is an Equality op, we must pass in the expr types
+    +when(binaryOper) {
+      is EqualityBinOp -> binaryOper.equalityJvmAsm(expr1.type, expr2.type)
+      else -> binaryOper.jvmAsm()
+    }
   }
 
   companion object {
