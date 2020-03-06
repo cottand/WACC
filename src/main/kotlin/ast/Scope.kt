@@ -76,6 +76,7 @@ sealed class Scope {
    * creation.
    *
    * @see Scope.stackSizeSoFar
+   * @see Scope.localVarsSoFar
    */
   fun addVariable(pos: Position, t: Type, i: Ident) =
     Variable(t, i, scope = this, addrFromSP = stackSizeSoFar(), indexNo = localVarsSoFar()).let {
@@ -100,6 +101,7 @@ sealed class Scope {
   /**
    * Returns the encapsulation of a scope in assembly instructions by growing the stack down to allocate local variables
    */
+  @ARMGenOnly
   fun makeInstrScope(offset: Int = 0) = stackSizeSoFar().plus(offset).let { size ->
     val auxReg = Reg.first
     val regLoad = LDRInstr(auxReg, size)
