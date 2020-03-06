@@ -231,7 +231,29 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
     ChrUO -> expr.armAsm(rem)
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = when(unaryOper) {
+    NotUO -> JvmAsm {
+      TODO()
+      +expr.jvmAsm()
+      +IXOR
+    }
+    MinusUO -> JvmAsm {
+      +expr.jvmAsm()
+      +INEG
+    }
+    LenUO -> JvmAsm {
+      TODO() // implement this once array lits are done
+      +expr.jvmAsm()
+      +ARRAYLENGTH
+    }
+    OrdUO -> JvmAsm {
+      TODO()
+    }
+    ChrUO -> JvmAsm {
+      +expr.jvmAsm()
+      +I2C
+    }
+  }
 
   companion object {
     /**

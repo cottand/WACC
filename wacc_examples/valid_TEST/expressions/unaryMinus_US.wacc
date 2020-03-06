@@ -1,0 +1,12 @@
+# unary minus
+
+# Output:
+# -4
+
+# Program:
+
+begin
+  int x = 4;
+  int y = -x;
+  exit y
+end
