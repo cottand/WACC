@@ -3,6 +3,11 @@
 # Output:
 # #runtime_error#
 
+# begin JVM_Output
+# Exception in thread "main" java.lang.ArithmeticException: / by zero
+# 	at modByZero.main(modByZero.j)
+# end JVM_Output
+
 # Exit:
 # 255
 

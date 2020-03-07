@@ -3,6 +3,10 @@
 # Output:
 # (nil)
 
+# begin JVM_Output
+# null
+# end JVM_Output
+
 # Program:
 
 begin

@@ -101,7 +101,9 @@ object NullPairLit : Expr() {
   // null is represented as 0
   override fun armAsm(rem: Regs) = ARMAsm.instr(LDRInstr(rem.head, ImmEquals32b(0)))
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    +ACONST_NULL
+  }
 
   override val weight = 1
 }

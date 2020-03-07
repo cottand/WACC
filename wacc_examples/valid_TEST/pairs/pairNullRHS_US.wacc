@@ -3,6 +3,11 @@
 # Output:
 # 100
 
+# begin JVM_Output
+# Exception in thread "main" java.lang.NullPointerException
+# 	at pairNullRHS_US.main(pairNullRHS_US.j)
+# end JVM_Output
+
 # Program:
 
 begin

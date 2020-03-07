@@ -1,5 +1,7 @@
 package ic.org.jvm
 
+import kotlin.reflect.jvm.internal.impl.metadata.jvm.deserialization.JvmProtoBufUtil
+
 data class ILOAD(val varIndex: Int) : JvmInstr {
   override val code = "iload $varIndex"
 }
@@ -43,4 +45,8 @@ sealed class LDC : JvmInstr {
 
 data class BIPUSH(val byte: Byte) : JvmInstr {
   override val code = "bipush $byte"
+}
+
+object ACONST_NULL : JvmInstr {
+  override val code = "aconst_null"
 }
