@@ -59,3 +59,7 @@ data class IF_ACMPEQ(val label: JvmLabel) : JvmInstr {
 data class IF_ACMPNE(val label: JvmLabel) : JvmInstr {
   override val code = "if_acmpne ${label.name}"
 }
+
+data class IFNONNULL(val label: JvmLabel) : JvmInstr {
+  override val code = "ifnonnull ${label.name}"
+}

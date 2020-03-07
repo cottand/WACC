@@ -3,6 +3,10 @@
 # Output:
 # #error#
 
+# begin JVM_Output
+# Exception in thread "main" java.lang.NullPointerException
+# end JVM_Output
+
 begin
   int[] x = [1, 2, 3, 4];
   free x;

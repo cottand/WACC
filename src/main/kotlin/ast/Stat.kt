@@ -106,7 +106,20 @@ data class Free(val expr: Expr, override val scope: Scope, override val pos: Pos
   }
 
   // Instead of calling `free`, we may rely on the JVM's GC to free our memory
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = JvmAsm {
+    val labelSkip = JvmLabel("L_FREE_SKIP_" + shortRandomUUID())
+
+    +expr.jvmAsm()
+    +IFNONNULL(labelSkip)
+    +NEW("java/lang/NullPointerException")
+    +DUP
+    +InvokeSpecial("java/lang/NullPointerException/<init>()V")
+    +ATHROW
+
+    +labelSkip
+    +ACONST_NULL
+    +ASTORE(0)
+  }
 }
 
 data class Return(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {

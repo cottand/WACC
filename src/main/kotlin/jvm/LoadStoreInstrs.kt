@@ -50,3 +50,7 @@ data class BIPUSH(val byte: Byte) : JvmInstr {
 object ACONST_NULL : JvmInstr {
   override val code = "aconst_null"
 }
+
+data class NEW(val v: String) : JvmInstr {
+  override val code = "new $v"
+}
