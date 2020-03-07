@@ -216,7 +216,6 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
       +INEG
     }
     LenUO -> JvmAsm {
-      TODO() // implement this once array lits are done
       +expr.jvmAsm()
       +ARRAYLENGTH
     }
