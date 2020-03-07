@@ -134,7 +134,7 @@ class TestPrograms {
           if (jvmOut !in actualOut) assertEquals(jvmOut, actualOut)
         } else {
           assertEquals(expectedOut, actualOut)
-          { "Not matching program outputs for $canonicalPath.\nBytecode:\n$actualAss" }
+          { "Not matching program outputs for $canonicalPath.\nBytecode:\n${actualAss.withLineNumbers()}" }
           assertEquals(expectedCode, actualCode)
           { "Not matching exit codes for $canonicalPath\n.Bytecode:\n$actualAss" }
         }

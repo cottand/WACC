@@ -1,5 +1,6 @@
 package ic.org.jvm
 
+import java.lang.RuntimeException
 import kotlin.reflect.jvm.internal.impl.metadata.jvm.deserialization.JvmProtoBufUtil
 
 data class ILOAD(val varIndex: Int) : JvmInstr {
@@ -10,23 +11,36 @@ data class ISTORE(val varIndex: Int) : JvmInstr {
   override val code = "istore $varIndex"
 }
 
-data class ASTORE(val varIndex: Int? = null, val type: JvmType = JvmObject) : JvmInstr {
+data class ASTORE constructor(val varIndex: Int? = null, val type: JvmType = JvmObject) : JvmInstr {
   override val code = when(type) {
     is JvmInt -> "i"
     is JvmChar -> "c"
     is JvmBool -> "b"
     is JvmArray -> "a"
     else -> ""
-  } + if (varIndex == null)  "astore" else "astore_$varIndex"}
+  } + if (varIndex == null)  "astore" else "astore $varIndex"
 
-data class ALOAD(val varIndex: Int? = null, val type: JvmType = JvmObject) : JvmInstr {
+}
+
+data class ALOAD constructor(val varIndex: Int? = null, val type: JvmType = JvmObject) : JvmInstr {
   override val code = when(type) {
     is JvmInt -> "i"
     is JvmChar -> "c"
     is JvmBool -> "b"
     is JvmArray -> "a"
     else -> ""
-  } + if (varIndex == null)  "aload" else "aload_$varIndex"
+  } + if (varIndex == null)  "aload" else "aload $varIndex"
+
+  companion object {
+    operator fun invoke(index: Int? = null, type: JvmType = JvmObject) = when(index) {
+      null -> JvmAsm.instr(ALOAD(type = type))
+      in 0..3 -> JvmAsm.instr(ALOAD(3, type))
+      else -> JvmAsm {
+        +LDC(index)
+        +ALOAD(type = type)
+      }
+    }
+  }
 }
 
 sealed class LDC : JvmInstr {
