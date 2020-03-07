@@ -108,7 +108,7 @@ class TestPrograms {
     }
     // If we are not doing only checks, also check with the reference compiler assembly output
     if (!doCheckOnly) runBlocking {
-      val (expectedAss, expectedOut, expectedCode) = expRef!!.await()
+      val (expectedAss, expectedOut, expectedCode, jvmOut) = expRef!!.await()
       val actualAss = res.out.getOrElse { fail("Compilation unsuccessful") }
       if (target is ARM) {
         val (actualOut, actualCode) = Ref.emulate(actualAss, filePath, input)
@@ -130,10 +130,14 @@ class TestPrograms {
         val (actualOut, actualCode) = JasminAPI.emulate(actualAss, filePath, input)
         println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
         println("\nCompiled WACC:\n${program.file.readText()}")
-        assertEquals(expectedOut, actualOut)
-        { "Not matching program outputs for $canonicalPath.\nBytecode:\n$actualAss" }
-        assertEquals(expectedCode, actualCode)
-        { "Not matching exit codes for $canonicalPath\n.Bytecode:\n$actualAss" }
+        if (jvmOut != null) {
+          if (jvmOut !in actualOut) assertEquals(jvmOut, actualOut)
+        } else {
+          assertEquals(expectedOut, actualOut)
+          { "Not matching program outputs for $canonicalPath.\nBytecode:\n$actualAss" }
+          assertEquals(expectedCode, actualCode)
+          { "Not matching exit codes for $canonicalPath\n.Bytecode:\n$actualAss" }
+        }
       }
     }
     println("Test successful (compiler exit code ${res.exitCode}). Compiler output:\n${res.msg}\n")

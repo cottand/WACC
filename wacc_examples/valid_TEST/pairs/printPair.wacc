@@ -3,6 +3,10 @@
 # Output:
 # #addrs# = (10, a)
 
+# begin JVM_Output
+# Pair@
+# end JVM_Output
+
 # Program:
 
 begin

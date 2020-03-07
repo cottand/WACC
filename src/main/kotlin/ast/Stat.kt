@@ -106,7 +106,7 @@ data class Free(val expr: Expr, override val scope: Scope, override val pos: Pos
   }
 
   // Instead of calling `free`, we may rely on the JVM's GC to free our memory
-  override fun jvmInstr() = JvmAsm.empty
+  override fun jvmInstr() = TODO()
 }
 
 data class Return(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
@@ -148,21 +148,26 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
         withFunction(PrintReferenceStdFunc.body)
         +BLInstr(PrintReferenceStdFunc.label)
       }
-      else -> NOT_REACHED()
+      is AnyArrayT -> {
+        withFunction(PrintReferenceStdFunc.body)
+        +BLInstr(PrintReferenceStdFunc.label)
+      }
     }
   }
 
   override fun jvmInstr() = JvmAsm.write {
     val type = expr.type
     +expr.jvmAsm()
-    +when (type) {
-      is IntT -> JvmSystemPrintFunc(JvmInt).invoke
-      is BoolT -> JvmSystemPrintFunc(JvmBool).invoke
-      is CharT -> JvmSystemPrintFunc(JvmChar).invoke
-      is StringT -> JvmSystemPrintFunc(JvmString).invoke
-      is AnyPairTs -> TODO()
-      is ArrayT -> if (type.type is CharT) JvmSystemPrintFunc(JvmString).invoke else TODO()
-      is AnyArrayT -> TODO()
+    when (type) {
+      is IntT -> +JvmSystemPrintFunc(JvmInt).invoke
+      is BoolT -> +JvmSystemPrintFunc(JvmBool).invoke
+      is CharT -> +JvmSystemPrintFunc(JvmChar).invoke
+      is StringT -> +JvmSystemPrintFunc(JvmString).invoke
+      is AnyPairTs -> +JvmSystemPrintFunc(JvmObject).invoke
+      is ArrayT -> if (type.type is CharT) {
+        +JvmSystemPrintFunc(type.toJvm()).invoke
+      } else +JvmSystemPrintFunc(JvmObject).invoke
+      is AnyArrayT -> +JvmSystemPrintFunc(JvmObject).invoke
     }
   }
 }
@@ -182,12 +187,14 @@ data class Println(val expr: Expr, override val scope: Scope, override val pos: 
       is BoolT -> +JvmSystemPrintlnFunc(JvmBool).invoke
       is CharT -> +JvmSystemPrintlnFunc(JvmChar).invoke
       is StringT -> +JvmSystemPrintlnFunc(JvmString).invoke
-      is AnyPairTs -> TODO()
-      is ArrayT ->
-        if (type.type is CharT) +JvmSystemPrintlnFunc(JvmString).invoke
-        else TODO()
+      is AnyPairTs -> +JvmSystemPrintFunc(JvmObject).invoke
+      is ArrayT -> if (type.type is CharT) {
+        +JvmSystemPrintlnFunc(type.toJvm()).invoke
+      } else {
+        +JvmSystemPrintFunc(JvmObject).invoke
+      }
       // Empty array
-      is AnyArrayT -> TODO()
+      is AnyArrayT -> +JvmSystemPrintFunc(JvmObject).invoke
     }
 
   }

@@ -63,7 +63,7 @@ fun main(args: Array<String>) {
       println("Packaging JAR file $jarFile... ")
       val manifest = File("manifest").apply { writeText("Main-Class: $progName\n") }
       jasminMain(arrayOf(newFile))
-      "jar cfm $jarFile ${manifest.path} $progClass -C ${JVM.classpath} ${JVM.classes}".runCommand()
+      "jar cfm $jarFile ${manifest.path} $progClass -C ${JVM.classpath.dropLast(1)} ${JVM.classes}".runCommand()
       if (cleanAfterBuild) listOf(manifest, mainClass, assembly).forEach { it.delete() }
     } else
       println("Saving file with compiled assembly:\n$newFile")
