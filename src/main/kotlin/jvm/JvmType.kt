@@ -77,9 +77,27 @@ object JvmChar : JvmType() {
 }
 
 object JvmWaccPair : JvmType() {
-  override val rep = "Lstdlib/Pair;"
+  const val name = "wacc/lang/Pair"
+  override val rep = "L$name;"
   override val toNonPrimative = JvmAsm.empty
   override val toPrimative = JvmAsm.empty
+
+  val new = object : JvmInstr {
+    override val code = "new $name"
+  }
+
+  val init = object : JvmMethod() {
+    override val descriptor = "$name/<init>"
+    override val args = listOf(JvmObject, JvmObject)
+    override val ret = JvmVoid
+  }
+
+  val fst = object : JvmInstr {
+    override val code = "getfield $name/fst ${JvmObject.rep}"
+  }
+  val snd = object : JvmInstr {
+    override val code = "getfield $name/snd ${JvmObject.rep}"
+  }
 }
 
 data class CheckCast(val type: String) : JvmInstr {

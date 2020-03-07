@@ -139,6 +139,7 @@ class TestPrograms {
           { "Not matching exit codes for $canonicalPath\n.Bytecode:\n$actualAss" }
         }
       }
+      println("Succesful assembly:\n$actualAss\n")
     }
     println("Test successful (compiler exit code ${res.exitCode}). Compiler output:\n${res.msg}\n")
   }

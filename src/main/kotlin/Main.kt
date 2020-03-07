@@ -170,7 +170,7 @@ sealed class Target
 object ARM : Target()
 object JVM : Target() {
   const val classpath = "lib/*"
-  const val classes = "stdlib/Pair.class"
+  const val classes = "wacc/lang/Pair.class"
 }
 
 val Target.fileExtension

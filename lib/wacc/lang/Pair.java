@@ -1,4 +1,4 @@
-package stdlib;
+package wacc.lang;
 
 public class Pair<Fst, Snd> {
   public Fst fst;
