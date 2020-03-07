@@ -16,7 +16,7 @@ fun Type.toJvm() : JvmType = when(this) {
   StringT -> JvmString
   is ArrayT -> JvmArray(type.toJvm())
   is AnyArrayT -> JvmArray(JvmObject)
-  is AnyPairTs -> TODO()
+  is AnyPairTs -> JvmWaccPair
 }
 
 object PrintStream : JvmType() {
