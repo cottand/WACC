@@ -207,8 +207,8 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
 
   override fun jvmAsm() = when(unaryOper) {
     NotUO -> JvmAsm {
-      TODO()
       +expr.jvmAsm()
+      +LDC(1)
       +IXOR
     }
     MinusUO -> JvmAsm {
