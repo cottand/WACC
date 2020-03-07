@@ -1,10 +1,11 @@
 # binary plus operator
 
 # Output:
-# #empty#
+# 3
 
 # Program:
 
 begin
-  int x = 1 + 2
+  int x = 1 + 2;
+  exit x
 end

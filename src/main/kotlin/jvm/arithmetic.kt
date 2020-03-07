@@ -23,3 +23,7 @@ object IDIV : JvmInstr {
 object IREM : JvmInstr {
   override val code = "irem"
 }
+
+object ARRAYLENGTH : JvmInstr {
+  override val code = "arraylength"
+}

@@ -101,7 +101,9 @@ object NullPairLit : Expr() {
   // null is represented as 0
   override fun armAsm(rem: Regs) = ARMAsm.instr(LDRInstr(rem.head, ImmEquals32b(0)))
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    +ACONST_NULL
+  }
 
   override val weight = 1
 }
@@ -205,7 +207,28 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
     ChrUO -> expr.armAsm(rem)
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = when(unaryOper) {
+    NotUO -> JvmAsm {
+      +expr.jvmAsm()
+      +LDC(1)
+      +IXOR
+    }
+    MinusUO -> JvmAsm {
+      +expr.jvmAsm()
+      +INEG
+    }
+    LenUO -> JvmAsm {
+      +expr.jvmAsm()
+      +ARRAYLENGTH
+    }
+    OrdUO -> JvmAsm {
+      +expr.jvmAsm()
+    }
+    ChrUO -> JvmAsm {
+      +expr.jvmAsm()
+      +I2C
+    }
+  }
 
   companion object {
     /**
@@ -259,7 +282,16 @@ data class BinaryOperExpr internal constructor(
     })
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    +expr1.jvmAsm()
+    +expr2.jvmAsm()
+
+    // If binaryOper is an Equality op, we must pass in the expr types
+    +when(binaryOper) {
+      is EqualityBinOp -> binaryOper.equalityJvmAsm(expr1.type, expr2.type)
+      else -> binaryOper.jvmAsm()
+    }
+  }
 
   companion object {
     /**

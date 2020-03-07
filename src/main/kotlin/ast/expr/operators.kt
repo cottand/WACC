@@ -31,7 +31,10 @@ import ic.org.ast.CharT
 import ic.org.ast.IntT
 import ic.org.ast.StringT
 import ic.org.ast.Type
+import ic.org.jvm.*
 import ic.org.util.ARMAsm
+import ic.org.util.NOT_REACHED
+import ic.org.util.shortRandomUUID
 
 /**
  * Represents a unary operator, like `!` or `-`.
@@ -115,6 +118,8 @@ sealed class BinaryOper {
    * The [ARMAsm] required in order to perform this [BinaryOper]. By convention, the result should be put in [dest]
    */
   abstract fun code(dest: Reg, r2: Reg): ARMAsm
+
+  abstract fun jvmAsm() : JvmAsm
 }
 
 // (int, int) -> int:
@@ -151,6 +156,10 @@ object MulBO : IntBinOp() {
     +CMPInstr(None, r2, ASRImmOperand2(dest, Immed_5(31)))
     +BLInstr(NECond, OverflowException.label)
   }
+
+  override fun jvmAsm() = JvmAsm {
+    +IMUL
+  }
 }
 
 object DivBO : IntBinOp() {
@@ -164,6 +173,10 @@ object DivBO : IntBinOp() {
     +MOVInstr(None, false, dest, Reg(0))
 
     withFunction(CheckDivByZero)
+  }
+
+  override fun jvmAsm() = JvmAsm {
+    +IDIV
   }
 }
 
@@ -179,6 +192,10 @@ object ModBO : IntBinOp() {
 
     withFunction(CheckDivByZero.body)
   }
+
+  override fun jvmAsm() = JvmAsm {
+    +IREM
+  }
 }
 
 object PlusBO : IntBinOp() {
@@ -188,6 +205,10 @@ object PlusBO : IntBinOp() {
     +BLInstr(VSCond, OverflowException.label)
     withFunction(OverflowException.body)
   }
+
+  override fun jvmAsm() = JvmAsm  {
+    +IADD
+  }
 }
 
 object MinusBO : IntBinOp() {
@@ -196,6 +217,10 @@ object MinusBO : IntBinOp() {
     +SUBInstr(rd = dest, rn = dest, op2 = r2)
     +BLInstr(VSCond, OverflowException.label)
     withFunction(OverflowException)
+  }
+
+  override fun jvmAsm() = JvmAsm {
+    +ISUB
   }
 }
 
@@ -207,6 +232,18 @@ object GtBO : CompBinOp() {
     +MOVInstr(GTCond, rd = dest, imm8b = 1)
     +MOVInstr(LECond, rd = dest, imm8b = 0)
   }
+
+  override fun jvmAsm() = JvmAsm {
+    val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
+    val labelSkip = JvmLabel("L_SKIP_" + shortRandomUUID())
+
+    +IF_ICMPGT(labelTrue)
+    +LDC.LDCInt(0)
+    +GOTO(labelSkip)
+    +labelTrue
+    +LDC.LDCInt(1)
+    +labelSkip
+  }
 }
 
 object GeqBO : CompBinOp() {
@@ -215,6 +252,18 @@ object GeqBO : CompBinOp() {
     +CMPInstr(None, dest, RegOperand2(r2))
     +MOVInstr(GECond, rd = dest, imm8b = 1)
     +MOVInstr(LTCond, rd = dest, imm8b = 0)
+  }
+
+  override fun jvmAsm() = JvmAsm {
+    val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
+    val labelSkip = JvmLabel("L_SKIP_" + shortRandomUUID())
+
+    +IF_ICMPGE(labelTrue)
+    +LDC.LDCInt(0)
+    +GOTO(labelSkip)
+    +labelTrue
+    +LDC.LDCInt(1)
+    +labelSkip
   }
 }
 
@@ -225,6 +274,18 @@ object LtBO : CompBinOp() {
     +MOVInstr(LTCond, rd = dest, imm8b = 1)
     +MOVInstr(GECond, rd = dest, imm8b = 0)
   }
+
+  override fun jvmAsm() = JvmAsm {
+    val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
+    val labelSkip = JvmLabel("L_SKIP_" + shortRandomUUID())
+
+    +IF_ICMPLT(labelTrue)
+    +LDC.LDCInt(0)
+    +GOTO(labelSkip)
+    +labelTrue
+    +LDC.LDCInt(1)
+    +labelSkip
+  }
 }
 
 object LeqBO : CompBinOp() {
@@ -233,6 +294,18 @@ object LeqBO : CompBinOp() {
     +CMPInstr(None, dest, RegOperand2(r2))
     +MOVInstr(cond = LECond, rd = dest, imm8b = 1)
     +MOVInstr(cond = GTCond, rd = dest, imm8b = 0)
+  }
+
+  override fun jvmAsm() = JvmAsm {
+    val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
+    val labelSkip = JvmLabel("L_SKIP_" + shortRandomUUID())
+
+    +IF_ICMPLE(labelTrue)
+    +LDC.LDCInt(0)
+    +GOTO(labelSkip)
+    +labelTrue
+    +LDC.LDCInt(1)
+    +labelSkip
   }
 }
 
@@ -248,6 +321,10 @@ sealed class EqualityBinOp : BinaryOper() {
   override val validReturn: (Type) -> Boolean = { it is BoolT }
   override val inTypes = listOf(IntT, BoolT, CharT, StringT, AnyArrayT(), AnyPairTs())
   override val retType = BoolT
+
+  override fun jvmAsm() = NOT_REACHED()
+
+   abstract fun equalityJvmAsm(t1: Type, t2: Type): JvmAsm
 }
 
 object EqBO : EqualityBinOp() {
@@ -258,6 +335,23 @@ object EqBO : EqualityBinOp() {
       +MOVInstr(cond = EQCond, rd = dest, imm8b = 1)
       +MOVInstr(cond = NECond, rd = dest, imm8b = 0)
     }
+
+  override fun equalityJvmAsm(t1: Type, t2: Type): JvmAsm = JvmAsm {
+    val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
+    val labelSkip = JvmLabel("L_SKIP_" + shortRandomUUID())
+
+    if (t1 == StringT && t2 == StringT) {
+      +IF_ACMPEQ(labelTrue)
+    } else {
+      +IF_ICMPEQ(labelTrue)
+    }
+
+    +LDC.LDCInt(0)
+    +GOTO(labelSkip)
+    +labelTrue
+    +LDC.LDCInt(1)
+    +labelSkip
+  }
 }
 
 object NeqBO : EqualityBinOp() {
@@ -268,6 +362,23 @@ object NeqBO : EqualityBinOp() {
       +MOVInstr(cond = NECond, rd = dest, imm8b = 1)
       +MOVInstr(cond = EQCond, rd = dest, imm8b = 0)
     }
+
+  override fun equalityJvmAsm(t1: Type, t2: Type) = JvmAsm {
+    val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
+    val labelSkip = JvmLabel("L_SKIP_" + shortRandomUUID())
+
+    if (t1 == StringT && t2 == StringT) {
+      +IF_ACMPNE(labelTrue)
+    } else {
+      +IF_ICMPNE(labelTrue)
+    }
+
+    +LDC.LDCInt(0)
+    +GOTO(labelSkip)
+    +labelTrue
+    +LDC.LDCInt(1)
+    +labelSkip
+  }
 }
 
 object AndBO : BoolBinOp() {
@@ -275,11 +386,19 @@ object AndBO : BoolBinOp() {
   override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     +ANDInstr(None, false, dest, dest, RegOperand2(r2))
   }
+
+  override fun jvmAsm() = JvmAsm {
+    +IAND
+  }
 }
 
 object OrBO : BoolBinOp() {
   override fun toString(): String = "||"
   override fun code(dest: Reg, r2: Reg) = ARMAsm.write {
     +ORRInstr(None, false, dest, dest, RegOperand2(r2))
+  }
+
+  override fun jvmAsm() = JvmAsm {
+    +IOR
   }
 }

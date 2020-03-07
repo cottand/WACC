@@ -7,5 +7,6 @@
 
 begin
   bool x = true;
-  bool y = !x
+  bool y = !x;
+  println y
 end

@@ -3,6 +3,11 @@
 # Output:
 # #runtime_error#
 
+# begin JVM_Output
+# Exception in thread "main" java.lang.NullPointerException
+# 	at useNull2.main(useNull2.j)
+# end JVM_Output
+
 # Exit:
 # 255
 

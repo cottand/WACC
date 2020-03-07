@@ -7,3 +7,7 @@ object IAND : JvmInstr {
 object IOR : JvmInstr {
   override val code = "ior"
 }
+
+object IXOR : JvmInstr {
+  override val code = "ixor"
+}
