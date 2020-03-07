@@ -76,6 +76,12 @@ object JvmChar : JvmType() {
   }
 }
 
+object JvmWaccPair : JvmType() {
+  override val rep = "Lstdlib/Pair;"
+  override val toNonPrimative = JvmAsm.empty
+  override val toPrimative = JvmAsm.empty
+}
+
 data class CheckCast(val type: String) : JvmInstr {
   override val code = "checkcast $type"
 }

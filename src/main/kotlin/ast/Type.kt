@@ -29,17 +29,13 @@ sealed class Type {
   @JvmGenOnly
   fun sizedSTORE(indexNo: Int) = when (this) {
     IntT, BoolT, CharT -> ISTORE(indexNo)
-    StringT -> ASTORE(indexNo)
-    is AnyArrayT -> ASTORE(indexNo)
-    is AnyPairTs -> ASTORE(indexNo)
+    is AnyArrayT, is AnyPairTs, StringT -> ASTORE(indexNo)
   }
 
   @JvmGenOnly
   fun sizedLOAD(indexNo: Int) = when (this) {
     IntT, BoolT, CharT -> ILOAD(indexNo)
-    StringT -> ALOAD(indexNo)
-    is AnyArrayT -> ALOAD(indexNo)
-    is AnyPairTs -> ALOAD(indexNo)
+    StringT, is AnyArrayT, is AnyPairTs -> ALOAD(indexNo)
   }
 
   /**

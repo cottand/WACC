@@ -1,19 +1,19 @@
 package ic.org.jvm
 
 object JvmNewPair : JvmInstr {
-  override val code = "new Pair"
+  override val code = "new stdlib/Pair"
 }
 
 object JvmNewPairInit : JvmMethod() {
-  override val descriptor = "Pair/<init>"
+  override val descriptor = "stdlib/Pair/<init>"
   override val args = listOf(JvmObject, JvmObject)
   override val ret = JvmVoid
 }
 
 object JvmGetFst : JvmInstr {
-  override val code = "getfield Pair/fst Ljava/lang/Object;"
+  override val code = "getfield stdlib/Pair/fst Ljava/lang/Object;"
 }
 
 object JvmGetSnd : JvmInstr {
-  override val code = "getfield Pair/snd Ljava/lang/Object;"
+  override val code = "getfield stdlib/Pair/snd Ljava/lang/Object;"
 }

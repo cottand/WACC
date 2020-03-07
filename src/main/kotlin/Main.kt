@@ -169,8 +169,8 @@ class WACCCompiler(private val filename: String) {
 sealed class Target
 object ARM : Target()
 object JVM : Target() {
-  const val classpath = "lib/wacc-stdlib/*"
-  const val classes = "Pair.class"
+  const val classpath = "lib/*"
+  const val classes = "stdlib/Pair.class"
 }
 
 val Target.fileExtension

@@ -74,7 +74,7 @@ val JvmType.jvmReturn
   get() = when (this) {
     JvmInt, JvmBool -> JvmReturn.Int
     is JvmArray -> TODO()
-    JvmObject, JvmString, PrintStream -> JvmReturn.Object
+    JvmObject, JvmString, PrintStream, JvmWaccPair -> JvmReturn.Object
     JvmVoid -> JvmReturn.Void
     JvmChar -> TODO()
   }
