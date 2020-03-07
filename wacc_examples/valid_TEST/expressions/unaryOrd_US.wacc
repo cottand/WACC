@@ -1,11 +1,12 @@
 # unary neg operator
 
 # Output:
-# #empty#
+# 97
 
 # Program:
 
 begin
   char x = 'a';
-  int y = ord(x)
+  int y = ord(x);
+  exit y
 end

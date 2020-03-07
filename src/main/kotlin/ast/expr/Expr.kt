@@ -220,7 +220,7 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
       +ARRAYLENGTH
     }
     OrdUO -> JvmAsm {
-      TODO()
+      +expr.jvmAsm()
     }
     ChrUO -> JvmAsm {
       +expr.jvmAsm()
