@@ -1,6 +1,9 @@
 package ic.org.jvm
 
 import com.sun.org.apache.bcel.internal.generic.IRETURN
+import ic.org.JVM
+import ic.org.ast.GlobalScope
+import ic.org.ast.Scope
 import ic.org.util.shortRandomUUID
 import javax.swing.ImageIcon
 
@@ -37,11 +40,24 @@ object JvmSystemOut : JvmField() {
 }
 
 object JvmSystemIn : JvmField() {
-  override val name = "java/lang/System/in Ljava/io/InputStream"
+  override val name = "java/lang/System/in"
 }
 
-abstract class JvmSystemReadFunc() : WACCMethod() {
-  override val args = listOf(JvmVoid)
+object JvmInputStreamReadChar : JvmMethod() {
+  override val descriptor = "java/io/InputStream/read"
+  override val args = listOf<Nothing>()
+  override val ret = JvmChar
+}
+
+object JvmInputStreamReadInt : JvmMethod() {
+  override val descriptor = "java/io/InputStream/read"
+  override val args = listOf<Nothing>()
+  override val ret = JvmInt
+}
+
+sealed class JvmSystemReadFunc() : WACCMethod() {
+  override val args = listOf<Nothing>()
+  abstract val scope: Scope
 
   val maxStack = 10 // TODO change to lower?
   val locals = 10 // TODO change to lower
@@ -51,24 +67,26 @@ abstract class JvmSystemReadFunc() : WACCMethod() {
   private val retLabel = JvmLabel("return_" + shortRandomUUID())
   private val delimiters = charArrayOf(' ')
 
-  override val asm = JvmAsm.write {
-    +".method public static $spec"
-    +".limit stack $maxStack"
-    +".limit locals $locals"
-    +LDC(0)
-    +ISTORE(retIndex)
-    +nextCharLabel.code
-    +GetStatic(JvmSystemIn, InputStream)
-    +InvokeVirtual("java/io/InputStream/read()")
-    +ISTORE(currIndex)
-    +ILOAD(currIndex)
-    +delimit()
-    +parseChar()
-    +GOTO(nextCharLabel)
-    +retLabel.code
-    +ILOAD(retIndex)
-    +ret.jvmReturn
-    +".end method"
+  override val asm by lazy {
+    JvmAsm.write {
+      +".method public static $spec"
+      +".limit locals $locals"
+      +".limit stack $maxStack"
+      +LDC(0)
+      +ISTORE(retIndex)
+      +nextCharLabel.code
+      +GetStatic(JvmSystemIn, InputStream)
+      +InvokeVirtual("java/io/InputStream/read()I")
+      +ISTORE(currIndex)
+//      +ILOAD(currIndex) //TODO may want to load here but decrease stack later?
+      +delimit()
+      +parseChar()
+      +GOTO(nextCharLabel)
+      +retLabel.code
+      +ILOAD(retIndex)
+      +ret.jvmReturn
+      +".end method"
+    }
   }
 
   private fun delimit() = delimiters.asSequence().map {
@@ -80,16 +98,23 @@ abstract class JvmSystemReadFunc() : WACCMethod() {
     }
   }.toList()
 
+  override val invoke by lazy { JvmAsm.instr(InvokeStatic("${scope.progName}/$spec")) }
+
   abstract fun parseChar(): JvmAsm
 }
 
+open class JvmReadChar(override val scope: Scope) : JvmSystemReadFunc() {
+  override fun parseChar() = JvmAsm.empty
+  override val descriptor = "readChar"
+  override val ret = JvmChar
+}
 
-
-class JvmReadIntFunc() : JvmSystemReadFunc() {
+open class JvmReadInt(override val scope: Scope) : JvmSystemReadFunc() {
   override val descriptor = "readInt"
-  override val args = listOf(JvmVoid)
+  override val args = listOf<Nothing>()
+
   //TODO: add support for negative integers
-  override fun parseChar() = JvmAsm.write{
+  override fun parseChar() = JvmAsm.write {
     +ILOAD(currIndex)
     +LDC('0'.toInt())
     +ISUB

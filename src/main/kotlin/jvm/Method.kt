@@ -69,14 +69,13 @@ object JvmReturnObj : JvmInstr {
 
 val JvmType.jvmReturn
   get() = when (this) {
-    JvmInt -> object : JvmInstr {
+    JvmInt, JvmChar -> object : JvmInstr {
       override val code = "ireturn"
     }
     is JvmArray -> TODO()
     JvmObject, JvmString, PrintStream, InputStream -> JvmReturnObj
     JvmVoid -> JvmReturn
     JvmBool -> TODO()
-    JvmChar -> TODO()
   }
 
 abstract class JvmField {
