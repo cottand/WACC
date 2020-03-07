@@ -48,7 +48,7 @@ open class DefinedMethod(
       body?.let { +it.jvmInstr() }
       if (ret is JvmVoid) {
         +LDC(0)
-        +JvmReturn
+        +JvmReturn.Void
       }
       +".end method"
     }
@@ -59,23 +59,25 @@ open class DefinedMethod(
 data class Main(override val body: Stat, val gscope: GlobalScope) :
   DefinedMethod("main", listOf(JvmArray(JvmString)), JvmVoid, gscope, body)
 
-object JvmReturn : JvmInstr {
-  override val code = "return"
-}
 
 object JvmReturnObj : JvmInstr {
   override val code = "areturn"
 }
 
+enum class JvmReturn(override val code: String) : JvmInstr {
+  Void("return"),
+  Object("areturn"),
+  Int("ireturn")
+}
+
 val JvmType.jvmReturn
   get() = when (this) {
-    JvmInt, JvmChar -> object : JvmInstr {
-      override val code = "ireturn"
-    }
+    JvmInt, JvmBool, JvmChar -> JvmReturn.Int
     is JvmArray -> TODO()
-    JvmObject, JvmString, PrintStream, InputStream -> JvmReturnObj
-    JvmVoid -> JvmReturn
+    JvmObject, JvmString, PrintStream, InputStream -> JvmReturn.Object
+    JvmVoid -> JvmReturn.Void
     JvmBool -> TODO()
+    JvmChar -> TODO()
   }
 
 abstract class JvmField {

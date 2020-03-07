@@ -3,6 +3,10 @@
 # Output:
 # #runtime_error#
 
+# begin JVM_Output
+# Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException
+# end JVM_Output
+
 # Exit:
 # 255
 

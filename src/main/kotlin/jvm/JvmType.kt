@@ -1,12 +1,6 @@
 package ic.org.jvm
 
-import ic.org.ast.AnyArrayT
-import ic.org.ast.AnyPairTs
-import ic.org.ast.BoolT
-import ic.org.ast.CharT
-import ic.org.ast.IntT
-import ic.org.ast.StringT
-import ic.org.ast.Type
+import ic.org.ast.*
 
 sealed class JvmType {
   abstract val rep: String
@@ -15,12 +9,13 @@ sealed class JvmType {
   abstract val toPrimative: JvmAsm
 }
 
-fun Type.toJvm() = when(this) {
+fun Type.toJvm() : JvmType = when(this) {
   IntT -> JvmInt
   BoolT -> JvmBool
   CharT -> JvmChar
   StringT -> JvmString
-  is AnyArrayT -> TODO()
+  is ArrayT -> JvmArray(type.toJvm())
+  is AnyArrayT -> JvmArray(JvmObject)
   is AnyPairTs -> TODO()
 }
 

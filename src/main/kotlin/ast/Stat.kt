@@ -102,10 +102,10 @@ data class Free(val expr: Expr, override val scope: Scope, override val pos: Pos
 
       withFunction(FreeFunc)
     }
-
     else -> NOT_REACHED()
   }
 
+  // Instead of calling `free`, we may rely on the JVM's GC to free our memory
   override fun jvmInstr() = TODO()
 }
 
@@ -148,7 +148,10 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
         withFunction(PrintReferenceStdFunc.body)
         +BLInstr(PrintReferenceStdFunc.label)
       }
-      else -> NOT_REACHED()
+      is AnyArrayT -> {
+        withFunction(PrintReferenceStdFunc.body)
+        +BLInstr(PrintReferenceStdFunc.label)
+      }
     }
   }
 
@@ -156,27 +159,15 @@ data class Print(val expr: Expr, override val scope: Scope, override val pos: Po
     val type = expr.type
     +expr.jvmAsm()
     when (type) {
-      is IntT -> {
-        +JvmSystemPrintFunc(JvmInt).invoke
-      }
-      is BoolT -> {
-        +JvmSystemPrintFunc(JvmBool).invoke
-      }
-      is CharT -> {
-        +JvmSystemPrintFunc(JvmChar).invoke
-      }
-      is StringT -> {
-        +JvmSystemPrintFunc(JvmString).invoke
-      }
-      is AnyPairTs -> {
-        TODO()
-      }
+      is IntT -> +JvmSystemPrintFunc(JvmInt).invoke
+      is BoolT -> +JvmSystemPrintFunc(JvmBool).invoke
+      is CharT -> +JvmSystemPrintFunc(JvmChar).invoke
+      is StringT -> +JvmSystemPrintFunc(JvmString).invoke
+      is AnyPairTs -> +JvmSystemPrintFunc(JvmObject).invoke
       is ArrayT -> if (type.type is CharT) {
-        +JvmSystemPrintFunc(JvmString).invoke
-      } else {
-        TODO()
-      }
-      else -> NOT_REACHED()
+        +JvmSystemPrintFunc(type.toJvm()).invoke
+      } else +JvmSystemPrintFunc(JvmObject).invoke
+      is AnyArrayT -> +JvmSystemPrintFunc(JvmObject).invoke
     }
   }
 }
@@ -196,12 +187,14 @@ data class Println(val expr: Expr, override val scope: Scope, override val pos: 
       is BoolT -> +JvmSystemPrintlnFunc(JvmBool).invoke
       is CharT -> +JvmSystemPrintlnFunc(JvmChar).invoke
       is StringT -> +JvmSystemPrintlnFunc(JvmString).invoke
-      is AnyPairTs -> TODO()
-      is ArrayT ->
-        if (type.type is CharT) +JvmSystemPrintlnFunc(JvmString).invoke
-        else TODO()
+      is AnyPairTs -> +JvmSystemPrintFunc(JvmObject).invoke
+      is ArrayT -> if (type.type is CharT) {
+        +JvmSystemPrintlnFunc(type.toJvm()).invoke
+      } else {
+        +JvmSystemPrintFunc(JvmObject).invoke
+      }
       // Empty array
-      is AnyArrayT -> TODO()
+      is AnyArrayT -> +JvmSystemPrintFunc(JvmObject).invoke
     }
 
   }
@@ -233,8 +226,8 @@ data class If(val cond: Expr, val then: Stat, val `else`: Stat, override val sco
 
   override fun jvmInstr() = JvmAsm {
     val uuid = shortRandomUUID()
-    val elseLabel = JvmLabel("IfElse$uuid")
-    val continueLabel = JvmLabel("IfContinue$uuid")
+    val elseLabel = JvmLabel("IfElse_$uuid")
+    val continueLabel = JvmLabel("IfContinue_$uuid")
 
     +cond.jvmAsm() // Load cond (bool) to top of the stack
     +IFEQ(elseLabel) // If cond == 0 (cond == false) jump to else
@@ -267,7 +260,18 @@ data class While(val cond: Expr, val body: Stat, override val scope: Scope, over
     +BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
   }
 
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = jvmAsmWithPos {
+    val uuid = shortRandomUUID()
+    val bodyLabel = JvmLabel("WhileBody_$uuid")
+    val condLabel = JvmLabel("WhileCond_$uuid")
+
+    +GOTO(condLabel)
+    +bodyLabel
+    +body.jvmInstr()
+    +condLabel
+    +cond.jvmAsm()
+    +IFNE(bodyLabel) // If cond != 0 (cond is true) jump to body
+  }
 }
 
 data class BegEnd(val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {

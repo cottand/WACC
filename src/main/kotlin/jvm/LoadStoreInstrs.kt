@@ -8,12 +8,23 @@ data class ISTORE(val varIndex: Int) : JvmInstr {
   override val code = "istore $varIndex"
 }
 
-data class ASTORE(val varIndex: Int) : JvmInstr {
-  override val code = "astore_$varIndex"
-}
+data class ASTORE(val varIndex: Int? = null, val type: JvmType = JvmObject) : JvmInstr {
+  override val code = when(type) {
+    is JvmInt -> "i"
+    is JvmChar -> "c"
+    is JvmBool -> "b"
+    is JvmArray -> "a"
+    else -> ""
+  } + if (varIndex == null)  "astore" else "astore_$varIndex"}
 
-data class ALOAD(val varIndex: Int) : JvmInstr {
-  override val code = "aload_$varIndex"
+data class ALOAD(val varIndex: Int? = null, val type: JvmType = JvmObject) : JvmInstr {
+  override val code = when(type) {
+    is JvmInt -> "i"
+    is JvmChar -> "c"
+    is JvmBool -> "b"
+    is JvmArray -> "a"
+    else -> ""
+  } + if (varIndex == null)  "aload" else "aload_$varIndex"
 }
 
 sealed class LDC : JvmInstr {
