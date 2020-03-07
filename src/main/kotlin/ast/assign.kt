@@ -174,7 +174,7 @@ data class Newpair(val expr1: Expr, val expr2: Expr) : AssRHS() {
     +expr1.type.toJvm().toNonPrimative
     +expr2.jvmAsm()
     +expr2.type.toJvm().toNonPrimative
-    +InvokeSpecial(JvmWaccPair.init)
+    +JvmWaccPair.init.invoke
   }
 }
 
@@ -195,7 +195,10 @@ data class PairElemRHS(val pairElem: PairElem, val pairs: PairT) : AssRHS() {
 
   override fun jvmAsm() = JvmAsm {
     +pairElem.expr.jvmAsm()
-    +if (pairElem is Fst) JvmWaccPair.fst else JvmWaccPair.snd
+    +when (pairElem) {
+      is Fst -> JvmWaccPair.getFst
+      is Snd -> JvmWaccPair.getSnd
+    }.invoke
     +type.toJvm().toPrimative
   }
 

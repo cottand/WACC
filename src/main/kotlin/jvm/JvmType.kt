@@ -86,17 +86,25 @@ object JvmWaccPair : JvmType() {
     override val code = "new $name"
   }
 
-  val init = object : JvmMethod() {
-    override val descriptor = "$name/<init>"
+  val init = object : JvmMethod(type = Special) {
+    override val `class` = name
+    override val mName = "<init>"
     override val args = listOf(JvmObject, JvmObject)
     override val ret = JvmVoid
   }
 
-  val fst = object : JvmInstr {
-    override val code = "getfield $name/fst ${JvmObject.rep}"
+  // TODO refactor to a getter class?
+  val getFst = object : JvmMethod(type = Virtual) {
+    override val `class` = name
+    override val mName = "getFst"
+    override val args = listOf<Nothing>()
+    override val ret = JvmObject
   }
-  val snd = object : JvmInstr {
-    override val code = "getfield $name/snd ${JvmObject.rep}"
+  val getSnd = object : JvmMethod(type = Virtual) {
+    override val `class` = name
+    override val mName = "getSnd"
+    override val args = listOf<Nothing>()
+    override val ret = JvmObject
   }
 }
 
