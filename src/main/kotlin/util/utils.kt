@@ -54,13 +54,14 @@ inline val <reified E, reified V> List<Validated<E, V>>.valids
 inline fun log2(i: Int) =
   log2(i.toDouble()).also { if (it > Byte.MAX_VALUE) throw UnsupportedOperationException() }.toInt().toUByte()
 
-fun String.runCommand(workingDir: File = File(".")) =
+fun String.runCommand(workingDir: File = File("."), input: String? = null) =
   ProcessBuilder(*split("\\s".toRegex()).toTypedArray())
     .directory(workingDir)
     .redirectOutput(ProcessBuilder.Redirect.PIPE)
     .redirectError(ProcessBuilder.Redirect.PIPE)
     .start()
     .let { proc ->
+      input?.let { proc.outputStream.writer().write(input) }
       proc.waitFor()
       val errs = proc.errorStream.bufferedReader().readText()
       errs + proc.inputStream.bufferedReader().readText() to proc.exitValue()
