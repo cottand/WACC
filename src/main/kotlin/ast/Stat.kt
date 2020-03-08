@@ -204,10 +204,10 @@ data class Println(val expr: Expr, override val scope: Scope, override val pos: 
       is ArrayT -> if (type.type is CharT) {
         +JvmSystemPrintlnFunc(type.toJvm()).invoke
       } else {
-        +JvmSystemPrintFunc(JvmObject).invoke
+        +JvmSystemPrintlnFunc(JvmObject).invoke
       }
       // Empty array
-      is AnyArrayT -> +JvmSystemPrintFunc(JvmObject).invoke
+      is AnyArrayT -> +JvmSystemPrintlnFunc(JvmObject).invoke
     }
 
   }
