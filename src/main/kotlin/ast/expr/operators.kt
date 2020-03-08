@@ -369,10 +369,12 @@ object NeqBO : EqualityBinOp() {
     val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
     val labelSkip = JvmLabel("L_SKIP_" + shortRandomUUID())
 
-    if (t1 == StringT && t2 == StringT) {
-      +IF_ACMPNE(labelTrue)
-    } else {
+    if ((t1 == IntT && t2 == IntT) ||
+      (t1 == CharT && t2 == CharT) ||
+      (t1 == BoolT && t2 == BoolT)) {
       +IF_ICMPNE(labelTrue)
+    } else {
+      +IF_ACMPNE(labelTrue)
     }
 
     +LDC.LDCInt(0)
