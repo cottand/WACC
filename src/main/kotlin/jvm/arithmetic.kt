@@ -4,6 +4,10 @@ object INEG : JvmInstr {
   override val code = "ineg"
 }
 
+object LNEG : JvmInstr {
+  override val code = "lneg"
+}
+
 object IADD : JvmInstr {
   override val code = "iadd"
 }

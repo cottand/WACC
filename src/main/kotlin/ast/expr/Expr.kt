@@ -215,6 +215,7 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
     }
     MinusUO -> JvmAsm {
       +expr.jvmAsm()
+      +jvmCheckIntegerOverflowUO(MinusUO)
       +INEG
     }
     LenUO -> JvmAsm {
