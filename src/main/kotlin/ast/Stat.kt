@@ -200,7 +200,7 @@ data class Println(val expr: Expr, override val scope: Scope, override val pos: 
       is BoolT -> +JvmSystemPrintlnFunc(JvmBool).invoke
       is CharT -> +JvmSystemPrintlnFunc(JvmChar).invoke
       is StringT -> +JvmSystemPrintlnFunc(JvmString).invoke
-      is AnyPairTs -> +JvmSystemPrintFunc(JvmObject).invoke
+      is AnyPairTs -> +JvmSystemPrintlnFunc(JvmObject).invoke
       is ArrayT -> if (type.type is CharT) {
         +JvmSystemPrintlnFunc(type.toJvm()).invoke
       } else {
