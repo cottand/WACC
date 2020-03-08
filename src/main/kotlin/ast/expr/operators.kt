@@ -340,10 +340,12 @@ object EqBO : EqualityBinOp() {
     val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
     val labelSkip = JvmLabel("L_SKIP_" + shortRandomUUID())
 
-    if (t1 == StringT && t2 == StringT) {
-      +IF_ACMPEQ(labelTrue)
-    } else {
+    if ((t1 == IntT && t2 == IntT) ||
+        (t1 == CharT && t2 == CharT) ||
+        (t1 == BoolT && t2 == BoolT)) {
       +IF_ICMPEQ(labelTrue)
+    } else {
+      +IF_ACMPEQ(labelTrue)
     }
 
     +LDC.LDCInt(0)
