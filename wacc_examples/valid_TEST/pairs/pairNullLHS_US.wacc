@@ -2,6 +2,9 @@
 
 # Output:
 # 100
+# begin JVM_Output
+# Exception in thread "main" java.lang.NullPointerException
+# end JVM_Output
 
 # Program:
 

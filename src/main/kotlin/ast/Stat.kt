@@ -35,7 +35,7 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
   val type = variable.type
   val ident = variable.ident
   override fun instr() = variable.set(rhs, scope)
-  override fun jvmInstr() = variable.store(rhs)
+  override fun jvmInstr() = jvmAsmWithPos { +variable.store(rhs) }
 }
 
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
@@ -77,7 +77,16 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
   override fun jvmInstr() = when (lhs) {
     is IdentLHS -> JvmAsm { +lhs.variable.store(rhs) }
     is ArrayElemLHS -> TODO()
-    is PairElemLHS -> TODO()
+    is PairElemLHS -> jvmAsmWithPos {
+      +lhs.variable.load() // load pair ref onto the stack
+      +CheckCast(JvmWaccPair.name)
+      +rhs.jvmAsm() // load rhs onto the stack
+      +rhs.type.toJvm().toNonPrimative
+      +when (lhs.pairElem) {
+        is Fst -> JvmWaccPair.setFst
+        is Snd -> JvmWaccPair.setSnd
+      }.invoke
+    }
   }
 }
 
