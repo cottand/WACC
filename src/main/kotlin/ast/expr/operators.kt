@@ -158,6 +158,7 @@ object MulBO : IntBinOp() {
   }
 
   override fun jvmAsm() = JvmAsm {
+    +JvmCheckIntegerOverflow(MulBO)
     +IMUL
   }
 }
@@ -207,6 +208,7 @@ object PlusBO : IntBinOp() {
   }
 
   override fun jvmAsm() = JvmAsm  {
+    +JvmCheckIntegerOverflow(PlusBO)
     +IADD
   }
 }
@@ -220,6 +222,7 @@ object MinusBO : IntBinOp() {
   }
 
   override fun jvmAsm() = JvmAsm {
+    +JvmCheckIntegerOverflow(MinusBO)
     +ISUB
   }
 }

@@ -63,3 +63,7 @@ data class IF_ACMPNE(val label: JvmLabel) : JvmInstr {
 data class IFNONNULL(val label: JvmLabel) : JvmInstr {
   override val code = "ifnonnull ${label.name}"
 }
+
+object LCMP : JvmInstr {
+  override val code = "lcmp"
+}

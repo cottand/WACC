@@ -5,6 +5,10 @@
 # -2147483648
 # #runtime_error#
 
+# begin JVM_Output
+# Exception in thread "main" java.lang.RuntimeException: Integer Overflow
+# end JVM_Output
+
 # Exit:
 # 255
 
