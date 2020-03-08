@@ -131,7 +131,7 @@ class TestPrograms {
         println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
         println("\nCompiled WACC:\n${program.file.readText()}")
         if (jvmOut != null) {
-          if (jvmOut !in actualOut) assertEquals(jvmOut, actualOut)
+          if (jvmOut !in actualOut) assertEquals(jvmOut, actualOut) {"Bytecode:\n$actualAss"}
         } else {
           assertEquals(expectedOut, actualOut)
           { "Not matching program outputs for $canonicalPath.\nBytecode:\n$actualAss" }

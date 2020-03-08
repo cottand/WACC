@@ -55,7 +55,7 @@ open class DefinedMethod(
   override val `class` = scope.progName
   override val asm by lazy {
     JvmAsm {
-      val maxStack = 20 // TODO change
+      val maxStack = 100 // TODO change
       val locals = body?.scope?.localVarsSoFar()
       +".method public static $header"
       +".limit stack $maxStack"
