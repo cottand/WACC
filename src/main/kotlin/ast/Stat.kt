@@ -76,7 +76,17 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
 
   override fun jvmInstr() = when (lhs) {
     is IdentLHS -> JvmAsm { +lhs.variable.store(rhs) }
-    is ArrayElemLHS -> TODO()
+    is ArrayElemLHS -> JvmAsm {
+      +lhs.variable.load()
+
+      lhs.indices.dropLast(1).forEach {
+        +it.jvmAsm()
+        +ALOAD(type = rhs.type.toJvm())
+      }
+      +lhs.indices.last().jvmAsm()
+      +rhs.jvmAsm()
+      +ASTORE(type = rhs.type.toJvm())
+    }
     is PairElemLHS -> TODO()
   }
 }
