@@ -3,6 +3,10 @@
 # Output:
 # #addrs# = ((nil),(nil))
 
+# begin JVM_Output
+# = (null,null)
+# end JVM_Output
+
 # Program:
 
 begin
