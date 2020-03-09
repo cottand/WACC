@@ -9,6 +9,13 @@
 # f is #addrs#
 # answer is g
 
+# begin JVM_Output
+# a is 42
+# b is true
+# c is u
+# d is hello
+# end JVM_Output
+
 # Program:
 
 begin

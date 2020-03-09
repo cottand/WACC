@@ -5,7 +5,6 @@
 
 # begin JVM_Output
 # Exception in thread "main" java.lang.ArithmeticException: / by zero
-# 	at divZero.main(divZero.j)
 # end JVM_Output
 
 # Exit:
