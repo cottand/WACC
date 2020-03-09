@@ -26,3 +26,13 @@ fun WACCProgram.specialInput() = "Input_particular".let { token ->
     .joinLines()
     .let { if (it.isBlank()) None else it.some() }
 }
+
+/**
+ * Prints same text with prepended line numbers
+ */
+fun Iterable<String>.withLineNumbers() = mapIndexed { i, line ->
+  val index = i.toString()
+  index + "    ".drop(index.length) + line
+}
+
+fun String.withLineNumbers() = lines().withLineNumbers().joinLines()

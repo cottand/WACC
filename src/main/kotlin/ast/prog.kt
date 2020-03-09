@@ -43,6 +43,7 @@ data class Prog(val name: String, val funcs: List<Func>, val body: Stat, val glo
     }
 
   fun jvmAsm() = JvmAsm {
+    +".source $name.wacc"
     +".class public $name"
     +SuperObject
     // +MainClass.init

@@ -10,9 +10,17 @@ abstract class JvmMethod(type: MethodType) {
   internal abstract val mName: String
   internal abstract val args: List<JvmType>
   internal abstract val ret: JvmType
+
+  /**
+   * What shows in function declaration
+   */
   internal val header by lazy {
     "$mName(${args.joinToString(separator = "") { it.rep }})$ret"
   }
+
+  /**
+   * What shows in function calling
+   */
   private val spec by lazy {
     val pre = `class`.toOption().fold({ "" }, { "$it/" })
     pre + header

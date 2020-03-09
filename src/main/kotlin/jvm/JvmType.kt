@@ -9,7 +9,7 @@ sealed class JvmType {
   abstract val toPrimative: JvmAsm
 }
 
-fun Type.toJvm() : JvmType = when(this) {
+fun Type.toJvm(): JvmType = when (this) {
   IntT -> JvmInt
   BoolT -> JvmBool
   CharT -> JvmChar
@@ -90,25 +90,29 @@ object JvmWaccPair : JvmType() {
     override val code = "new $name"
   }
 
+  class Getter internal constructor(override val mName: String) : JvmMethod(type = Virtual) {
+    override val `class` = name
+    override val args = listOf<Nothing>()
+    override val ret = JvmObject
+  }
+
+  val getFst = Getter("getFst")
+  val getSnd = Getter("getSnd")
+
+  class Setter internal constructor(override val mName: String) : JvmMethod(type = Virtual) {
+    override val `class` = name
+    override val args = listOf(JvmObject)
+    override val ret = JvmVoid
+  }
+
+  val setFst = Setter("setFst")
+  val setSnd = Setter("setSnd")
+
   val init = object : JvmMethod(type = Special) {
     override val `class` = name
     override val mName = "<init>"
     override val args = listOf(JvmObject, JvmObject)
     override val ret = JvmVoid
-  }
-
-  // TODO refactor to a getter class?
-  val getFst = object : JvmMethod(type = Virtual) {
-    override val `class` = name
-    override val mName = "getFst"
-    override val args = listOf<Nothing>()
-    override val ret = JvmObject
-  }
-  val getSnd = object : JvmMethod(type = Virtual) {
-    override val `class` = name
-    override val mName = "getSnd"
-    override val args = listOf<Nothing>()
-    override val ret = JvmObject
   }
 }
 
