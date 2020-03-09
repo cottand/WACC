@@ -11,6 +11,16 @@
 # a
 # true
 
+# begin JVM_Output
+# true
+# 10
+# 10
+# true
+# a
+# a
+# true
+# end JVM_Output
+
 # Program:
 
 begin

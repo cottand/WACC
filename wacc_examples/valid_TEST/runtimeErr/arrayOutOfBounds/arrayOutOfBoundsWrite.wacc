@@ -4,7 +4,7 @@
 # #runtime_error#
 
 # begin JVM_Output
-# Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException: Index 5 out of bounds for length 4
+# Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException:
 # end JVM_Output
 
 # Exit:
