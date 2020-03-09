@@ -35,7 +35,7 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
   val type = variable.type
   val ident = variable.ident
   override fun instr() = variable.set(rhs, scope)
-  override fun jvmInstr() = variable.store(rhs, scope)
+  override fun jvmInstr() = variable.store(rhs)
 }
 
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
@@ -75,9 +75,9 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
   }
 
   override fun jvmInstr() = when (lhs) {
-    is IdentLHS -> JvmAsm { +lhs.variable.store(rhs, scope) }
+    is IdentLHS -> JvmAsm { +lhs.variable.store(rhs) }
     is ArrayElemLHS -> JvmAsm {
-      +lhs.variable.load(scope)
+      +lhs.variable.load()
 
       lhs.indices.dropLast(1).forEach {
         +it.jvmAsm()
@@ -305,7 +305,7 @@ data class BegEnd(val body: Stat, override val scope: Scope, override val pos: P
     +end
   }
 
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = body.jvmInstr()
 }
 
 data class StatChain(val stat1: Stat, val stat2: Stat, override val scope: Scope, override val pos: Position) :

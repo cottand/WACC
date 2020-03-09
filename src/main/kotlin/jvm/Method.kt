@@ -56,7 +56,7 @@ open class DefinedMethod(
   override val asm by lazy {
     JvmAsm {
       val maxStack = 100
-      val locals = body?.scope?.localVarsSoFar()
+      val locals = body?.scope?.totalLocalVarsSoFar()
       +".method public static $header"
       +".limit stack $maxStack"
       +".limit locals ${(locals ?: 1) + 2}"

@@ -18,6 +18,9 @@ import ic.org.util.Position
 import ic.org.util.RedeclarationError
 import ic.org.util.head
 import kotlinx.collections.immutable.persistentListOf
+import java.util.*
+import kotlin.collections.HashMap
+import kotlin.collections.LinkedHashMap
 
 /**
  * Represents a WACC Scope.
@@ -28,10 +31,14 @@ import kotlinx.collections.immutable.persistentListOf
 sealed class Scope {
   abstract val progName: String
 
+  private val children = LinkedList<Scope>()
+
   /**
    * Stateful list that holds all the [Variable]s defined in this scope only (not its parents').
    */
   internal val variables = LinkedHashMap<Ident, Variable>()
+
+  operator fun contains(v: Variable) = variables.values.contains(v)
 
   /**
    * Address at which this stack begins relative to the end of the parent scope's stack.
@@ -49,8 +56,12 @@ sealed class Scope {
   @ARMGenOnly
   fun stackSizeSoFar() = variables.toList().fold(relativeStartingAddress) { stack, (_, v) -> stack + v.type.size.bytes }
 
+  /**
+   * Only called on top-level scopes.
+   */
   @JvmGenOnly
-  fun localVarsSoFar() = variables.size
+  fun totalLocalVarsSoFar(): Int = children.map(Scope::totalLocalVarsSoFar).fold(variables.size, Int::plus)
+
 
   /**
    * Returns the [Variable] associated with [ident]. If [ident] exists twice in this scope and/or
@@ -76,10 +87,10 @@ sealed class Scope {
    * creation.
    *
    * @see Scope.stackSizeSoFar
-   * @see Scope.localVarsSoFar
+   * @see Scope.totalLocalVarsSoFar
    */
   fun addVariable(pos: Position, t: Type, i: Ident) =
-    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar(), indexNo = localVarsSoFar()).let {
+    Variable(t, i, scope = this, addrFromSP = stackSizeSoFar(), indexNo = totalLocalVarsSoFar()).let {
       if (variables.put(it.ident, it) == null)
         it.valid()
       else
@@ -110,20 +121,25 @@ sealed class Scope {
         0 -> persistentListOf<Nothing>() to persistentListOf<Nothing>()
         in 1..250 -> {
           persistentListOf(SUBInstr(s = false, rd = SP, rn = SP, int8b = size)) to
-            persistentListOf(ADDInstr(s = false, rd = SP, rn = SP, int8b = size))
+              persistentListOf(ADDInstr(s = false, rd = SP, rn = SP, int8b = size))
         }
         else ->
           persistentListOf(
             regLoad,
             SUBInstr(s = false, rd = SP, rn = SP, op2 = RegOperand2(auxReg))
           ) to
-            persistentListOf(
-              regLoad,
-              ADDInstr(s = false, rd = SP, rn = SP, op2 = RegOperand2(auxReg))
-            )
+              persistentListOf(
+                regLoad,
+                ADDInstr(s = false, rd = SP, rn = SP, op2 = RegOperand2(auxReg))
+              )
       }
     Triple(beg, end, size)
   }
+
+  /**
+   * Factory method to build a nested scope from this one
+   */
+  fun nested() = ControlFlowScope(this).also { children.addLast(it) }
 }
 
 /**
@@ -163,12 +179,12 @@ data class FuncScope(val ident: Ident, val gScope: GlobalScope) : Scope() {
  * Created by [BegEnd] or by constructs like [If] and [While] inside another [Scope] (the [parent])
  *
  */
-data class ControlFlowScope(val parent: Scope) : Scope() {
+class ControlFlowScope internal constructor(val parent: Scope) : Scope() {
   override val progName = parent.progName
   // Return whatever ident is found in this scope's varMap, and look in its parent's otherwise.
   override fun getVar(ident: Ident): Option<Variable> =
     variables.getOption(ident) or
-      parent.getVar(ident)
+        parent.getVar(ident)
 
   override fun toString() = "CFScope(vars=$variables stackS=${stackSizeSoFar()} parent=$parent)"
 }
@@ -202,10 +218,15 @@ data class Variable(
    * Returns this [Variable]'s stack address with the respect to [childScope], for accessing from a nested scope.
    */
   @JvmGenOnly
-  private fun indexWithScopeOffset(childScope: Scope): Int = when (childScope) {
-    this.scope -> indexNo
-    is ControlFlowScope -> indexWithScopeOffset(childScope.parent) + childScope.variables.size
-    else -> NOT_REACHED()
+  private fun indexWithScopeOffset(): Int {
+    fun recurseUp(varScope: Scope): Int = when (varScope) {
+      is GlobalScope, is FuncScope -> indexNo
+      is ControlFlowScope -> recurseUp(varScope.parent) + varScope.parent.variables.size
+//    this.scope -> indexNo
+//    is ControlFlowScope -> indexWithScopeOffset() + childScope.variables.size
+//    else -> NOT_REACHED()
+    }
+    return recurseUp(scope)
   }
 
   /**
@@ -214,7 +235,7 @@ data class Variable(
   @ARMGenOnly
   fun set(rhs: Computable, currentScope: Scope, availableRegs: Regs = Reg.fromExpr) =
     rhs.armAsm(availableRegs) +
-      type.sizedSTR(availableRegs.head, SP.withOffset(addrWithScopeOffset(currentScope)))
+        type.sizedSTR(availableRegs.head, SP.withOffset(addrWithScopeOffset(currentScope)))
 
   /**
    * Puts this [Variable] into the register [destReg] (usually an expression register like [Reg.firstExpr])
@@ -227,13 +248,13 @@ data class Variable(
    * Loads this [Variable] from the locals to the top of the stack (like set)
    */
   @JvmGenOnly
-  fun load(currentScope: Scope) = JvmAsm { +type.sizedLOAD(indexWithScopeOffset(currentScope)) }
+  fun load() = JvmAsm { +type.sizedLOAD(indexWithScopeOffset()) }
 
   /**
    * Stores this [Variable] from the top of the stack to the locals (like get)
    */
   @JvmGenOnly
-  fun store(rhs: Computable, currentScope: Scope): JvmAsm = rhs.jvmAsm() + type.sizedSTORE(indexWithScopeOffset(currentScope))
+  fun store(rhs: Computable): JvmAsm = rhs.jvmAsm() + type.sizedSTORE(indexWithScopeOffset())
 
   override fun toString() = "($type $ident at stack+$addrFromSP)"
 }

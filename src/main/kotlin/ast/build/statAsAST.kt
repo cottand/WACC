@@ -125,7 +125,7 @@ internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
 
   is WhileDoContext -> asAst(scp)
 
-  is NewScopeContext -> ControlFlowScope(scp).let { newScope ->
+  is NewScopeContext -> scp.nested().let { newScope ->
     stat().asAst(newScope).map { BegEnd(it, scp, startPosition) }
   }
 
@@ -133,7 +133,7 @@ internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
   else -> NOT_REACHED()
 }
 
-fun WhileDoContext.asAst(scope: Scope) = ControlFlowScope(scope).let { newScope ->
+fun WhileDoContext.asAst(scope: Scope) = scope.nested().let { newScope ->
   expr().asAst(scope)
     .validate(
       { it.type is BoolT },
@@ -144,8 +144,8 @@ fun WhileDoContext.asAst(scope: Scope) = ControlFlowScope(scope).let { newScope 
 }
 
 fun IfElseContext.asAst(scope: Scope): Parsed<If> {
-  val thenScope = ControlFlowScope(scope)
-  val elseScope = ControlFlowScope(scope)
+  val thenScope = scope.nested()
+  val elseScope = scope.nested()
   val cond = expr().asAst(scope)
     .validate(
       { it.type is BoolT },

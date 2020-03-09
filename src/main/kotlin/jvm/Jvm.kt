@@ -64,7 +64,7 @@ fun Stat.jvmAsmWithPos(pos: Position = this.pos, init: JvmAsm.BuilderScope.() ->
   JvmAsm.instr(Line(pos)) + JvmAsm.BuilderScope().apply(init).build()
 
 @JvmGenOnly
-val Scope.scratchRegisterId get() = localVarsSoFar() + 1
+val Scope.scratchRegisterId get() = totalLocalVarsSoFar() + 1
 
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER)
 @MustBeDocumented
