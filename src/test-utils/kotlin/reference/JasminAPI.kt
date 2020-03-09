@@ -10,7 +10,8 @@ object JasminAPI : ReferenceEmulatorAPI {
     val progName = File(filePath).name.replace(".wacc", "")
     val folder = newFile.parentFile
     val (jOut,_) = "java -jar lib/jasmin.jar ${newFile.path}".runCommand()
-    return "java -classpath .:${JVM.classpath.dropLast(1)}:${folder.path} $progName ${JVM.classes}".runCommand().also { (out, code) ->
+    return "java -classpath .:${JVM.classpath.dropLast(1)}:${folder.path} $progName ${JVM.classes}"
+      .runCommand(input = input).also { (out, code) ->
       File("$progName.class").delete()
       newFile.delete()
       if (code == 1)

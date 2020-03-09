@@ -40,10 +40,11 @@ class JvmAsm private constructor(
   operator fun plus(other: JvmInstr) = combine(instr(other))
 
   class BuilderScope {
-    private val instructions = LinkedList<JvmAsm>()
+    val instructions = LinkedList<JvmAsm>()
 
     operator fun JvmInstr.unaryPlus() = instructions.addLast(instr(this))
     operator fun List<JvmInstr>.unaryPlus() = forEach { instructions.addLast(instr(it)) }
+    operator fun Iterable<JvmAsm>.unaryPlus() = forEach { instructions.addLast(it) }
     operator fun JvmAsm.unaryPlus() = instructions.addLast(this)
     operator fun String.unaryPlus() = instructions.addLast(instr(JvmInstr.inline(this)))
 

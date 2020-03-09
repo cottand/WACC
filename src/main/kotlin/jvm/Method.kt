@@ -44,7 +44,7 @@ object JvmSystemExit : JvmMethod(type = Static) {
 /**
  * A WACC method that has a body that compiles to bytecode
  */
-sealed class WACCMethod(type: MethodType) : JvmMethod(type) {
+abstract class WACCMethod(type: MethodType) : JvmMethod(type) {
   abstract val asm: JvmAsm
 }
 
@@ -94,7 +94,7 @@ enum class JvmReturn(override val code: String) : JvmInstr {
 val JvmType.jvmReturn
   get() = when (this) {
     JvmInt, JvmChar, JvmBool -> JvmReturn.Int
-    is JvmArray, JvmObject, JvmString, PrintStream, JvmWaccPair -> JvmReturn.Object
+    is JvmArray, JvmObject, JvmString, PrintStream, JvmWaccPair, JvmInputStream -> JvmReturn.Object
     JvmVoid -> JvmReturn.Void
   }
 

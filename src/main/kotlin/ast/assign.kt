@@ -75,7 +75,7 @@ interface Computable {
 
 sealed class AssRHS : Computable
 
-data class ReadRHS(override val type: Type) : AssRHS() {
+data class ReadRHS(override val type: Type, val scope: Scope) : AssRHS() {
   override fun armAsm(rem: Regs): ARMAsm = ARMAsm.write {
     val readFunc = when (type) {
       is IntT -> ReadInt
@@ -89,7 +89,13 @@ data class ReadRHS(override val type: Type) : AssRHS() {
     withFunction(readFunc)
   }
 
-  override fun jvmAsm() = TODO()
+  override fun jvmAsm() = JvmAsm {
+    val readfunc = if (type is IntT) JvmReadInt(scope) else JvmReadChar(scope)
+
+    +readfunc.invoke
+    withMethod(readfunc)
+    //TODO: make sure that we don't duplicate function definitions at each call... should be a set instead of list?
+  }
 }
 
 data class ExprRHS(val expr: Expr) : AssRHS(), Computable by expr {

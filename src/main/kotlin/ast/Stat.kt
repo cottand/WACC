@@ -101,8 +101,8 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
 }
 
 data class Read(val lhs: AssLHS, override val scope: Scope, override val pos: Position) : Stat() {
-  override fun instr(): ARMAsm = Assign(lhs, ReadRHS(lhs.type), scope, pos).instr()
-  override fun jvmInstr() = TODO()
+  override fun instr(): ARMAsm = Assign(lhs, ReadRHS(lhs.type, scope), scope, pos).instr()
+  override fun jvmInstr() = Assign(lhs, ReadRHS(lhs.type, scope), scope, pos).jvmInstr()
 }
 
 data class Free(val expr: Expr, override val scope: Scope, override val pos: Position) : Stat() {
