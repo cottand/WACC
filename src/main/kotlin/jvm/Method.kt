@@ -93,11 +93,9 @@ enum class JvmReturn(override val code: String) : JvmInstr {
 
 val JvmType.jvmReturn
   get() = when (this) {
-    JvmInt, JvmBool -> JvmReturn.Int
-    is JvmArray -> TODO()
-    JvmObject, JvmString, PrintStream, JvmWaccPair -> JvmReturn.Object
+    JvmInt, JvmChar, JvmBool -> JvmReturn.Int
+    is JvmArray, JvmObject, JvmString, PrintStream, JvmWaccPair -> JvmReturn.Object
     JvmVoid -> JvmReturn.Void
-    JvmChar -> TODO()
   }
 
 abstract class JvmField {
