@@ -35,7 +35,7 @@ data class Decl(val variable: Variable, val rhs: AssRHS, override val scope: Sco
   val type = variable.type
   val ident = variable.ident
   override fun instr() = variable.set(rhs, scope)
-  override fun jvmInstr() = variable.store(rhs)
+  override fun jvmInstr() = variable.store(rhs, scope)
 }
 
 data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, override val pos: Position) : Stat() {
@@ -75,9 +75,9 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
   }
 
   override fun jvmInstr() = when (lhs) {
-    is IdentLHS -> JvmAsm { +lhs.variable.store(rhs) }
+    is IdentLHS -> JvmAsm { +lhs.variable.store(rhs, scope) }
     is ArrayElemLHS -> JvmAsm {
-      +lhs.variable.load()
+      +lhs.variable.load(scope)
 
       lhs.indices.dropLast(1).forEach {
         +it.jvmAsm()

@@ -112,7 +112,7 @@ data class IdentExpr(val vari: Variable, val scope: Scope) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
   override fun armAsm(rem: Regs): ARMAsm = ARMAsm.instr(vari.get(destReg = rem.head, currentScope = scope))
-  override fun jvmAsm() = vari.load()  // TODO is it just load?
+  override fun jvmAsm() = vari.load(scope)  // TODO is it just load?
   override val weight = stackAccess
 }
 
@@ -150,7 +150,7 @@ data class ArrayElemExpr internal constructor(
   }).withFunction(CheckArrayBounds.body)
 
   override fun jvmAsm() = JvmAsm {
-    +variable.load()
+    +variable.load(scope)
     exprs.forEachIndexed { i, expr ->
       +expr.jvmAsm()
       // If the array is empty, we force the ArrayOutOfBoundsException

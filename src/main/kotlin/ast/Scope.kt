@@ -191,9 +191,20 @@ data class Variable(
   /**
    * Returns this [Variable]'s stack address with the respect to [childScope], for accessing from a nested scope.
    */
+  @ARMGenOnly
   private fun addrWithScopeOffset(childScope: Scope): Int = when (childScope) {
     this.scope -> addrFromSP
     is ControlFlowScope -> addrWithScopeOffset(childScope.parent) + childScope.stackSizeSoFar()
+    else -> NOT_REACHED()
+  }
+
+  /**
+   * Returns this [Variable]'s stack address with the respect to [childScope], for accessing from a nested scope.
+   */
+  @JvmGenOnly
+  private fun indexWithScopeOffset(childScope: Scope): Int = when (childScope) {
+    this.scope -> indexNo
+    is ControlFlowScope -> indexWithScopeOffset(childScope.parent) + childScope.variables.size
     else -> NOT_REACHED()
   }
 
@@ -216,13 +227,13 @@ data class Variable(
    * Loads this [Variable] from the locals to the top of the stack (like set)
    */
   @JvmGenOnly
-  fun load() = JvmAsm { +type.sizedLOAD(indexNo) }
+  fun load(currentScope: Scope) = JvmAsm { +type.sizedLOAD(indexWithScopeOffset(currentScope)) }
 
   /**
    * Stores this [Variable] from the top of the stack to the locals (like get)
    */
   @JvmGenOnly
-  fun store(rhs: Computable): JvmAsm = rhs.jvmAsm() + type.sizedSTORE(indexNo)
+  fun store(rhs: Computable, currentScope: Scope): JvmAsm = rhs.jvmAsm() + type.sizedSTORE(indexWithScopeOffset(currentScope))
 
   override fun toString() = "($type $ident at stack+$addrFromSP)"
 }
