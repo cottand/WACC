@@ -81,7 +81,7 @@ data class Assign(val lhs: AssLHS, val rhs: AssRHS, override val scope: Scope, o
 
       lhs.indices.dropLast(1).forEach {
         +it.jvmAsm()
-        +ALOAD(type = rhs.type.toJvm())
+        +ALOAD(type = JvmArray(JvmObject))
       }
       +lhs.indices.last().jvmAsm()
       +rhs.jvmAsm()

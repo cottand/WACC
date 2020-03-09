@@ -1,7 +1,5 @@
 package ic.org.jvm
 
-import kotlin.reflect.jvm.internal.impl.metadata.jvm.deserialization.JvmProtoBufUtil
-
 data class ILOAD(val varIndex: Int) : JvmInstr {
   override val code = "iload $varIndex"
 }
@@ -17,7 +15,7 @@ data class ASTORE(val varIndex: Int? = null, val type: JvmType = JvmObject) : Jv
     is JvmBool -> "b"
     is JvmArray -> "a"
     else -> ""
-  } + if (varIndex == null)  "astore" else "astore $varIndex"}
+  } + if (varIndex == null) "astore" else "astore $varIndex"}
 
 data class ALOAD(val varIndex: Int? = null, val type: JvmType = JvmObject) : JvmInstr {
   override val code = when(type) {
@@ -26,7 +24,7 @@ data class ALOAD(val varIndex: Int? = null, val type: JvmType = JvmObject) : Jvm
     is JvmBool -> "b"
     is JvmArray -> "a"
     else -> ""
-  } + if (varIndex == null)  "aload" else "aload $varIndex"
+  } + if (varIndex == null) "aload" else "aload $varIndex"
 }
 
 sealed class LDC : JvmInstr {
