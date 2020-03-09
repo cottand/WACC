@@ -49,7 +49,9 @@ object JvmObject : JvmType() {
 object JvmString : JvmType() {
   override val rep = "Ljava/lang/String;"
   override val toNonPrimative = JvmAsm.empty
-  override val toPrimative = JvmAsm.empty
+  override val toPrimative = JvmAsm {
+    +CheckCast("Ljava/lang/String")
+  }
 }
 
 object JvmVoid : JvmType() {
@@ -80,7 +82,9 @@ object JvmWaccPair : JvmType() {
   const val name = "wacc/lang/Pair"
   override val rep = "L$name;"
   override val toNonPrimative = JvmAsm.empty
-  override val toPrimative = JvmAsm.empty
+  override val toPrimative = JvmAsm {
+    +CheckCast("wacc/lang/Pair")
+  }
 
   val new = object : JvmInstr {
     override val code = "new $name"
