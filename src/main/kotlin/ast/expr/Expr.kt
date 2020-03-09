@@ -279,7 +279,12 @@ data class BinaryOperExpr internal constructor(
         +expr2.armAsm(next prepend (dest prepend rest))
         +expr1.armAsm(dest prepend rest)
       }
-      +binaryOper.code(dest, next)
+
+      //+binaryOper.code(dest, next)
+      +when(binaryOper) {
+        is EqualityBinOp -> binaryOper.equalityARMAsm(dest, next, expr1.type, expr2.type)
+        else -> binaryOper.code(dest, next)
+      }
     })
   }
 

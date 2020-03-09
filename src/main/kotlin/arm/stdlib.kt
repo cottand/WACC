@@ -204,3 +204,8 @@ object FreeFunc : StdFunc() {
     withFunction(RuntimeError)
   }
 }
+
+object StrcmpStdFunc : StdFunc() {
+  override val name = "strcmp"
+  override val body = ARMAsm.empty
+}

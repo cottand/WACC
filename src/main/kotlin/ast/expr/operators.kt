@@ -1,20 +1,7 @@
 package ic.org.ast.expr
 
 import arrow.core.None
-import ic.org.arm.ASRImmOperand2
-import ic.org.arm.CheckDivByZero
-import ic.org.arm.EQCond
-import ic.org.arm.GECond
-import ic.org.arm.GTCond
-import ic.org.arm.Immed_5
-import ic.org.arm.LECond
-import ic.org.arm.LTCond
-import ic.org.arm.AsmLabel
-import ic.org.arm.NECond
-import ic.org.arm.OverflowException
-import ic.org.arm.Reg
-import ic.org.arm.RegOperand2
-import ic.org.arm.VSCond
+import ic.org.arm.*
 import ic.org.arm.instr.ADDInstr
 import ic.org.arm.instr.ANDInstr
 import ic.org.arm.instr.BLInstr
@@ -119,7 +106,7 @@ sealed class BinaryOper {
    */
   abstract fun code(dest: Reg, r2: Reg): ARMAsm
 
-  abstract fun jvmAsm() : JvmAsm
+  abstract fun jvmAsm(): JvmAsm
 }
 
 // (int, int) -> int:
@@ -207,7 +194,7 @@ object PlusBO : IntBinOp() {
     withFunction(OverflowException.body)
   }
 
-  override fun jvmAsm() = JvmAsm  {
+  override fun jvmAsm() = JvmAsm {
     +jvmCheckIntegerOverflowBO(PlusBO)
     +IADD
   }
@@ -315,37 +302,46 @@ object LeqBO : CompBinOp() {
 sealed class EqualityBinOp : BinaryOper() {
   override val validArgs: (Type, Type) -> Boolean = { b1, b2 ->
     check<BoolT>(b1, b2) ||
-      check<IntT>(b1, b2) ||
-      check<CharT>(b1, b2) ||
-      check<StringT>(b1, b2) ||
-      check<AnyPairTs>(b1, b2) ||
-      check<ArrayT>(b1, b2)
+            check<IntT>(b1, b2) ||
+            check<CharT>(b1, b2) ||
+            check<StringT>(b1, b2) ||
+            check<AnyPairTs>(b1, b2) ||
+            check<ArrayT>(b1, b2)
   }
   override val validReturn: (Type) -> Boolean = { it is BoolT }
   override val inTypes = listOf(IntT, BoolT, CharT, StringT, AnyArrayT(), AnyPairTs())
   override val retType = BoolT
 
+  override fun code(dest: Reg, r2: Reg) = NOT_REACHED()
   override fun jvmAsm() = NOT_REACHED()
 
-   abstract fun equalityJvmAsm(t1: Type, t2: Type): JvmAsm
+  abstract fun equalityARMAsm(dest: Reg, r2: Reg, t1: Type, t2: Type): ARMAsm
+  abstract fun equalityJvmAsm(t1: Type, t2: Type): JvmAsm
 }
 
 object EqBO : EqualityBinOp() {
   override fun toString(): String = "=="
-  override fun code(dest: Reg, r2: Reg) =
-    ARMAsm.write {
+  override fun equalityARMAsm(dest: Reg, r2: Reg, t1: Type, t2: Type) = ARMAsm.write {
+    if (t1 == StringT && t2 == StringT) {
+      withFunction(StrcmpStdFunc)
+      +MOVInstr(None, false, Reg(0), dest)
+      +MOVInstr(None, false, Reg(1), r2)
+      +BLInstr(StrcmpStdFunc.label)
+    } else {
       +CMPInstr(None, dest, RegOperand2(r2))
-      +MOVInstr(cond = EQCond, rd = dest, imm8b = 1)
-      +MOVInstr(cond = NECond, rd = dest, imm8b = 0)
     }
+    +MOVInstr(cond = EQCond, rd = dest, imm8b = 1)
+    +MOVInstr(cond = NECond, rd = dest, imm8b = 0)
+  }
 
   override fun equalityJvmAsm(t1: Type, t2: Type): JvmAsm = JvmAsm {
     val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
     val labelSkip = JvmLabel("L_SKIP_" + shortRandomUUID())
 
     if ((t1 == IntT && t2 == IntT) ||
-        (t1 == CharT && t2 == CharT) ||
-        (t1 == BoolT && t2 == BoolT)) {
+      (t1 == CharT && t2 == CharT) ||
+      (t1 == BoolT && t2 == BoolT)
+    ) {
       +IF_ICMPEQ(labelTrue)
     } else {
       +IF_ACMPEQ(labelTrue)
@@ -361,12 +357,18 @@ object EqBO : EqualityBinOp() {
 
 object NeqBO : EqualityBinOp() {
   override fun toString(): String = "!="
-  override fun code(dest: Reg, r2: Reg) =
-    ARMAsm.write {
+  override fun equalityARMAsm(dest: Reg, r2: Reg, t1: Type, t2: Type) = ARMAsm.write {
+    if (t1 == StringT && t2 == StringT) {
+      withFunction(StrcmpStdFunc)
+      +MOVInstr(None, false, Reg(0), dest)
+      +MOVInstr(None, false, Reg(1), r2)
+      +BLInstr(StrcmpStdFunc.label)
+    } else {
       +CMPInstr(None, dest, RegOperand2(r2))
-      +MOVInstr(cond = NECond, rd = dest, imm8b = 1)
-      +MOVInstr(cond = EQCond, rd = dest, imm8b = 0)
     }
+    +MOVInstr(cond = NECond, rd = dest, imm8b = 1)
+    +MOVInstr(cond = EQCond, rd = dest, imm8b = 0)
+  }
 
   override fun equalityJvmAsm(t1: Type, t2: Type) = JvmAsm {
     val labelTrue = JvmLabel("L_TRUE_" + shortRandomUUID())
@@ -374,7 +376,8 @@ object NeqBO : EqualityBinOp() {
 
     if ((t1 == IntT && t2 == IntT) ||
       (t1 == CharT && t2 == CharT) ||
-      (t1 == BoolT && t2 == BoolT)) {
+      (t1 == BoolT && t2 == BoolT)
+    ) {
       +IF_ICMPNE(labelTrue)
     } else {
       +IF_ACMPNE(labelTrue)
