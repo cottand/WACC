@@ -1,11 +1,7 @@
 package ic.org.jvm
 
-import com.sun.org.apache.bcel.internal.generic.IRETURN
-import ic.org.JVM
-import ic.org.ast.GlobalScope
 import ic.org.ast.Scope
 import ic.org.util.shortRandomUUID
-import javax.swing.ImageIcon
 
 data class JvmSystemPrintFunc(val type: JvmType) : JvmMethod() {
   override val descriptor = "java/io/PrintStream/print"
@@ -43,13 +39,7 @@ object JvmSystemIn : JvmField() {
   override val name = "java/lang/System/in"
 }
 
-object JvmInputStreamReadChar : JvmMethod() {
-  override val descriptor = "java/io/InputStream/read"
-  override val args = listOf<Nothing>()
-  override val ret = JvmChar
-}
-
-object JvmInputStreamReadInt : JvmMethod() {
+object JvmInputStreamRead : JvmMethod() {
   override val descriptor = "java/io/InputStream/read"
   override val args = listOf<Nothing>()
   override val ret = JvmInt
@@ -58,53 +48,66 @@ object JvmInputStreamReadInt : JvmMethod() {
 sealed class JvmSystemReadFunc() : WACCMethod() {
   override val args = listOf<Nothing>()
   abstract val scope: Scope
+  override val invoke by lazy { JvmAsm.instr(InvokeStatic("${scope.progName}/$spec")) }
 
   val maxStack = 10 // TODO change to lower?
-  val locals = 10 // TODO change to lower
-  protected val retIndex = 1
-  protected val currIndex = 2
-  private val nextCharLabel = JvmLabel("next_char_" + shortRandomUUID())
-  private val retLabel = JvmLabel("return_" + shortRandomUUID())
-  private val delimiters = charArrayOf(' ')
+  val maxLocals = 3 // TODO change to lower
+
+  protected val locals = (0 until maxLocals).iterator()
+  protected val retLocal = locals.next()
+  protected val currLocal = locals.next()
+
+  protected val nextCharLabel = JvmLabel("next_char_" + shortRandomUUID())
+  protected val retLabel = JvmLabel("return_" + shortRandomUUID())
+
+  private val delimiters = charArrayOf(' ', '\n')
 
   override val asm by lazy {
     JvmAsm.write {
       +".method public static $spec"
-      +".limit locals $locals"
+      +".limit locals $maxLocals"
       +".limit stack $maxStack"
+      +pre()
       +LDC(0)
-      +ISTORE(retIndex)
+      +ISTORE(retLocal)
       +nextCharLabel.code
       +GetStatic(JvmSystemIn, InputStream)
-      +InvokeVirtual("java/io/InputStream/read()I")
-      +ISTORE(currIndex)
-//      +ILOAD(currIndex) //TODO may want to load here but decrease stack later?
+      +InvokeVirtual(JvmInputStreamRead)
+      +ISTORE(currLocal)
       +delimit()
-      +parseChar()
+      +ILOAD(currLocal)
+      +parse()
+      +ISTORE(retLocal)
       +GOTO(nextCharLabel)
       +retLabel.code
-      +ILOAD(retIndex)
+      +ILOAD(retLocal)
+      +post()
       +ret.jvmReturn
       +".end method"
     }
   }
 
+  // initial setup of any relevant variables
+  open fun pre() : JvmAsm = JvmAsm.empty
+
+  // ..., value1 -> ..., value2
+  open fun parse(): JvmAsm = JvmAsm.empty
+
+  // ..., value1 -> ..., value2
+  open fun post() : JvmAsm = JvmAsm.empty
+
   private fun delimit() = delimiters.asSequence().map {
     JvmAsm.write {
-      +ILOAD(currIndex)
+      +ILOAD(currLocal)
       +LDC(it.toInt())
       +ISUB
       +IFEQ(retLabel)
     }
   }.toList()
 
-  override val invoke by lazy { JvmAsm.instr(InvokeStatic("${scope.progName}/$spec")) }
-
-  abstract fun parseChar(): JvmAsm
 }
 
 open class JvmReadChar(override val scope: Scope) : JvmSystemReadFunc() {
-  override fun parseChar() = JvmAsm.empty
   override val descriptor = "readChar"
   override val ret = JvmChar
 }
@@ -112,18 +115,39 @@ open class JvmReadChar(override val scope: Scope) : JvmSystemReadFunc() {
 open class JvmReadInt(override val scope: Scope) : JvmSystemReadFunc() {
   override val descriptor = "readInt"
   override val args = listOf<Nothing>()
+  override val ret = JvmInt
 
-  //TODO: add support for negative integers
-  override fun parseChar() = JvmAsm.write {
-    +ILOAD(currIndex)
+  private val signLocal = locals.next()
+  private val skipSignLabel = JvmLabel("sign_" + shortRandomUUID())
+
+  // assume integer is non-negative
+  override fun pre() = JvmAsm {
+    +LDC(1)
+    +ISTORE(signLocal)
+  }
+
+  override fun parse() = JvmAsm.write {
+    //check for sign
+    +LDC('-'.toInt())
+    +ISUB
+    +IFNE(skipSignLabel)
+    +LDC(-1)
+    +ISTORE(signLocal)
+    +GOTO(nextCharLabel)
+    +skipSignLabel.code
+
+    // parse integer by each digit
+    +ILOAD(currLocal)
     +LDC('0'.toInt())
     +ISUB
     +LDC(10)
-    +ILOAD(retIndex)
+    +ILOAD(retLocal)
     +IMUL
     +IADD
-    +ISTORE(retIndex)
   }
 
-  override val ret = JvmInt
+  override fun post() = JvmAsm {
+    +ILOAD(signLocal)
+    +IMUL
+  }
 }

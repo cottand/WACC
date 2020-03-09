@@ -77,7 +77,6 @@ val JvmType.jvmReturn
     JvmObject, JvmString, PrintStream, InputStream -> JvmReturn.Object
     JvmVoid -> JvmReturn.Void
     JvmBool -> TODO()
-    JvmChar -> TODO()
   }
 
 abstract class JvmField {
