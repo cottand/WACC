@@ -56,20 +56,20 @@ sealed class JvmSystemReadFunc() : WACCMethod(type = Static) {
   protected val retLocal = locals.next()
   protected val currLocal = locals.next()
 
-  protected val nextCharLabel = JvmLabel("next_char")
-  protected val retLabel = JvmLabel("return")
+  protected val nextCharLabel = JvmLabel("readNextChar")
+  protected val retLabel = JvmLabel("endOfRead")
 
   private val delimiters = charArrayOf(' ', '\n')
 
   override val asm by lazy {
     JvmAsm.write {
-      +".method public static $header"
-      +".limit locals $maxLocals"
-      +".limit stack $maxStack"
+      +JvmSpecialDirective(".method public static $header")
+      +JvmSpecialDirective(".limit locals $maxLocals")
+      +JvmSpecialDirective(".limit stack $maxStack")
       +pre()
       +LDC(0)
       +ISTORE(retLocal)
-      +nextCharLabel.code
+      +nextCharLabel
       +GetStatic(JvmSystemIn, JvmInputStream)
       +JvmInputStreamRead.invoke
       +ISTORE(currLocal)
@@ -78,11 +78,11 @@ sealed class JvmSystemReadFunc() : WACCMethod(type = Static) {
       +parse()
       +ISTORE(retLocal)
       +GOTO(nextCharLabel)
-      +retLabel.code
+      +retLabel
       +ILOAD(retLocal)
       +post()
       +ret.jvmReturn
-      +".end method"
+      +JvmSpecialDirective(".end method")
     }
   }
 
@@ -119,7 +119,7 @@ class JvmReadInt(override val scope: Scope) : JvmSystemReadFunc() {
   override val ret = JvmInt
 
   private val signLocal = locals.next()
-  private val skipSignLabel = JvmLabel("sign")
+  private val skipSignLabel = JvmLabel("skipSign")
 
   // assume integer is non-negative
   override fun pre() = JvmAsm {
@@ -135,7 +135,7 @@ class JvmReadInt(override val scope: Scope) : JvmSystemReadFunc() {
     +LDC(-1)
     +ISTORE(signLocal)
     +GOTO(nextCharLabel)
-    +skipSignLabel.code
+    +skipSignLabel
 
     // parse integer by each digit
     +ILOAD(currLocal)

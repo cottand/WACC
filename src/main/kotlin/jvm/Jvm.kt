@@ -2,6 +2,7 @@ package ic.org.jvm
 
 import ic.org.ast.Scope
 import ic.org.ast.Stat
+import ic.org.util.ARMAsm
 import ic.org.util.Position
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
@@ -17,6 +18,7 @@ interface JvmInstr {
   companion object {
     fun inline(s: String) = object : JvmInstr {
       override val code = s
+
     }
   }
 }
@@ -34,12 +36,19 @@ class JvmAsm private constructor(
   fun withMethod(m: WACCMethod): JvmAsm = JvmAsm(instrs, methods + m.asm)
   fun withMethods(ms: List<WACCMethod>) = JvmAsm(instrs, methods + ms.map { it.asm })
 
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     other as JvmAsm
     if (instrs != other.instrs) return false
     if (methods != other.methods) return false
     return true
+  }
+
+  override fun hashCode(): Int {
+    var result = instrs.hashCode()
+    result = 31 * result + methods.hashCode()
+    return result
   }
 
   fun combine(other: JvmAsm) = JvmAsm(instrs + other.instrs, methods + other.methods)
