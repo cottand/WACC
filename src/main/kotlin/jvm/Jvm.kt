@@ -16,11 +16,15 @@ interface JvmInstr {
 
   // override fun toString() = code
   companion object {
-    fun inline(s: String) = object : JvmInstr {
-      override val code = s
-
-    }
+    fun inline(s: String) = JvmStringInstr(s)
   }
+}
+
+/**
+ * Used when defining a [JvmInstr] inline by using a String literal.
+ */
+data class JvmStringInstr(val s: String) : JvmInstr {
+  override val code = s
 }
 
 data class JvmLabel(val name: String) : JvmInstr {

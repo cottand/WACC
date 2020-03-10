@@ -63,39 +63,39 @@ sealed class JvmSystemReadFunc() : WACCMethod(type = Static) {
 
   override val asm by lazy {
     JvmAsm.write {
-      +JvmSpecialDirective(".method public static $header")
-      +JvmSpecialDirective(".limit locals $maxLocals")
-      +JvmSpecialDirective(".limit stack $maxStack")
-      +pre()
+      +".method public static $header"
+      +".limit locals $maxLocals"
+      +".limit stack $maxStack"
+      +pre
       +LDC(0)
       +ISTORE(retLocal)
       +nextCharLabel
       +GetStatic(JvmSystemIn, JvmInputStream)
       +JvmInputStreamRead.invoke
       +ISTORE(currLocal)
-      +delimit()
+      +delimit
       +ILOAD(currLocal)
-      +parse()
+      +parse
       +ISTORE(retLocal)
       +GOTO(nextCharLabel)
       +retLabel
       +ILOAD(retLocal)
-      +post()
+      +post
       +ret.jvmReturn
-      +JvmSpecialDirective(".end method")
+      +".end method"
     }
   }
 
   // initial setup of any relevant variables
-  open fun pre() : JvmAsm = JvmAsm.empty
+  abstract val pre : JvmAsm
 
   // ..., value1 -> ..., value2
-  open fun parse(): JvmAsm = JvmAsm.empty
+  abstract val parse : JvmAsm
 
   // ..., value1 -> ..., value2
-  open fun post() : JvmAsm = JvmAsm.empty
+  abstract val post : JvmAsm
 
-  private fun delimit() = delimiters.asSequence().map {
+  private val delimit = delimiters.asSequence().map {
     JvmAsm.write {
       +ILOAD(currLocal)
       +LDC(it.toInt())
@@ -106,13 +106,16 @@ sealed class JvmSystemReadFunc() : WACCMethod(type = Static) {
 
 }
 
-class JvmReadChar(override val scope: Scope) : JvmSystemReadFunc() {
+data class JvmReadChar(override val scope: Scope) : JvmSystemReadFunc() {
   override val `class` = scope.progName
   override val mName = "readChar"
   override val ret = JvmChar
+  override val pre = JvmAsm.empty
+  override val parse = JvmAsm.empty
+  override val post = JvmAsm.empty
 }
 
-class JvmReadInt(override val scope: Scope) : JvmSystemReadFunc() {
+data class JvmReadInt(override val scope: Scope) : JvmSystemReadFunc() {
   override val `class` = scope.progName
   override val mName = "readInt"
   override val args = listOf<Nothing>()
@@ -122,12 +125,12 @@ class JvmReadInt(override val scope: Scope) : JvmSystemReadFunc() {
   private val skipSignLabel = JvmLabel("skipSign")
 
   // assume integer is non-negative
-  override fun pre() = JvmAsm {
+  override val pre = JvmAsm {
     +LDC(1)
     +ISTORE(signLocal)
   }
 
-  override fun parse() = JvmAsm.write {
+  override val parse = JvmAsm {
     //check for sign
     +LDC('-'.toInt())
     +ISUB
@@ -147,7 +150,7 @@ class JvmReadInt(override val scope: Scope) : JvmSystemReadFunc() {
     +IADD
   }
 
-  override fun post() = JvmAsm {
+  override val post = JvmAsm {
     +ILOAD(signLocal)
     +IMUL
   }

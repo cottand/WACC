@@ -52,7 +52,7 @@ data class Prog(val name: String, val funcs: List<Func>, val body: Stat, val glo
   }.let { prog ->
     fun JvmAsm.string(): String = instrs.joinToString(separator = "\n", postfix = "\n") {
       val margin = when (it) {
-        is JvmDirective, is JvmLabel -> "  "
+        is JvmDirective, is JvmStringInstr, is JvmLabel -> "  "
         else -> "    "
       }
       margin + it.code
