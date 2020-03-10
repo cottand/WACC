@@ -56,8 +56,8 @@ sealed class JvmSystemReadFunc() : WACCMethod(type = Static) {
   protected val retLocal = locals.next()
   protected val currLocal = locals.next()
 
-  protected val nextCharLabel = JvmLabel("next_char_" + shortRandomUUID())
-  protected val retLabel = JvmLabel("return_" + shortRandomUUID())
+  protected val nextCharLabel = JvmLabel("next_char")
+  protected val retLabel = JvmLabel("return")
 
   private val delimiters = charArrayOf(' ', '\n')
 
@@ -119,7 +119,7 @@ class JvmReadInt(override val scope: Scope) : JvmSystemReadFunc() {
   override val ret = JvmInt
 
   private val signLocal = locals.next()
-  private val skipSignLabel = JvmLabel("sign_" + shortRandomUUID())
+  private val skipSignLabel = JvmLabel("sign")
 
   // assume integer is non-negative
   override fun pre() = JvmAsm {
