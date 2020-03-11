@@ -155,3 +155,19 @@ data class JvmReadInt(override val scope: Scope) : JvmSystemReadFunc() {
     +IMUL
   }
 }
+
+object JvmReadString : JvmMethod(type = Virtual) {
+  override val `class` = "java/util/Scanner"
+  override val mName = "nextLine"
+  override val args = listOf<Nothing>()
+  override val ret = JvmString
+  private val instanceType by lazy { PrintStream }
+  override val prelude by lazy {
+    JvmAsm {
+      +NEW("java/util/Scanner")
+      +DUP
+      +GetStatic(JvmSystemIn, JvmInputStream)
+      +InvokeSpecial("java/util/Scanner/<init>(Ljava/io/InputStream;)V")
+    }
+  }
+}
