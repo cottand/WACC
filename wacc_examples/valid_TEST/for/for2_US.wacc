@@ -5,6 +5,12 @@
 # 1
 # 2
 
+# begin ARM_Output
+# 0
+# 1
+# 2
+# end ARM_Output
+
 # begin JVM_Output
 # 0
 # 1
