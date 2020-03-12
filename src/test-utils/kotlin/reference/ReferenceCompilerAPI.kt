@@ -11,6 +11,7 @@ import com.github.kittinunf.fuel.gson.responseObject
 import com.google.gson.Gson
 import ic.org.util.*
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import reference.ReferenceCompilerAPI.extractFromDelimiters
 import java.io.File
 
 interface ReferenceEmulatorAPI {
@@ -24,6 +25,9 @@ object ReferenceCompilerAPI : ReferenceEmulatorAPI {
 
   private const val jvmOutTokenBegin = "begin JVM_Output"
   private const val jvmOutTokenEnd = "end JVM_Output"
+
+  private const val armOutTokenBegin = "begin ARM_Output"
+  private const val armOutTokenEnd = "end ARM_Output"
 
   private const val delimiters = "==========================================================="
 
@@ -60,14 +64,22 @@ object ReferenceCompilerAPI : ReferenceEmulatorAPI {
       System.err.println("Could not parse exit code from reference compiler. Output:\n${out.joinLines()}\n")
       -1
     }
-    val jvmSpecOut = prog.readLines()
+    val progLines = prog.readLines()
+    val jvmSpecOut = progLines
       .extractFromDelimiters(jvmOutTokenBegin, jvmOutTokenEnd)
       .map { it.drop(2) }
       .joinLines()
       .noneIfEmpy()
       .orNull()
 
-    return RefAnswer(assembly, runtimeOut, code, jvmSpecOut)
+    val armSpecOut = progLines
+    .extractFromDelimiters(armOutTokenBegin, armOutTokenEnd)
+      .map { it.drop(2) }
+      .joinLines()
+      .noneIfEmpy()
+      .orNull()
+
+    return RefAnswer(assembly, runtimeOut, code, jvmSpecOut, armSpecOut)
   }
 
   private fun Iterable<String>.extractFromDelimiters(beg: String, end: String, dropInitial: Int = 1) =
@@ -111,7 +123,13 @@ object ReferenceCompilerAPI : ReferenceEmulatorAPI {
  * Represents an answer from the reference compiler.[out] represents the compiled assembly,
  * or the received errors.
  */
-data class RefAnswer(val assembly: String, val out: String, val code: Int, val jvmSpecificOut: String?)
+data class RefAnswer(
+  val assembly: String,
+  val out: String,
+  val code: Int,
+  val jvmSpecificOut: String?,
+  val armSpecificOut: String?
+)
 
 /**
  * Serialised JSON produced by the reference emulator

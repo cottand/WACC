@@ -92,7 +92,7 @@ class TestPrograms {
       expRef?.cancel()
       assumeFalse(e is NotImplementedError) {
         "Hit a TODO() statement trying to compile ${program.file.name}:\n${program.file.readText()}\n" +
-          "The TODO statement was found at:\n${e.stackTrace.first()}"
+            "The TODO statement was found at:\n${e.stackTrace.first()}"
       }
       // If we hit an unimplemented case, ignore this test. Otherwise, we must have crashed
       // for some other reason. So fail the test case.
@@ -108,22 +108,31 @@ class TestPrograms {
     }
     // If we are not doing only checks, also check with the reference compiler assembly output
     if (!doCheckOnly) runBlocking {
-      val (expectedAss, expectedOut, expectedCode, jvmOut) = expRef!!.await()
+      val (expectedAss, expectedOut, expectedCode, jvmOut, armOut) = expRef!!.await()
       val actualAss = res.out.getOrElse { fail("Compilation unsuccessful") }
       if (target is ARM) {
         val (actualOut, actualCode) = Ref.emulate(actualAss, filePath, input)
         println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
         println("\nCompiled WACC:\n${program.file.readText()}")
-        if (expectedOut != actualOut) {
-          println("Not matching program outputs for $canonicalPath.")
-          println("Expected" + "Actual:\n".padStart(50))
-          println(expectedOut.sideToSideWith(actualOut, pad = 50) + '\n')
-          assertEquals(expectedAss, actualAss)
-        }
-        if (expectedCode != actualCode) {
-          println("Not matching program output codes for $canonicalPath.")
-          println("Expected $expectedCode and actual: $actualCode\n")
-          assertEquals(expectedAss, actualAss)
+        if (armOut != null) {
+          if (armOut !in actualOut) {
+            println("Not matching specific JVM program outputs for $canonicalPath.")
+            println("Expected in" + "Actual:\n".padStart(50))
+            println(armOut.sideToSideWith(actualOut, pad = 50) + '\n')
+            assertEquals(expectedAss, actualAss)
+          }
+        } else {
+          if (expectedOut != actualOut) {
+            println("Not matching program outputs for $canonicalPath.")
+            println("Expected" + "Actual:\n".padStart(50))
+            println(expectedOut.sideToSideWith(actualOut, pad = 50) + '\n')
+            assertEquals(expectedAss, actualAss)
+          }
+          if (expectedCode != actualCode) {
+            println("Not matching program output codes for $canonicalPath.")
+            println("Expected $expectedCode and actual: $actualCode\n")
+            assertEquals(expectedAss, actualAss)
+          }
         }
       }
       if (target is JVM) {
@@ -131,7 +140,7 @@ class TestPrograms {
         println("Program runtime output:\n${actualOut.ifBlank { "(no output)" }}\n")
         println("\nCompiled WACC:\n${program.file.readText()}")
         if (jvmOut != null) {
-          if (jvmOut !in actualOut) assertEquals(jvmOut, actualOut) {"Bytecode:\n$actualAss"}
+          if (jvmOut !in actualOut) assertEquals(jvmOut, actualOut) { "Bytecode:\n$actualAss" }
         } else {
           assertEquals(expectedOut, actualOut)
           { "Not matching program outputs for $canonicalPath.\nBytecode:\n${actualAss.withLineNumbers()}" }
