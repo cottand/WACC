@@ -3,6 +3,10 @@
 # Output:
 # #runtime_error#
 
+# Input_particular:
+# 5
+# End of Input_particular
+
 # begin JVM_Output
 # Exception in thread "main" java.lang.NullPointerException
 # end JVM_Output

@@ -1,6 +1,8 @@
 # register machine style addition
 # Input_particular:
-# 2 3 4
+# 2
+# 3
+# 4
 # End of Input_particular
 # Output:
 # Enter the first number: #input# Enter the second number: #input# Initial value of x: #output#

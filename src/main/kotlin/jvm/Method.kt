@@ -21,11 +21,11 @@ abstract class JvmMethod(type: MethodType) {
   /**
    * What shows in function calling
    */
-  private val spec by lazy {
+  internal val spec by lazy {
     val pre = `class`.toOption().fold({ "" }, { "$it/" })
     pre + header
   }
-  val invoke by lazy { prelude + type.invoker(spec) }
+  open val invoke by lazy { prelude + type.invoker(spec) }
   open val prelude = JvmAsm.empty
 }
 

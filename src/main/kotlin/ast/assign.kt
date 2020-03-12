@@ -90,11 +90,13 @@ data class ReadRHS(override val type: Type, val scope: Scope) : AssRHS() {
   }
 
   override fun jvmAsm() = JvmAsm {
-    val readfunc = if (type is IntT) JvmReadInt(scope) else JvmReadChar(scope)
-
-    +readfunc.invoke
-    withMethod(readfunc)
-    //TODO: make sure that we don't duplicate function definitions at each call... should be a set instead of list?
+    val readFunc = when(type) {
+      is IntT -> JvmReadInt
+      is CharT -> JvmReadChar
+      is StringT -> JvmReadString
+      else -> NOT_REACHED()
+    }
+    +readFunc.invoke
   }
 }
 
