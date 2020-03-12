@@ -55,6 +55,7 @@ FI: 'fi';
 THEN: 'then';
 ELSE: 'else';
 WHILE: 'while';
+FOR: 'for';
 DO: 'do';
 DONE: 'done';
 IS: 'is';
