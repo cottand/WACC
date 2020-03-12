@@ -312,7 +312,20 @@ data class For(
   override val pos: Position
 ) : Stat() {
   override fun instr() = TODO()
-  override fun jvmInstr() = TODO()
+  override fun jvmInstr() = JvmAsm {
+    val uuid = shortRandomUUID()
+    val bodyLabel = JvmLabel("ForBody_$uuid")
+    val condLabel = JvmLabel("ForCond_$uuid")
+
+    +init.jvmInstr()
+    +GOTO(condLabel)
+    +bodyLabel
+    +body.jvmInstr()
+    +incr.jvmInstr()
+    +condLabel
+    +cond.jvmAsm()
+    +IFNE(bodyLabel)
+  }
 }
 
 data class BegEnd(val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
