@@ -1,3 +1,5 @@
+@file:Suppress("ClassName")
+
 package ic.org.jvm
 
 sealed class StackInstr(override val code: String) : JvmInstr

@@ -11,25 +11,25 @@ data class ISTORE(val varIndex: Int) : JvmInstr {
   override val code = "istore $varIndex"
 }
 
-data class ASTORE constructor(val varIndex: Int? = null, val type: JvmType = JvmObject) : JvmInstr {
-  override val code = when(type) {
+data class ASTORE(val varIndex: Int? = null, val type: JvmType = JvmObject) : JvmInstr {
+  override val code = when (type) {
     is JvmInt -> "i"
     is JvmChar -> "c"
     is JvmBool -> "b"
     is JvmArray -> "a"
     else -> ""
-  } + if (varIndex == null)  "astore" else "astore $varIndex"
+  } + if (varIndex == null) "astore" else "astore $varIndex"
 
 }
 
-data class ALOAD constructor(val varIndex: Int? = null, val type: JvmType = JvmObject) : JvmInstr {
-  override val code = when(type) {
+data class ALOAD(val varIndex: Int? = null, val type: JvmType = JvmObject) : JvmInstr {
+  override val code = when (type) {
     is JvmInt -> "i"
     is JvmChar -> "c"
     is JvmBool -> "b"
     is JvmArray -> "a"
     else -> ""
-  } + if (varIndex == null)  "aload" else "aload $varIndex"
+  } + if (varIndex == null) "aload" else "aload $varIndex"
 /*
   companion object {
     operator fun invoke(index: Int? = null, type: JvmType = JvmObject) = when(index) {
@@ -52,7 +52,7 @@ sealed class LDC : JvmInstr {
 
   companion object {
     operator fun invoke(constant: Int) = LDCInt(constant)
-    operator fun invoke(constant: String) = LDCString('"'+constant+'"')
+    operator fun invoke(constant: String) = LDCString('"' + constant + '"')
     operator fun invoke(constant: Char) = LDCInt(constant.toInt())
   }
 }

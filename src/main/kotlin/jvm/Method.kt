@@ -98,23 +98,18 @@ val JvmType.jvmReturn
     JvmVoid -> JvmReturn.Void
   }
 
-abstract class JvmField {
-  abstract val name: String
-  override fun toString() = name
-}
+abstract class JvmField(val name: String)
 
 data class GetStatic(val staticField: JvmField, val type: JvmType) : JvmInstr {
-  override val code = "getstatic $staticField $type"
+  override val code = "getstatic ${staticField.name} ${type.rep}"
 }
 
-data class InvokeStatic(val spec: String) : JvmInstr {
-  override val code = "invokestatic $spec"
+sealed class Invoke(mnemonic: String, spec: String) : JvmInstr {
+  override val code = "$mnemonic $spec"
 }
 
-data class InvokeVirtual(val spec: String) : JvmInstr {
-  override val code = "invokevirtual $spec"
-}
+data class InvokeStatic(val spec: String) : Invoke("invokestatic", spec)
 
-data class InvokeSpecial(val spec: String) : JvmInstr {
-  override val code = "invokespecial $spec"
-}
+data class InvokeVirtual(val spec: String) : Invoke("invokevirtual", spec)
+
+data class InvokeSpecial(val spec: String) : Invoke("invokespecial", spec)

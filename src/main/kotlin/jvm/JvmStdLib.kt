@@ -31,13 +31,9 @@ data class JvmSystemPrintlnFunc(val type: JvmType) : JvmMethod(type = Virtual) {
   }
 }
 
-object JvmSystemOut : JvmField() {
-  override val name = "java/lang/System/out"
-}
+object JvmSystemOut : JvmField("java/lang/System/out")
 
-object JvmSystemIn : JvmField() {
-  override val name = "java/lang/System/in"
-}
+object JvmSystemIn : JvmField("java/lang/System/in")
 
 sealed class JvmSystemReadFunc : JvmMethod(type = Virtual) {
   override val `class` = "java/util/Scanner"

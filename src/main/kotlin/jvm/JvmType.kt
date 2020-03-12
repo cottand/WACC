@@ -4,7 +4,6 @@ import ic.org.ast.*
 
 sealed class JvmType {
   abstract val rep: String
-  override fun toString() = rep
   abstract val toNonPrimative: JvmAsm
   abstract val toPrimative: JvmAsm
 }
