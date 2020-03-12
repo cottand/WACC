@@ -303,6 +303,50 @@ data class While(val cond: Expr, val body: Stat, override val scope: Scope, over
   }
 }
 
+data class For(
+  val init: Stat,
+  val cond: Expr,
+  val incr: Stat,
+  val body: Stat,
+  override val scope: Scope,
+  override val pos: Position
+) : Stat() {
+  override fun instr() = ARMAsm.write {
+    val uuid = shortRandomUUID()
+    val (line, _) = pos
+    val (initScope, endScope) = body.scope.makeInstrScope()
+    val bodyLabel = AsmLabel("for_body_${uuid}_at_line_$line")
+    val condLabel = AsmLabel("for_cond_${uuid}_at_line_$line")
+
+    +init.instr()
+    +BInstr(cond = None, label = condLabel)
+    +bodyLabel
+    +initScope
+    +body.instr()
+    +endScope
+    +incr.instr()
+    +condLabel
+    +cond.eval(Reg(4))
+    +CMPInstr(cond = None, rn = Reg(4), int8b = 1) // Test whether cond == 1
+    +BInstr(cond = EQCond.some(), label = bodyLabel) // If yes, jump to body
+  }
+
+  override fun jvmInstr() = JvmAsm {
+    val uuid = shortRandomUUID()
+    val bodyLabel = JvmLabel("ForBody_$uuid")
+    val condLabel = JvmLabel("ForCond_$uuid")
+
+    +init.jvmInstr()
+    +GOTO(condLabel)
+    +bodyLabel
+    +body.jvmInstr()
+    +incr.jvmInstr()
+    +condLabel
+    +cond.jvmAsm()
+    +IFNE(bodyLabel)
+  }
+}
+
 data class BegEnd(val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() = ARMAsm.write {
     val (init, end) = body.scope.makeInstrScope()

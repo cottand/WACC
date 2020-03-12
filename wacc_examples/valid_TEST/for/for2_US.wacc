@@ -1,0 +1,20 @@
+# for loop with variable declaration in init
+
+# Output:
+# 0
+# 1
+# 2
+
+# begin JVM_Output
+# 0
+# 1
+# 2
+# end JVM_Output
+
+# Program:
+
+begin
+  for int i = 0; i < 3; i = i + 1 do
+    println i
+  done
+end

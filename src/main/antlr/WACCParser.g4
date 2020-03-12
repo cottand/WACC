@@ -19,6 +19,7 @@ stat: SKP #Skip
 | PRINTLN WS+ expr #PrintlnStat
 | IF WS* expr WS* THEN WS* stat WS* ELSE WS* stat WS* FI #IfElse
 | WHILE WS* expr WS* DO WS* stat WS* DONE #WhileDo
+| FOR WS* stat WS* SEMICOLON WS* expr WS* SEMICOLON WS* stat WS* DO WS* stat WS* DONE #ForDo
 | BEGIN WS* stat WS* END #NewScope
 | <assoc=right> stat WS* SEMICOLON WS* stat #SemiColon
 ;
