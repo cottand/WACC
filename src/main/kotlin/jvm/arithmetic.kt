@@ -1,45 +1,25 @@
 package ic.org.jvm
 
-object INEG : JvmInstr {
-  override val code = "ineg"
-}
+sealed class ArithmeticInstr(override val code: String) : JvmInstr
 
-object LNEG : JvmInstr {
-  override val code = "lneg"
-}
+object INEG : ArithmeticInstr("ineg")
 
-object IADD : JvmInstr {
-  override val code = "iadd"
-}
+object LNEG : ArithmeticInstr("lneg")
 
-object LADD : JvmInstr {
-  override val code = "ladd"
-}
+object IADD : ArithmeticInstr("iadd")
 
-object ISUB : JvmInstr {
-  override val code = "isub"
-}
+object LADD : ArithmeticInstr("ladd")
 
-object LSUB : JvmInstr {
-  override val code = "lsub"
-}
+object ISUB : ArithmeticInstr("isub")
 
-object IMUL : JvmInstr {
-  override val code = "imul"
-}
+object LSUB : ArithmeticInstr("lsub")
 
-object LMUL : JvmInstr {
-  override val code = "lmul"
-}
+object IMUL : ArithmeticInstr("imul")
 
-object IDIV : JvmInstr {
-  override val code = "idiv"
-}
+object LMUL : ArithmeticInstr("lmul")
 
-object IREM : JvmInstr {
-  override val code = "irem"
-}
+object IDIV : ArithmeticInstr("idiv")
 
-object ARRAYLENGTH : JvmInstr {
-  override val code = "arraylength"
-}
+object IREM : ArithmeticInstr("irem")
+
+object ARRAYLENGTH : ArithmeticInstr("arraylength")
