@@ -53,7 +53,7 @@ class TestPrograms {
     private const val testARM = false
     private const val defaultInput = "Hello"
     private const val ignoreJVMKeyword = "NO_JVM"
-    private val target: Target = JVM
+    private val target: Target = ARM
   }
 
   private fun skipIfIgnored(prog: WACCProgram) {
