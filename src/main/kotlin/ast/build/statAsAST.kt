@@ -17,31 +17,7 @@ import antlr.WACCParser.WhileDoContext
 import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.ast.AnyArrayT
-import ic.org.ast.AnyPairTs
-import ic.org.ast.Assign
-import ic.org.ast.BegEnd
-import ic.org.ast.BoolT
-import ic.org.ast.CharT
-import ic.org.ast.ControlFlowScope
-import ic.org.ast.Decl
-import ic.org.ast.Exit
-import ic.org.ast.Free
-import ic.org.ast.GlobalScope
-import ic.org.ast.Ident
-import ic.org.ast.If
-import ic.org.ast.IntT
-import ic.org.ast.PairT
-import ic.org.ast.Print
-import ic.org.ast.Println
-import ic.org.ast.Read
-import ic.org.ast.Return
-import ic.org.ast.Scope
-import ic.org.ast.Skip
-import ic.org.ast.Stat
-import ic.org.ast.StatChain
-import ic.org.ast.StringT
-import ic.org.ast.While
+import ic.org.ast.*
 import ic.org.util.ControlFlowTypeError
 import ic.org.util.InvalidReturn
 import ic.org.util.NOT_REACHED
@@ -91,9 +67,9 @@ internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
   }
 
   is ReadStatContext -> assign_lhs().asAst(scp)
-    .validate({ it.type is IntT || it.type is StringT || it.type is CharT },
+    .validate({ it.type is IntT || it.type is StringT || it.type is CharT || (it.type is ArrayT && (it.type as ArrayT).type is CharT) },
       {
-        val supported = listOf(IntT, StringT, CharT)
+        val supported = listOf(IntT, CharT, StringT, ArrayT.make(CharT))
         TypeError(assign_lhs().startPosition, supported, it.type, "read")
       })
     .map { Read(it, scp, startPosition) }

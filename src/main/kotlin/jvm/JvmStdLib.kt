@@ -73,3 +73,13 @@ object JvmReadString : JvmSystemReadFunc() {
   override val ret = JvmString
   override val post = JvmAsm.empty
 }
+
+object JvmReadCharArray : JvmSystemReadFunc() {
+  override val mName = "nextLine"
+  override val ret = JvmString
+  override val post by lazy {
+    JvmAsm {
+      +InvokeVirtual("java/lang/String/toCharArray()[C")
+    }
+  }
+}

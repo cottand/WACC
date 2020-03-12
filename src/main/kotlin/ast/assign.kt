@@ -94,6 +94,7 @@ data class ReadRHS(override val type: Type, val scope: Scope) : AssRHS() {
       is IntT -> JvmReadInt
       is CharT -> JvmReadChar
       is StringT -> JvmReadString
+      is ArrayT -> if(type.type is CharT) JvmReadCharArray else NOT_REACHED()
       else -> NOT_REACHED()
     }
     +readFunc.invoke
