@@ -90,16 +90,9 @@ data class ReadRHS(override val type: Type, val scope: Scope) : AssRHS() {
   }
 
   override fun jvmAsm() = JvmAsm {
-   /* val readfunc = when (type) {
-      is IntT -> JvmReadInt(scope)
-      is CharT -> JvmReadChar(scope)
-      //is StrintT -> JvmReadString
-      else -> NOT_REACHED()
-    }
-
-    +readfunc.invoke
-    withMethod(readfunc)*/
     val readFunc = when(type) {
+      is IntT -> JvmReadInt
+      is CharT -> JvmReadChar
       is StringT -> JvmReadString
       else -> NOT_REACHED()
     }

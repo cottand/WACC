@@ -39,135 +39,41 @@ object JvmSystemIn : JvmField() {
   override val name = "java/lang/System/in"
 }
 
-object JvmInputStreamRead : JvmMethod(type = Virtual) {
-  override val `class` = "java/io/InputStream"
-  override val mName = "read"
-  override val args = listOf<Nothing>()
-  override val ret = JvmInt
-}
-
-sealed class JvmSystemReadFunc() : WACCMethod(type = Static) {
-  override val args = listOf<Nothing>()
-  abstract val scope: Scope
-  val maxStack = 10 // TODO change to lower?
-  val maxLocals = 3
-
-  protected val locals = (0 until maxLocals).iterator()
-  protected val retLocal = locals.next()
-  protected val currLocal = locals.next()
-
-  protected val nextCharLabel = JvmLabel("readNextChar")
-  protected val retLabel = JvmLabel("endOfRead")
-
-  private val delimiters = charArrayOf(' ', '\n')
-
-  override val asm by lazy {
-    JvmAsm.write {
-      +".method public static $header"
-      +".limit locals $maxLocals"
-      +".limit stack $maxStack"
-      +pre
-      +LDC(0)
-      +ISTORE(retLocal)
-      +nextCharLabel
-      +GetStatic(JvmSystemIn, JvmInputStream)
-      +JvmInputStreamRead.invoke
-      +ISTORE(currLocal)
-      +delimit
-      +ILOAD(currLocal)
-      +parse
-      +ISTORE(retLocal)
-      +GOTO(nextCharLabel)
-      +retLabel
-      +ILOAD(retLocal)
-      +post
-      +ret.jvmReturn
-      +".end method"
-    }
-  }
-
-  // initial setup of any relevant variables
-  abstract val pre : JvmAsm
-
-  // ..., value1 -> ..., value2
-  abstract val parse : JvmAsm
-
-  // ..., value1 -> ..., value2
-  abstract val post : JvmAsm
-
-  private val delimit = delimiters.asSequence().map {
-    JvmAsm.write {
-      +ILOAD(currLocal)
-      +LDC(it.toInt())
-      +ISUB
-      +IFEQ(retLabel)
-    }
-  }.toList()
-
-}
-
-data class JvmReadChar(override val scope: Scope) : JvmSystemReadFunc() {
-  override val `class` = scope.progName
-  override val mName = "readChar"
-  override val ret = JvmChar
-  override val pre = JvmAsm.empty
-  override val parse = JvmAsm.empty
-  override val post = JvmAsm.empty
-}
-
-data class JvmReadInt(override val scope: Scope) : JvmSystemReadFunc() {
-  override val `class` = scope.progName
-  override val mName = "readInt"
-  override val args = listOf<Nothing>()
-  override val ret = JvmInt
-
-  private val signLocal = locals.next()
-  private val skipSignLabel = JvmLabel("skipSign")
-
-  // assume integer is non-negative
-  override val pre = JvmAsm {
-    +LDC(1)
-    +ISTORE(signLocal)
-  }
-
-  override val parse = JvmAsm {
-    //check for sign
-    +LDC('-'.toInt())
-    +ISUB
-    +IFNE(skipSignLabel)
-    +LDC(-1)
-    +ISTORE(signLocal)
-    +GOTO(nextCharLabel)
-    +skipSignLabel
-
-    // parse integer by each digit
-    +ILOAD(currLocal)
-    +LDC('0'.toInt())
-    +ISUB
-    +LDC(10)
-    +ILOAD(retLocal)
-    +IMUL
-    +IADD
-  }
-
-  override val post = JvmAsm {
-    +ILOAD(signLocal)
-    +IMUL
-  }
-}
-
-object JvmReadString : JvmMethod(type = Virtual) {
+sealed class JvmSystemReadFunc : JvmMethod(type = Virtual) {
   override val `class` = "java/util/Scanner"
-  override val mName = "nextLine"
   override val args = listOf<Nothing>()
-  override val ret = JvmString
-  private val instanceType by lazy { PrintStream }
+  private val instanceType by lazy { JvmInputStream }
+  abstract val post : JvmAsm
   override val prelude by lazy {
     JvmAsm {
       +NEW("java/util/Scanner")
       +DUP
-      +GetStatic(JvmSystemIn, JvmInputStream)
+      +GetStatic(JvmSystemIn, instanceType)
       +InvokeSpecial("java/util/Scanner/<init>(Ljava/io/InputStream;)V")
     }
   }
+  override val invoke by lazy { prelude + Virtual.invoker(spec) + post }
+}
+
+object JvmReadInt : JvmSystemReadFunc() {
+  override val mName = "nextInt"
+  override val ret = JvmInt
+  override val post = JvmAsm.empty
+}
+
+object JvmReadChar : JvmSystemReadFunc() {
+  override val mName = "next"
+  override val ret = JvmString
+  override val post by lazy {
+    JvmAsm {
+      +LDC(0)
+      +InvokeVirtual("java/lang/String/charAt(I)C")
+    }
+  }
+}
+
+object JvmReadString : JvmSystemReadFunc() {
+  override val mName = "nextLine"
+  override val ret = JvmString
+  override val post = JvmAsm.empty
 }
