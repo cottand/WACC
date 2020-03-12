@@ -1,5 +1,6 @@
 package ic.org.ast.build
 
+import antlr.WACCParser
 import antlr.WACCParser.AssignContext
 import antlr.WACCParser.DeclareContext
 import antlr.WACCParser.ExitStatContext
@@ -14,34 +15,11 @@ import antlr.WACCParser.SemiColonContext
 import antlr.WACCParser.SkipContext
 import antlr.WACCParser.StatContext
 import antlr.WACCParser.WhileDoContext
+import antlr.WACCParser.ForDoContext
 import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.ast.AnyArrayT
-import ic.org.ast.AnyPairTs
-import ic.org.ast.Assign
-import ic.org.ast.BegEnd
-import ic.org.ast.BoolT
-import ic.org.ast.CharT
-import ic.org.ast.ControlFlowScope
-import ic.org.ast.Decl
-import ic.org.ast.Exit
-import ic.org.ast.Free
-import ic.org.ast.GlobalScope
-import ic.org.ast.Ident
-import ic.org.ast.If
-import ic.org.ast.IntT
-import ic.org.ast.PairT
-import ic.org.ast.Print
-import ic.org.ast.Println
-import ic.org.ast.Read
-import ic.org.ast.Return
-import ic.org.ast.Scope
-import ic.org.ast.Skip
-import ic.org.ast.Stat
-import ic.org.ast.StatChain
-import ic.org.ast.StringT
-import ic.org.ast.While
+import ic.org.ast.*
 import ic.org.util.ControlFlowTypeError
 import ic.org.util.InvalidReturn
 import ic.org.util.NOT_REACHED
@@ -125,11 +103,14 @@ internal fun StatContext.asAst(scp: Scope): Parsed<Stat> = when (this) {
 
   is WhileDoContext -> asAst(scp)
 
+  is ForDoContext -> asAst(scp)
+
   is NewScopeContext -> scp.nested().let { newScope ->
     stat().asAst(newScope).map { BegEnd(it, scp, startPosition) }
   }
 
   is SemiColonContext -> asAst(scp)
+
   else -> NOT_REACHED()
 }
 
@@ -141,6 +122,27 @@ fun WhileDoContext.asAst(scope: Scope) = scope.nested().let { newScope ->
     .combineWith(stat().asAst(newScope)) { cond, body ->
       While(cond, body, scope, startPosition)
     }
+}
+
+fun ForDoContext.asAst(scope: Scope) : Parsed<For> {
+  val newScope = scope.nested()
+
+  val init = stat(0).asAst(scope)
+  val incr = stat(1).asAst(scope)
+  val body = stat(2).asAst(newScope)
+
+  val cond = expr().asAst(scope)
+    .validate({
+      it.type is BoolT
+    }, {
+      TypeError(startPosition, BoolT, "For condition", it)
+    })
+
+  return if (cond is Valid && init is Valid && incr is Valid && body is Valid) {
+    For(init.a, cond.a, incr.a, body.a, scope, startPosition).valid()
+  } else {
+    (init.errors + cond.errors + incr.errors + body.errors).invalid()
+  }
 }
 
 fun IfElseContext.asAst(scope: Scope): Parsed<If> {

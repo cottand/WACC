@@ -303,6 +303,18 @@ data class While(val cond: Expr, val body: Stat, override val scope: Scope, over
   }
 }
 
+data class For(
+  val init: Stat,
+  val cond: Expr,
+  val incr: Stat,
+  val body: Stat,
+  override val scope: Scope,
+  override val pos: Position
+) : Stat() {
+  override fun instr() = TODO()
+  override fun jvmInstr() = TODO()
+}
+
 data class BegEnd(val body: Stat, override val scope: Scope, override val pos: Position) : Stat() {
   override fun instr() = ARMAsm.write {
     val (init, end) = body.scope.makeInstrScope()

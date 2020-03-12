@@ -1,0 +1,15 @@
+# simple program with a for loop
+
+# Output:
+# 0
+# 1
+# 2
+
+# Program:
+
+begin
+  int i = -1;
+  for i = 0; i < 3; i = i + 1 do
+    println i
+  done
+end
