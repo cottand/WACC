@@ -10,6 +10,11 @@
 # false
 # true
 # end ARM_Output
+# begin JVM_Output
+# true
+# false
+# true
+# end JVM_Output
 # Program:
 
 begin

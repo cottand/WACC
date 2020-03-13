@@ -103,19 +103,6 @@ abstract class JvmField(val name: String, val type: JvmType) {
   val getStatic by lazy { GetStatic(this) }
 }
 
-object InScanner : JvmField("wacc/lang/Utils/inScanner", Scanner)
-
-///**
-// * Represents a static field in main
-// */
-//sealed class DeclaredStaticField(val classN: String, val fName: String, val jType: JvmType) :
-//  JvmField(name = "$classN/$fName", type = jType) {
-//  abstract val clinit: JvmAsm
-////  companion object {
-////    @JvmStatic val scanner = Scanner(System.`in`)
-////  }
-//}
-
 data class GetStatic(val staticField: JvmField) : JvmInstr {
   override val code = "getstatic ${staticField.name} ${staticField.type.rep}"
 }

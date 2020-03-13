@@ -19,6 +19,15 @@
 # They are the same string.
 # end ARM_Output
 #
+# begin JVM_Output
+# s1 is Hi
+# s2 is Hi
+# They are the same string.
+# Now make s1 = s2
+# s1 is Hi
+# s2 is Hi
+# They are the same string.
+# end JVM_Output
 
 # Program:
 

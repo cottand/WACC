@@ -1,15 +1,15 @@
 package ic.org.jvm
 
+object InScanner : JvmField("wacc/lang/Utils/inScanner", Scanner)
+
 data class JvmSystemPrintFunc(val type: JvmType) : JvmMethod(type = Virtual) {
   override val `class` = "java/io/PrintStream"
   override val mName = "print"
   override val args = listOf(type)
   override val ret = JvmVoid
-  override val prelude by lazy {
-    JvmAsm {
-      +JvmSystemOut.getStatic
-      +SWAP
-    }
+  override val prelude = JvmAsm {
+    +JvmSystemOut.getStatic
+    +SWAP
   }
 }
 
@@ -18,17 +18,13 @@ data class JvmSystemPrintlnFunc(val type: JvmType) : JvmMethod(type = Virtual) {
   override val mName = "println"
   override val args = listOf(type)
   override val ret = JvmVoid
-  override val prelude by lazy {
-    JvmAsm {
-      +JvmSystemOut.getStatic
-      +SWAP
-    }
+  override val prelude = JvmAsm {
+    +JvmSystemOut.getStatic
+    +SWAP
   }
 }
 
 object JvmSystemOut : JvmField("java/lang/System/out", PrintStream)
-
-object JvmSystemIn : JvmField("java/lang/System/in", JvmInputStream)
 
 sealed class JvmSystemReadFunc : JvmMethod(type = Virtual) {
   override val `class` = "java/util/Scanner"
