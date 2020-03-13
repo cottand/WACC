@@ -1,7 +1,7 @@
 package ic.org.arm.addressing
 
-import ic.org.arm.Immed_8
 import ic.org.arm.ARMAsmInstr
+import ic.org.arm.Immed_8
 import ic.org.arm.Register
 import ic.org.arm.Sign
 

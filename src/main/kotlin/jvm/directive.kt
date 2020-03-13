@@ -9,6 +9,7 @@ object SuperObject : JvmInstr {
 }
 
 data class Line(val i: Int) : JvmInstr {
-  constructor(pos: Position): this (pos.l)
+  constructor(pos: Position) : this(pos.l)
+
   override val code = ".line $i"
 }

@@ -9,9 +9,11 @@ import com.github.kittinunf.fuel.core.FileDataPart
 import com.github.kittinunf.fuel.core.InlineDataPart
 import com.github.kittinunf.fuel.gson.responseObject
 import com.google.gson.Gson
-import ic.org.util.*
+import ic.org.util.NOT_REACHED
+import ic.org.util.createWithDirs
+import ic.org.util.joinLines
+import ic.org.util.noneIfEmpy
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import reference.ReferenceCompilerAPI.extractFromDelimiters
 import java.io.File
 
 interface ReferenceEmulatorAPI {
@@ -73,7 +75,7 @@ object ReferenceCompilerAPI : ReferenceEmulatorAPI {
       .orNull()
 
     val armSpecOut = progLines
-    .extractFromDelimiters(armOutTokenBegin, armOutTokenEnd)
+      .extractFromDelimiters(armOutTokenBegin, armOutTokenEnd)
       .map { it.drop(2) }
       .joinLines()
       .noneIfEmpy()

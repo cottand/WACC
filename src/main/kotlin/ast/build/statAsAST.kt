@@ -1,9 +1,9 @@
 package ic.org.ast.build
 
-import antlr.WACCParser
 import antlr.WACCParser.AssignContext
 import antlr.WACCParser.DeclareContext
 import antlr.WACCParser.ExitStatContext
+import antlr.WACCParser.ForDoContext
 import antlr.WACCParser.FreeStatContext
 import antlr.WACCParser.IfElseContext
 import antlr.WACCParser.NewScopeContext
@@ -15,11 +15,35 @@ import antlr.WACCParser.SemiColonContext
 import antlr.WACCParser.SkipContext
 import antlr.WACCParser.StatContext
 import antlr.WACCParser.WhileDoContext
-import antlr.WACCParser.ForDoContext
 import arrow.core.Validated.Valid
 import arrow.core.invalid
 import arrow.core.valid
-import ic.org.ast.*
+import ic.org.ast.AnyArrayT
+import ic.org.ast.AnyPairTs
+import ic.org.ast.ArrayT
+import ic.org.ast.Assign
+import ic.org.ast.BegEnd
+import ic.org.ast.BoolT
+import ic.org.ast.CharT
+import ic.org.ast.Decl
+import ic.org.ast.Exit
+import ic.org.ast.For
+import ic.org.ast.Free
+import ic.org.ast.GlobalScope
+import ic.org.ast.Ident
+import ic.org.ast.If
+import ic.org.ast.IntT
+import ic.org.ast.PairT
+import ic.org.ast.Print
+import ic.org.ast.Println
+import ic.org.ast.Read
+import ic.org.ast.Return
+import ic.org.ast.Scope
+import ic.org.ast.Skip
+import ic.org.ast.Stat
+import ic.org.ast.StatChain
+import ic.org.ast.StringT
+import ic.org.ast.While
 import ic.org.util.ControlFlowTypeError
 import ic.org.util.InvalidReturn
 import ic.org.util.NOT_REACHED
@@ -124,7 +148,7 @@ fun WhileDoContext.asAst(scope: Scope) = scope.nested().let { newScope ->
     }
 }
 
-fun ForDoContext.asAst(scope: Scope) : Parsed<For> {
+fun ForDoContext.asAst(scope: Scope): Parsed<For> {
   val newScope = scope.nested()
 
   val init = stat(0).asAst(scope)

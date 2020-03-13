@@ -5,14 +5,64 @@ import arrow.core.extensions.list.foldable.forAll
 import arrow.core.some
 import arrow.core.valid
 import ast.Sizes
-import ic.org.arm.*
+import ic.org.arm.CheckArrayBounds
+import ic.org.arm.ImmOperand2
+import ic.org.arm.Immed_5
+import ic.org.arm.Immed_8r_bs
+import ic.org.arm.LSLImmOperand2
+import ic.org.arm.OverflowException
+import ic.org.arm.Reg
+import ic.org.arm.Regs
+import ic.org.arm.SP
+import ic.org.arm.StringData
+import ic.org.arm.VSCond
 import ic.org.arm.addressing.ImmEqualLabel
 import ic.org.arm.addressing.ImmEquals32b
 import ic.org.arm.addressing.zeroOffsetAddr
-import ic.org.arm.instr.*
-import ic.org.ast.*
-import ic.org.jvm.*
-import ic.org.util.*
+import ic.org.arm.instr.ADDInstr
+import ic.org.arm.instr.BLInstr
+import ic.org.arm.instr.EORInstr
+import ic.org.arm.instr.LDRInstr
+import ic.org.arm.instr.MOVInstr
+import ic.org.arm.instr.POPInstr
+import ic.org.arm.instr.PUSHInstr
+import ic.org.arm.instr.RSBInstr
+import ic.org.arm.instr.SUBInstr
+import ic.org.ast.AnyArrayT
+import ic.org.ast.AnyPairTs
+import ic.org.ast.ArrayT
+import ic.org.ast.BoolT
+import ic.org.ast.CharT
+import ic.org.ast.Computable
+import ic.org.ast.IntT
+import ic.org.ast.Scope
+import ic.org.ast.StringT
+import ic.org.ast.Type
+import ic.org.ast.Variable
+import ic.org.jvm.ACONST_NULL
+import ic.org.jvm.ALOAD
+import ic.org.jvm.ARRAYLENGTH
+import ic.org.jvm.BIPUSH
+import ic.org.jvm.I2C
+import ic.org.jvm.INEG
+import ic.org.jvm.IXOR
+import ic.org.jvm.JvmArray
+import ic.org.jvm.JvmAsm
+import ic.org.jvm.JvmObject
+import ic.org.jvm.LDC
+import ic.org.jvm.jvmCheckIntegerOverflowUO
+import ic.org.jvm.toJvm
+import ic.org.util.ARMAsm
+import ic.org.util.IllegalArrayAccess
+import ic.org.util.NOT_REACHED
+import ic.org.util.Parsed
+import ic.org.util.Position
+import ic.org.util.TypeError
+import ic.org.util.head
+import ic.org.util.log2
+import ic.org.util.prepend
+import ic.org.util.tail
+import ic.org.util.take2OrNone
 import java.lang.Integer.max
 import java.lang.Integer.min
 
@@ -123,7 +173,7 @@ data class ArrayElemExpr internal constructor(
   override val type: Type
 ) : Expr() {
   override fun toString(): String = variable.ident.name +
-    exprs.joinToString(separator = ", ", prefix = "[", postfix = "]")
+      exprs.joinToString(separator = ", ", prefix = "[", postfix = "]")
 
   override fun armAsm(rem: Regs): ARMAsm = rem.take2OrNone.fold({
     TODO()
@@ -207,7 +257,7 @@ data class UnaryOperExpr(val unaryOper: UnaryOper, val expr: Expr) : Expr() {
     ChrUO -> expr.armAsm(rem)
   }
 
-  override fun jvmAsm() = when(unaryOper) {
+  override fun jvmAsm() = when (unaryOper) {
     NotUO -> JvmAsm {
       +expr.jvmAsm()
       +LDC(1)
@@ -281,7 +331,7 @@ data class BinaryOperExpr internal constructor(
       }
 
       //+binaryOper.code(dest, next)
-      +when(binaryOper) {
+      +when (binaryOper) {
         is EqualityBinOp -> binaryOper.equalityARMAsm(dest, next, expr1.type, expr2.type)
         else -> binaryOper.code(dest, next)
       }
@@ -293,7 +343,7 @@ data class BinaryOperExpr internal constructor(
     +expr2.jvmAsm()
 
     // If binaryOper is an Equality op, we must pass in the expr types
-    +when(binaryOper) {
+    +when (binaryOper) {
       is EqualityBinOp -> binaryOper.equalityJvmAsm(expr1.type, expr2.type)
       else -> binaryOper.jvmAsm()
     }

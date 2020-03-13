@@ -4,7 +4,6 @@ import arrow.core.getOrElse
 import arrow.core.some
 import ic.org.util.joinLines
 import ic.org.util.print
-import java.util.*
 
 fun String.sideToSideWith(other: String, pad: Int = 20) = lines().padZip(other.lines())
   .map { (ol, or) ->

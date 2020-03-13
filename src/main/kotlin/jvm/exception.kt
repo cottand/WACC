@@ -1,6 +1,11 @@
 package ic.org.jvm
 
-import ic.org.ast.expr.*
+import ic.org.ast.expr.BinaryOper
+import ic.org.ast.expr.MinusBO
+import ic.org.ast.expr.MinusUO
+import ic.org.ast.expr.MulBO
+import ic.org.ast.expr.PlusBO
+import ic.org.ast.expr.UnaryOper
 import ic.org.util.NOT_REACHED
 import ic.org.util.shortRandomUUID
 
@@ -11,7 +16,7 @@ object ATHROW : JvmInstr {
 /**
  * Add JvmAsm code to check integer underflow/overflow for binary operators
  */
-fun jvmCheckIntegerOverflowBO(op : BinaryOper) : JvmAsm {
+fun jvmCheckIntegerOverflowBO(op: BinaryOper): JvmAsm {
   val stackManipulation = JvmAsm {
     +DUP2
     +DUP_X1
@@ -33,7 +38,7 @@ fun jvmCheckIntegerOverflowBO(op : BinaryOper) : JvmAsm {
 /**
  * Add JvmAsm code to check integer underflow/overflow for unary operators
  */
-fun jvmCheckIntegerOverflowUO(op : UnaryOper) : JvmAsm {
+fun jvmCheckIntegerOverflowUO(op: UnaryOper): JvmAsm {
   val stackManipulation = JvmAsm {
     +DUP
     +I2L

@@ -4,7 +4,6 @@ import arrow.core.toOption
 import ic.org.ast.GlobalScope
 import ic.org.ast.Scope
 import ic.org.ast.Stat
-import java.util.*
 
 abstract class JvmMethod(type: MethodType) {
   internal abstract val `class`: String?

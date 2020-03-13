@@ -2,9 +2,19 @@
 
 package ic.org.ast
 
-import arrow.core.*
+import arrow.core.Option
+import arrow.core.getOption
+import arrow.core.or
+import arrow.core.toOption
+import arrow.core.valid
 import ast.Sizes
-import ic.org.arm.*
+import ic.org.arm.ARMGenOnly
+import ic.org.arm.AsmLabel
+import ic.org.arm.Reg
+import ic.org.arm.RegOperand2
+import ic.org.arm.Register
+import ic.org.arm.Regs
+import ic.org.arm.SP
 import ic.org.arm.addressing.withOffset
 import ic.org.arm.instr.ADDInstr
 import ic.org.arm.instr.LDRInstr

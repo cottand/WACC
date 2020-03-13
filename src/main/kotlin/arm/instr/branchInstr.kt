@@ -3,9 +3,9 @@ package ic.org.arm.instr
 import arrow.core.None
 import arrow.core.some
 import ic.org.arm.ARMCondInstr
+import ic.org.arm.AsmLabel
 import ic.org.arm.CondFlag
 import ic.org.arm.Flag
-import ic.org.arm.AsmLabel
 
 data class BInstr(override val cond: Flag = None, val label: AsmLabel) : ARMCondInstr() {
   constructor(label: AsmLabel) : this(None, label)

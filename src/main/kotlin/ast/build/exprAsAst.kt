@@ -16,6 +16,7 @@ import antlr.WACCParser.Unary_opContext
 import arrow.core.invalid
 import arrow.core.valid
 import ic.org.arm.Ranges
+import ic.org.ast.Scope
 import ic.org.ast.expr.AndBO
 import ic.org.ast.expr.ArrayElemExpr
 import ic.org.ast.expr.BinaryOperExpr
@@ -42,7 +43,6 @@ import ic.org.ast.expr.NullPairLit
 import ic.org.ast.expr.OrBO
 import ic.org.ast.expr.OrdUO
 import ic.org.ast.expr.PlusBO
-import ic.org.ast.Scope
 import ic.org.ast.expr.StrLit
 import ic.org.ast.expr.UnaryOper
 import ic.org.ast.expr.UnaryOperExpr

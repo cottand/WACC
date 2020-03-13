@@ -2,14 +2,13 @@ package ic.org.jvm
 
 import ic.org.ast.Scope
 import ic.org.ast.Stat
-import ic.org.util.ARMAsm
 import ic.org.util.Position
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.plus
-import java.util.LinkedList
+import java.util.*
 
 interface JvmInstr {
   val code: String
@@ -81,11 +80,13 @@ class JvmAsm private constructor(
     operator fun invoke(init: BuilderScope.() -> Unit) = write(init)
   }
 }
+
 fun Stat.jvmAsmWithPos(pos: Position = this.pos, init: JvmAsm.BuilderScope.() -> Unit) =
   JvmAsm.instr(Line(pos)) + JvmAsm.BuilderScope().apply(init).build()
 
 @JvmGenOnly
-val Scope.scratchRegisterId get() = totalLocalVarsSoFar() + 1
+val Scope.scratchRegisterId
+  get() = totalLocalVarsSoFar() + 1
 
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER)
 @MustBeDocumented

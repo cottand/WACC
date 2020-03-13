@@ -12,7 +12,15 @@ import ic.org.ast.Prog
 import ic.org.ast.build.asAst
 import ic.org.listeners.CollectingErrorListener
 import ic.org.listeners.DummyListener
-import ic.org.util.*
+import ic.org.util.Parsed
+import ic.org.util.areAllValid
+import ic.org.util.asLines
+import ic.org.util.errors
+import ic.org.util.flatMap
+import ic.org.util.head
+import ic.org.util.ifExsistsAnd
+import ic.org.util.runCommand
+import ic.org.util.tail
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTreeWalker

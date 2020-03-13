@@ -1,7 +1,21 @@
 package ic.org.ast.expr
 
 import arrow.core.None
-import ic.org.arm.*
+import ic.org.arm.ASRImmOperand2
+import ic.org.arm.AsmLabel
+import ic.org.arm.CheckDivByZero
+import ic.org.arm.EQCond
+import ic.org.arm.GECond
+import ic.org.arm.GTCond
+import ic.org.arm.Immed_5
+import ic.org.arm.LECond
+import ic.org.arm.LTCond
+import ic.org.arm.NECond
+import ic.org.arm.OverflowException
+import ic.org.arm.Reg
+import ic.org.arm.RegOperand2
+import ic.org.arm.StrcmpStdFunc
+import ic.org.arm.VSCond
 import ic.org.arm.instr.ADDInstr
 import ic.org.arm.instr.ANDInstr
 import ic.org.arm.instr.BLInstr
@@ -18,7 +32,26 @@ import ic.org.ast.CharT
 import ic.org.ast.IntT
 import ic.org.ast.StringT
 import ic.org.ast.Type
-import ic.org.jvm.*
+import ic.org.jvm.GOTO
+import ic.org.jvm.IADD
+import ic.org.jvm.IAND
+import ic.org.jvm.IDIV
+import ic.org.jvm.IF_ACMPEQ
+import ic.org.jvm.IF_ACMPNE
+import ic.org.jvm.IF_ICMPEQ
+import ic.org.jvm.IF_ICMPGE
+import ic.org.jvm.IF_ICMPGT
+import ic.org.jvm.IF_ICMPLE
+import ic.org.jvm.IF_ICMPLT
+import ic.org.jvm.IF_ICMPNE
+import ic.org.jvm.IMUL
+import ic.org.jvm.IOR
+import ic.org.jvm.IREM
+import ic.org.jvm.ISUB
+import ic.org.jvm.JvmAsm
+import ic.org.jvm.JvmLabel
+import ic.org.jvm.LDC
+import ic.org.jvm.jvmCheckIntegerOverflowBO
 import ic.org.util.ARMAsm
 import ic.org.util.NOT_REACHED
 import ic.org.util.shortRandomUUID
@@ -302,11 +335,11 @@ object LeqBO : CompBinOp() {
 sealed class EqualityBinOp : BinaryOper() {
   override val validArgs: (Type, Type) -> Boolean = { b1, b2 ->
     check<BoolT>(b1, b2) ||
-            check<IntT>(b1, b2) ||
-            check<CharT>(b1, b2) ||
-            check<StringT>(b1, b2) ||
-            check<AnyPairTs>(b1, b2) ||
-            check<ArrayT>(b1, b2)
+        check<IntT>(b1, b2) ||
+        check<CharT>(b1, b2) ||
+        check<StringT>(b1, b2) ||
+        check<AnyPairTs>(b1, b2) ||
+        check<ArrayT>(b1, b2)
   }
   override val validReturn: (Type) -> Boolean = { it is BoolT }
   override val inTypes = listOf(IntT, BoolT, CharT, StringT, AnyArrayT(), AnyPairTs())

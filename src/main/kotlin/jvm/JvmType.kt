@@ -1,6 +1,13 @@
 package ic.org.jvm
 
-import ic.org.ast.*
+import ic.org.ast.AnyArrayT
+import ic.org.ast.AnyPairTs
+import ic.org.ast.ArrayT
+import ic.org.ast.BoolT
+import ic.org.ast.CharT
+import ic.org.ast.IntT
+import ic.org.ast.StringT
+import ic.org.ast.Type
 
 sealed class JvmType {
   abstract val rep: String

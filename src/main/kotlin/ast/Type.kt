@@ -8,7 +8,11 @@ import ic.org.arm.instr.LDRBInstr
 import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.STRBInstr
 import ic.org.arm.instr.STRInstr
-import ic.org.jvm.*
+import ic.org.jvm.ALOAD
+import ic.org.jvm.ASTORE
+import ic.org.jvm.ILOAD
+import ic.org.jvm.ISTORE
+import ic.org.jvm.JvmGenOnly
 
 /**
  * Class representing one of WACC's types.
@@ -74,7 +78,7 @@ data class ArrayT private constructor(val type: Type) : AnyArrayT() {
 
   override fun matches(other: Type) =
     other is EmptyArrayT ||
-      (other is ArrayT && other.depth == depth && nestedType.matches(other.nestedType))
+        (other is ArrayT && other.depth == depth && nestedType.matches(other.nestedType))
 
   override fun toString() =
     nestedType.toString() + (0 until depth).joinToString(separator = "") { "[]" }
@@ -122,7 +126,7 @@ data class PairT(val fstT: Type, val sndT: Type) : AnyPairTs() {
   override fun toString() = "Pair($fstT, $sndT)"
   override fun matches(other: Type) =
     other is PairT && fstT.matches(other.fstT) && sndT.matches(other.sndT) ||
-      other == AnyPairTs()
+        other == AnyPairTs()
 }
 
 // <base-type>

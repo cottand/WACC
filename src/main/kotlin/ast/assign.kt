@@ -3,7 +3,15 @@ package ic.org.ast
 import arrow.core.None
 import arrow.core.firstOrNone
 import ast.Sizes
-import ic.org.arm.*
+import ic.org.arm.ARMGenOnly
+import ic.org.arm.CheckNullPointer
+import ic.org.arm.MallocStdFunc
+import ic.org.arm.ReadChar
+import ic.org.arm.ReadInt
+import ic.org.arm.Reg
+import ic.org.arm.Register
+import ic.org.arm.Regs
+import ic.org.arm.SP
 import ic.org.arm.addressing.ZeroOffsetAddrMode2
 import ic.org.arm.addressing.withOffset
 import ic.org.arm.addressing.zeroOffsetAddr
@@ -12,7 +20,18 @@ import ic.org.arm.instr.LDRInstr
 import ic.org.arm.instr.MOVInstr
 import ic.org.arm.instr.STRInstr
 import ic.org.ast.expr.Expr
-import ic.org.jvm.*
+import ic.org.jvm.ASTORE
+import ic.org.jvm.DUP
+import ic.org.jvm.JvmAsm
+import ic.org.jvm.JvmGenOnly
+import ic.org.jvm.JvmReadChar
+import ic.org.jvm.JvmReadCharArray
+import ic.org.jvm.JvmReadInt
+import ic.org.jvm.JvmReadString
+import ic.org.jvm.JvmWaccPair
+import ic.org.jvm.LDC
+import ic.org.jvm.NEWARRAY
+import ic.org.jvm.toJvm
 import ic.org.util.ARMAsm
 import ic.org.util.NOT_REACHED
 import ic.org.util.head
@@ -90,11 +109,11 @@ data class ReadRHS(override val type: Type, val scope: Scope) : AssRHS() {
   }
 
   override fun jvmAsm() = JvmAsm {
-    val readFunc = when(type) {
+    val readFunc = when (type) {
       is IntT -> JvmReadInt
       is CharT -> JvmReadChar
       is StringT -> JvmReadString
-      is ArrayT -> if(type.type is CharT) JvmReadCharArray else NOT_REACHED()
+      is ArrayT -> if (type.type is CharT) JvmReadCharArray else NOT_REACHED()
       else -> NOT_REACHED()
     }
     +readFunc.invoke
@@ -148,7 +167,7 @@ data class ArrayLit(val exprs: List<Expr>, val arrT: AnyArrayT) : AssRHS() {
       +LDC(i)
       +expr.jvmAsm()
       +ASTORE(type = exprType.toJvm())
-      if(i < exprs.size - 1) +DUP
+      if (i < exprs.size - 1) +DUP
     }
   }
 

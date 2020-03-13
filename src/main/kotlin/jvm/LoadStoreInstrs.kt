@@ -1,8 +1,5 @@
 package ic.org.jvm
 
-import java.lang.RuntimeException
-import kotlin.reflect.jvm.internal.impl.metadata.jvm.deserialization.JvmProtoBufUtil
-
 data class ILOAD(val varIndex: Int) : JvmInstr {
   override val code = "iload $varIndex"
 }
