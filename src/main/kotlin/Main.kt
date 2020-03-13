@@ -42,7 +42,7 @@ fun main(args: Array<String>) {
 
   val cmds = args.toMutableList()
   val printAssembly = cmds.remove("-a")
-  val saveToFile = !cmds.remove("-nosave")
+  val saveToFile = !(cmds.remove("-nosave") || cmds.remove("-dry"))
   val cleanAfterBuild = !cmds.remove("-noclean")
   val target = if (cmds.remove("-jvm")) JVM else ARM
   if (cmds.size != 1) {
