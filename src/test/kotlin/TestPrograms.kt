@@ -53,7 +53,6 @@ class TestPrograms {
     private const val testARM = false
     private const val defaultInput = "Hello"
     private const val ignoreJVMKeyword = "NO_JVM"
-    private val target: Target = ARM
   }
 
   private fun skipIfIgnored(prog: WACCProgram) {
@@ -78,7 +77,7 @@ class TestPrograms {
    * reference compiler's.
    */
   @ExperimentalTime
-  private fun test(program: WACCProgram, doCheckOnly: Boolean) {
+  private fun test(program: WACCProgram, doCheckOnly: Boolean, target: Target) {
     skipIfIgnored(program)
     val filePath = program.file.absolutePath
     val canonicalPath = program.file.canonicalPath
@@ -116,7 +115,7 @@ class TestPrograms {
         println("\nCompiled WACC:\n${program.file.readText()}")
         if (armOut != null) {
           if (armOut !in actualOut) {
-            println("Not matching specific JVM program outputs for $canonicalPath.")
+            println("Not matching specific ARM program outputs for $canonicalPath.")
             println("Expected in" + "Actual:\n".padStart(50))
             println(armOut.sideToSideWith(actualOut, pad = 50) + '\n')
             assertEquals(expectedAss, actualAss)
@@ -161,7 +160,7 @@ class TestPrograms {
    */
   @TestFactory
   fun semanticallyCheckPrograms() = waccFiles.map { prog ->
-    DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = true) }
+    DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = true, target = JVM) }
   }
 
   /**
@@ -171,10 +170,18 @@ class TestPrograms {
    * It does only check tests that are supposed to preoduce assembly, ie, are valid.
    */
   @TestFactory
-  fun compileCheckPrograms() = waccFiles
+  fun compileCheckProgramsARM() = waccFiles
     .filterNot { testSemanticsOnly }
     .filterNot { "invalid" in it.file.path }
     .map { prog ->
-      DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = false) }
+      DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = false, target = ARM) }
+    }
+
+  @TestFactory
+  fun compileCheckProgramsJVM() = waccFiles
+    .filterNot { testSemanticsOnly }
+    .filterNot { "invalid" in it.file.path }
+    .map { prog ->
+      DynamicTest.dynamicTest(prog.file.canonicalPath) { test(prog, doCheckOnly = false, target = JVM) }
     }
 }

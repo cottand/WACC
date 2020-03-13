@@ -6,6 +6,7 @@ sealed class JvmType {
   abstract val rep: String
   abstract val toNonPrimative: JvmAsm
   abstract val toPrimative: JvmAsm
+  override fun toString() = rep
 }
 
 fun Type.toJvm(): JvmType = when (this) {
