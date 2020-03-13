@@ -1,17 +1,13 @@
 package ic.org.jvm
 
-import ic.org.ast.Scope
-import ic.org.util.shortRandomUUID
-
 data class JvmSystemPrintFunc(val type: JvmType) : JvmMethod(type = Virtual) {
   override val `class` = "java/io/PrintStream"
   override val mName = "print"
   override val args = listOf(type)
   override val ret = JvmVoid
-  private val instanceType by lazy { PrintStream }
   override val prelude by lazy {
     JvmAsm {
-      +GetStatic(JvmSystemOut, instanceType)
+      +JvmSystemOut.getStatic
       +SWAP
     }
   }
@@ -22,32 +18,23 @@ data class JvmSystemPrintlnFunc(val type: JvmType) : JvmMethod(type = Virtual) {
   override val mName = "println"
   override val args = listOf(type)
   override val ret = JvmVoid
-  private val instanceType by lazy { PrintStream }
   override val prelude by lazy {
     JvmAsm {
-      +GetStatic(JvmSystemOut, instanceType)
+      +JvmSystemOut.getStatic
       +SWAP
     }
   }
 }
 
-object JvmSystemOut : JvmField("java/lang/System/out")
+object JvmSystemOut : JvmField("java/lang/System/out", PrintStream)
 
-object JvmSystemIn : JvmField("java/lang/System/in")
+object JvmSystemIn : JvmField("java/lang/System/in", JvmInputStream)
 
 sealed class JvmSystemReadFunc : JvmMethod(type = Virtual) {
   override val `class` = "java/util/Scanner"
   override val args = listOf<Nothing>()
-  private val instanceType by lazy { JvmInputStream }
-  abstract val post : JvmAsm
-  override val prelude by lazy {
-    JvmAsm {
-      +NEW("java/util/Scanner")
-      +DUP
-      +GetStatic(JvmSystemIn, instanceType)
-      +InvokeSpecial("java/util/Scanner/<init>(Ljava/io/InputStream;)V")
-    }
-  }
+  abstract val post: JvmAsm
+  override val prelude = JvmAsm { +InScanner.getStatic }
   override val invoke by lazy { prelude + Virtual.invoker(spec) + post }
 }
 

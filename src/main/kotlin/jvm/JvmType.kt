@@ -25,6 +25,12 @@ object PrintStream : JvmType() {
   override val toPrimative = JvmAsm.empty
 }
 
+object Scanner : JvmType() {
+  override val rep = "Ljava/util/Scanner;"
+  override val toNonPrimative = JvmAsm.empty
+  override val toPrimative = JvmAsm.empty
+}
+
 object JvmInputStream : JvmType() {
   override val rep = "Ljava/io/InputStream;"
   override val toNonPrimative = JvmAsm.empty
@@ -92,9 +98,7 @@ object JvmWaccPair : JvmType() {
     +CheckCast("wacc/lang/Pair")
   }
 
-  val new = object : JvmInstr {
-    override val code = "new $name"
-  }
+  val new = NEW(name)
 
   class Getter internal constructor(override val mName: String) : JvmMethod(type = Virtual) {
     override val `class` = name

@@ -40,7 +40,6 @@ class JvmAsm private constructor(
   fun withMethod(m: WACCMethod): JvmAsm = JvmAsm(instrs, methods + m.asm)
   fun withMethods(ms: List<WACCMethod>) = JvmAsm(instrs, methods + ms.map { it.asm })
 
-
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     other as JvmAsm

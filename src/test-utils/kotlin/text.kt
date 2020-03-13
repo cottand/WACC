@@ -3,6 +3,8 @@ import arrow.core.extensions.list.semialign.padZip
 import arrow.core.getOrElse
 import arrow.core.some
 import ic.org.util.joinLines
+import ic.org.util.print
+import java.util.*
 
 fun String.sideToSideWith(other: String, pad: Int = 20) = lines().padZip(other.lines())
   .map { (ol, or) ->
@@ -24,7 +26,7 @@ fun WACCProgram.specialInput() = "Input_particular".let { token ->
     .drop(1)
     .map { it.drop(2) }
     .joinLines()
-    .let { if (it.isBlank()) None else it.some() }
+    .let { if (it.isBlank()) None else ('\n' + it).some() }.print()
 }
 
 /**

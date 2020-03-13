@@ -4,6 +4,7 @@ import arrow.core.toOption
 import ic.org.ast.GlobalScope
 import ic.org.ast.Scope
 import ic.org.ast.Stat
+import java.util.*
 
 abstract class JvmMethod(type: MethodType) {
   internal abstract val `class`: String?
@@ -94,14 +95,29 @@ enum class JvmReturn(override val code: String) : JvmInstr {
 val JvmType.jvmReturn
   get() = when (this) {
     JvmInt, JvmChar, JvmBool -> JvmReturn.Int
-    is JvmArray, JvmObject, JvmString, PrintStream, JvmWaccPair, JvmInputStream -> JvmReturn.Object
+    is JvmArray, JvmObject, JvmString, PrintStream, JvmWaccPair, JvmInputStream, Scanner -> JvmReturn.Object
     JvmVoid -> JvmReturn.Void
   }
 
-abstract class JvmField(val name: String)
+abstract class JvmField(val name: String, val type: JvmType) {
+  val getStatic by lazy { GetStatic(this) }
+}
 
-data class GetStatic(val staticField: JvmField, val type: JvmType) : JvmInstr {
-  override val code = "getstatic ${staticField.name} ${type.rep}"
+object InScanner : JvmField("wacc/lang/Utils/inScanner", Scanner)
+
+///**
+// * Represents a static field in main
+// */
+//sealed class DeclaredStaticField(val classN: String, val fName: String, val jType: JvmType) :
+//  JvmField(name = "$classN/$fName", type = jType) {
+//  abstract val clinit: JvmAsm
+////  companion object {
+////    @JvmStatic val scanner = Scanner(System.`in`)
+////  }
+//}
+
+data class GetStatic(val staticField: JvmField) : JvmInstr {
+  override val code = "getstatic ${staticField.name} ${staticField.type.rep}"
 }
 
 sealed class Invoke(mnemonic: String, spec: String) : JvmInstr {
