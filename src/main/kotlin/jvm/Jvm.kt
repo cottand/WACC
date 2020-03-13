@@ -3,12 +3,12 @@ package ic.org.jvm
 import ic.org.ast.Scope
 import ic.org.ast.Stat
 import ic.org.util.Position
+import java.util.LinkedList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.plus
-import java.util.*
 
 interface JvmInstr {
   val code: String

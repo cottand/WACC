@@ -1,5 +1,5 @@
 import java.io.File
-import java.util.*
+import java.util.Collections
 
 /**
  * This file contains all funtions that should be sccessible by the testing suite, but are not

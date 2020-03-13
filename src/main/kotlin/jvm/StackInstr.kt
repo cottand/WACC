@@ -20,4 +20,3 @@ object SWAP2 : StackInstr(DUP2_X2.code + '\n' + POP2.code)
 object DUP_X1 : StackInstr("dup_x1")
 
 object DUP2_X2 : StackInstr("dup2_x2")
-

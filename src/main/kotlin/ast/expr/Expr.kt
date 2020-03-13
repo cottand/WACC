@@ -162,7 +162,7 @@ data class IdentExpr(val vari: Variable, val scope: Scope) : Expr() {
   override val type = vari.type
   override fun toString(): String = vari.ident.name
   override fun armAsm(rem: Regs): ARMAsm = ARMAsm.instr(vari.get(destReg = rem.head, currentScope = scope))
-  override fun jvmAsm() = vari.load()  // TODO is it just load?
+  override fun jvmAsm() = vari.load() // TODO is it just load?
   override val weight = stackAccess
 }
 
@@ -330,7 +330,7 @@ data class BinaryOperExpr internal constructor(
         +expr1.armAsm(dest prepend rest)
       }
 
-      //+binaryOper.code(dest, next)
+      // +binaryOper.code(dest, next)
       +when (binaryOper) {
         is EqualityBinOp -> binaryOper.equalityARMAsm(dest, next, expr1.type, expr2.type)
         else -> binaryOper.code(dest, next)
@@ -365,4 +365,3 @@ data class BinaryOperExpr internal constructor(
     }
   }
 }
-

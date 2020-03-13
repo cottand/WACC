@@ -16,7 +16,6 @@ data class ASTORE(val varIndex: Int? = null, val type: JvmType = JvmObject) : Jv
     is JvmArray -> "a"
     else -> ""
   } + if (varIndex == null) "astore" else "astore $varIndex"
-
 }
 
 data class ALOAD(val varIndex: Int? = null, val type: JvmType = JvmObject) : JvmInstr {

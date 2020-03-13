@@ -1,6 +1,5 @@
 package ic.org.jvm
 
-
 data class NEWARRAY(val type: JvmType) : JvmInstr {
   private val fullTypeRep = when (type) {
     is JvmInt -> "int"

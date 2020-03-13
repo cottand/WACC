@@ -274,7 +274,6 @@ data class Println(val expr: Expr, override val scope: Scope, override val pos: 
       is AnyArrayT -> +JvmSystemPrintFunc(JvmObject).invoke
       else -> +JvmSystemPrintlnFunc(type.toJvm()).invoke
     }
-
   }
 }
 

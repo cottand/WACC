@@ -21,15 +21,15 @@ import ic.org.util.head
 import ic.org.util.ifExsistsAnd
 import ic.org.util.runCommand
 import ic.org.util.tail
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.tree.ParseTreeWalker
+import jasmin.Main.main as jasminMain
 import java.io.File
 import kotlin.system.exitProcess
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 import kotlin.time.MonoClock
-import jasmin.Main.main as jasminMain
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.tree.ParseTreeWalker
 
 @ExperimentalTime
 fun main(args: Array<String>) {
@@ -75,7 +75,6 @@ fun main(args: Array<String>) {
       if (cleanAfterBuild) listOf(manifest, mainClass, assembly).forEach { it.delete() }
     } else
       println("Saving file with compiled assembly:\n$newFile")
-
   }
   exitProcess(result.exitCode)
 }

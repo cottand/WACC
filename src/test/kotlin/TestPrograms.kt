@@ -9,6 +9,8 @@ import ic.org.JVM
 import ic.org.Target
 import ic.org.WACCCompiler
 import ic.org.util.containsAll
+import java.io.File
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -22,8 +24,6 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.fail
 import reference.JasminAPI
-import java.io.File
-import kotlin.time.ExperimentalTime
 import reference.ReferenceCompilerAPI as Ref
 
 /**
@@ -44,7 +44,6 @@ import reference.ReferenceCompilerAPI as Ref
  */
 @ExperimentalTime
 class TestPrograms {
-
 
   companion object {
 
@@ -146,10 +145,8 @@ class TestPrograms {
         if (jvmOut != null) {
           if (jvmOut !in actualOut) assertEquals(jvmOut, actualOut) { "Bytecode:\n$actualAss" }
         } else {
-          assertEquals(expectedOut, actualOut)
-          { "Not matching program outputs for $canonicalPath.\nBytecode:\n${actualAss.withLineNumbers()}" }
-          assertEquals(expectedCode, actualCode)
-          { "Not matching exit codes for $canonicalPath\n.Bytecode:\n$actualAss" }
+          assertEquals(expectedOut, actualOut) { "Not matching program outputs for $canonicalPath.\nBytecode:\n${actualAss.withLineNumbers()}" }
+          assertEquals(expectedCode, actualCode) { "Not matching exit codes for $canonicalPath\n.Bytecode:\n$actualAss" }
         }
       }
       println("Succesful assembly:\n$actualAss\n")

@@ -5,13 +5,13 @@ import ic.org.arm.Data
 import ic.org.arm.Exception
 import ic.org.arm.StdFunc
 import ic.org.arm.StringData
+import java.util.LinkedList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.plus
 import kotlinx.collections.immutable.toPersistentList
-import java.util.*
 
 typealias Instructions = PersistentList<ARMAsmInstr>
 typealias Datas = PersistentList<Data>

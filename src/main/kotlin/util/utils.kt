@@ -8,10 +8,10 @@ import arrow.core.Validated
 import arrow.core.Validated.Valid
 import arrow.core.extensions.list.foldable.forAll
 import arrow.core.some
-import org.antlr.v4.runtime.ParserRuleContext
-import org.antlr.v4.runtime.tree.TerminalNode
 import java.io.File
 import kotlin.math.log2
+import org.antlr.v4.runtime.ParserRuleContext
+import org.antlr.v4.runtime.tree.TerminalNode
 
 /**
  * Returns whether a [List] of [Either] contains any [Either.Left]
@@ -79,4 +79,3 @@ inline fun <reified T, reified A : S, reified B : S, reified S> T.unfold(
   let { if (pred(this)) ifSo(this) else otherise(this) }
 
 fun String.noneIfEmpy() = unfold(String::isEmpty, { None }, String::some)
-

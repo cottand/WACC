@@ -19,4 +19,3 @@ object JasminAPI : ReferenceEmulatorAPI {
       }
   }
 }
-

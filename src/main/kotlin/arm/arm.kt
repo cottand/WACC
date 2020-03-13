@@ -18,7 +18,6 @@ interface ARMAsmInstr {
   operator fun plus(other: PersistentList<ARMAsmInstr>) = persistentListOf(this) + other
 }
 
-
 data class AsmDirective(val text: String) : Data() {
   override val code = ".$text"
 

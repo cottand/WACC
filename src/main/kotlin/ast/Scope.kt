@@ -27,10 +27,8 @@ import ic.org.util.NOT_REACHED
 import ic.org.util.Position
 import ic.org.util.RedeclarationError
 import ic.org.util.head
+import java.util.LinkedList
 import kotlinx.collections.immutable.persistentListOf
-import java.util.*
-import kotlin.collections.HashMap
-import kotlin.collections.LinkedHashMap
 
 /**
  * Represents a WACC Scope.
@@ -71,7 +69,6 @@ sealed class Scope {
    */
   @JvmGenOnly
   fun totalLocalVarsSoFar(): Int = children.map(Scope::totalLocalVarsSoFar).fold(variables.size, Int::plus)
-
 
   /**
    * Returns the [Variable] associated with [ident]. If [ident] exists twice in this scope and/or
