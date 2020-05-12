@@ -21,7 +21,7 @@ end
 It compiles to both ARM11 and the JVM, and is thus compatible with Java and offers some basic interop with it.
 
 Team members and contributors to this project were:
-- [Willam Profit](https://github.com/williamprofit)
+- [William Profit](https://github.com/williamprofit)
 - [Lancelot Blanchard](https://www.linkedin.com/in/lancelotblanchard)
 - [Kacper Kazaniecki](https://www.linkedin.com/in/kacperkazaniecki)
 - [Nico D'Cotta](https://www.linkedin.com/in/ndcotta)
