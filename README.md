@@ -3,7 +3,8 @@
 WACC is a toy compiler that supports basic constructs like stack allocated primitives, and heap-allocated arrays and pairs.
 
 Here are a couple of exmaples:
-```
+
+```java
 begin
   char continue = 'Y' ;
   int buff = 0 ;
@@ -18,7 +19,8 @@ begin
   done
 end
 ```
-```
+
+```java
 begin
   int f(int x) is
       int z = 0;
