@@ -119,6 +119,14 @@
           or as an addendum to the NOTICE text from the Work, provided
           that such additional attribution notices cannot be construed
           as modifying the License.
+          
+      (e) You must not reproduce or redistribute copies of the Work or
+          Derivative Works with the intent or goal to submit them as your
+          own work as part of assessements and examinations at
+          Imperial College London, subject to its academic integrity policy,
+          which can be found at:
+
+          https://www.imperial.ac.uk/media/imperial-college/administration-and-support-services/registry/academic-governance/public/academic-policy/academic-integrity/Examination-and-assessments---academic-integrity.pdf
 
       You may add Your own copyright statement to Your modifications and
       may provide additional or different license terms and conditions
@@ -186,7 +194,7 @@
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright [yyyy] [name of copyright owner]
+   Copyright [2020] [Nicolas D'Cotta]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
